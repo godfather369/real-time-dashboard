@@ -2,42 +2,42 @@
 const defaultTenantId = "5cca09b667f18c546f102361";
 // Connection URL
 module.exports = {
-  http: {
-    cors: {
-      origin: "http://localhost:8080",
-    },
-  },
-  //adding tenantId filters in query
-  queryTransformer: (query, { securityContext }) => {
-    const tenantIds = [];
-    // const sc = securityContext;
-    // console.log("tenantIds");
-    // console.log(sc);
-    tenantId = "60bdf4253f08118fcef4f30a";
-    if (tenantId) {
-      console.log("Fetching stats for tenantId", tenantId);
-      tenantIds.push(tenantId);
-    } else {
-      console.error(
-        "TenantId is not provided, fetching stats for default tenantId"
-      );
-    }
-    // query.filters.push({
-    //   member: "Tenants.tenantId",
-    //   operator: "equals",
-    //   values: tenantIds,
-    // });
-    return query;
-  },
-  // contextToAppId: ({ securityContext }) => `C_APP_${securityContext.tenantId}`,
-  // preAggregationsSchema: ({ securityContext }) =>
-  //   `pr_ag_${securityContext.tenantId}`,
-  // scheduledRefreshContexts: async () => {
-  //   const tenantIds = await fetchTenants();
-  //   return tenantIds.map((id) => {
-  //     return { securityContext: { tenantId: id } };
-  //   });
-  // },
+	http: {
+		cors: {
+			origin: "http://localhost:8080",
+		},
+	},
+	//adding tenantId filters in query
+	queryTransformer: (query, { securityContext }) => {
+		const tenantIds = [];
+		// const sc = securityContext;
+		// console.log("tenantIds");
+		// console.log(sc);
+		tenantId = "5cca09b667f18c546f102361";
+		if (tenantId) {
+			console.log("Fetching stats for tenantId", tenantId);
+			tenantIds.push(tenantId);
+		} else {
+			console.error(
+				"TenantId is not provided, fetching stats for default tenantId"
+			);
+		}
+		// query.filters.push({
+		//   member: "Tenants.tenantId",
+		//   operator: "equals",
+		//   values: tenantIds,
+		// });
+		return query;
+	},
+	// contextToAppId: ({ securityContext }) => `C_APP_${securityContext.tenantId}`,
+	// preAggregationsSchema: ({ securityContext }) =>
+	//   `pr_ag_${securityContext.tenantId}`,
+	// scheduledRefreshContexts: async () => {
+	//   const tenantIds = await fetchTenants();
+	//   return tenantIds.map((id) => {
+	//     return { securityContext: { tenantId: id } };
+	//   });
+	// },
 };
 // async function fetchTenants() {
 //   // Use connect method to connect to the server
