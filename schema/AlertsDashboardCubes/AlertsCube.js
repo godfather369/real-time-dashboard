@@ -30,10 +30,6 @@ cube(`AlertsCube`, {
 		AlertsOwnersCube: {
       relationship: `belongsTo`,
       sql: `${CUBE._id} = ${AlertsOwnersCube._id}`
-    },
-    AlertsGroupsCube: {
-      relationship: 'belongsTo',
-      sql: `TRIM(CONVERT(${CUBE._id}, CHAR))=TRIM(CONVERT(${AlertsGroupsCube._id}, CHAR))`
     }
   },
 
@@ -198,41 +194,13 @@ cube(`AlertsCube`, {
       refreshKey: {
         every: ALERT_CUBE_PRE_AGG_REFRESH_KEY
       }
-    },
-    billsbyGroupsRollUp: {
-      sqlAlias: "BillsGrpsRP",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [
-        AlertsCube.unread,
-        AlertsCube.inProcess,
-        AlertsCube.applicable,
-        AlertsCube.totalCount
-      ],
-      dimensions: [
-        AlertsCube.alertCategory,
-        AlertsGroupsCube.group,
-        Groups.fullName
-      ],
-      timeDimension: AlertsCube.publishedDate,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`
-      },
-      refreshKey: {
-           every: ALERT_CUBE_PRE_AGG_REFRESH_KEY_WORKFLOW
-      }
-    }
+		}
   },
 
   measures: {
     count: {
       type: `count`,
-      drillMembers: [ alertCategory,Groups._id, owner, Groups.fullName]
+      drillMembers: [alertCategory]
     },
     unread: {
       type: `count`,

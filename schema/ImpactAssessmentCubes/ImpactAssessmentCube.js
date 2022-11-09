@@ -51,7 +51,7 @@ cube(`ImpactAssessmentCube`, {
       type: `count`
     },
     inProcess: {
-      sql: `${CUBE}.\`status\``,
+      sql: `status`,
       type: 'count',
       title: "InProcess",
       filters: [
@@ -95,12 +95,7 @@ cube(`ImpactAssessmentCube`, {
       sql: `CONVERT(${CUBE}.\`_id\`,CHAR)`,
       type: `string`,
       primaryKey: true
-    },
-    status: {
-      sql: `${CUBE}.\`status\``,
-      type: `string`
-    },
-    
+    }
   },
 
   dataSource: `default`,

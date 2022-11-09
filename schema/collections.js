@@ -1,12 +1,10 @@
 const regHubDataBase = "RegHub";
 
 export const userCollection = getCollectionString("users");
-export const groupsCollection = getCollectionString("reg_groups");
 export const tenantCollection = getCollectionString("tenants");
 export const alertsCollection = getCollectionString("reg_alert_parents");
 export const agencyNamesCollection =  getCollectionString("reg_alert_parents_agencyNames");
-export const alertsUsersCollection = getCollectionString("reg_alert_parents_owners");
-export const alertsGroupsCollection=getCollectionString("reg_alert_parents_groups")
+export const alertsUsersCollection =  getCollectionString("reg_alert_parents_owners");
 export const alertGroupIdsCollection = getCollectionString("reg_alert_parents_grpIds");
 export const alertsMetaCollection =  getCollectionString("alerts_meta");
 export const juridictionsCollection =  getCollectionString("reg_jurisdictions");
@@ -24,9 +22,6 @@ export const risksByStatusCollection = getCollectionString("reg_config_status_ri
 export const tasksByStatusCollection = getCollectionString("reg_config_status_task");
 export const controlByStatusCollection = getCollectionString("reg_config_status_control");
 export const mapUserCollection = getCollectionString("reg_map_user");
-export const impactAssessmentCollection = getCollectionString("reg_assessments");
-export const impactAssessmentOwnersCollection =  getCollectionString("reg_assessments_owners");
-
 
 function getCollectionString(collectionName){
 	return `\`${regHubDataBase}\`.\`${collectionName}\``
