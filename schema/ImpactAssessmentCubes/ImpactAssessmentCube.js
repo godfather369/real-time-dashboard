@@ -157,6 +157,10 @@ cube(`ImpactAssessmentCube`, {
 			sql: `${CUBE}.\`impactLevel\``,
 			type: `string`,
 		},
+		status: {
+			sql: `${CUBE}.\`status\``,
+			type: `string`,
+		},
 	},
 
 	dataSource: `default`,
