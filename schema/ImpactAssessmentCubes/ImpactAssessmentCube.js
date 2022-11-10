@@ -48,7 +48,7 @@ cube(`ImpactAssessmentCube`, {
 			},
 		},
 		impactAssessmentByImpactLevelRollUp: {
-			sqlAlias: "iaByImpactLevel",
+			sqlAlias: "iaByIL",
 			type: `rollup`,
 			external: true,
 			scheduledRefresh: true,
