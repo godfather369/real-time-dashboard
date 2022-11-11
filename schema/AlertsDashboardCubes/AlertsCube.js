@@ -1,8 +1,8 @@
-import {alertsCollection  } from './collections';
+import {alertsCollection } from './collections';
 import { ALERT_CUBE_REFRESH_KEY_TIME , ALERT_CUBE_PRE_AGG_REFRESH_KEY, ALERT_CUBE_PRE_AGG_REFRESH_KEY_WORKFLOW } from './cube-constants';
 
 cube(`AlertsCube`, {
-  sql: `SELECT * FROM ${alertsCollection} where ${alertsCollection}.archived=0`,
+	sql : `SELECT * FROM  ${alertsCollection} where ${alertsCollection}.archived = 0`,
 
   sqlAlias: `AlCube`,
 
@@ -27,10 +27,10 @@ cube(`AlertsCube`, {
       relationship: `belongsTo`,
       sql: `${CUBE._id} = ${AlertAgencyNamesCube._id}`
     },
-		AlertsOwnersCube: {
-      relationship: `belongsTo`,
-      sql: `${CUBE._id} = ${AlertsOwnersCube._id}`
-    }
+		Users: {
+				relationship: `belongsTo`,
+				sql: `${CUBE.owners} = ${Users._id}`
+		}
   },
 
   preAggregations: {
@@ -89,31 +89,7 @@ cube(`AlertsCube`, {
       refreshKey: {
         every: ALERT_CUBE_PRE_AGG_REFRESH_KEY
       },
-    },
-    alertsByUsersRollUp: {
-      sqlAlias: "alByUsrsRP",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [
-        AlertsCube.unread,
-        AlertsCube.applicable,
-        AlertsCube.inProcess,
-        AlertsCube.totalCount
-      ],
-      dimensions: [Tenants.tenantId, Users.fullName, AlertsCube.alertCategory],
-      timeDimension: AlertsCube.publishedDate,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`
-      },
-      refreshKey: {
-           every: ALERT_CUBE_PRE_AGG_REFRESH_KEY_WORKFLOW
-      }
-    },
+		},
     feedPerJurisdictionRollUp: {
       sqlAlias: "feedRP",
       type: `rollup`,
@@ -293,12 +269,12 @@ cube(`AlertsCube`, {
       title: `Info repo`
     },
     _id: {
-      sql: `CONVERT(${CUBE}.\`_id\`,CHAR)`,
+      sql: `${CUBE}.\`_id\``,
       type: `string`,
       primaryKey: true
     },
     owner: {
-      sql: `CONVERT(${CUBE}.\`owner\`, CHAR)`,
+      sql: `${CUBE}.\`owner\``,
       type: `string`
     },
     status: {
@@ -332,6 +308,11 @@ cube(`AlertsCube`, {
       sql: `${CUBE}.\`alertType\``,
       type: `string`,
       title: `Alert Rule`
+    },
+		owners: {
+      sql: `${CUBE}.\`owners\``,
+      type: `string`,
+      title: `owners`
     }
   },
 
