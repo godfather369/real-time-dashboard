@@ -22,6 +22,11 @@ export const risksByStatusCollection = getCollectionString("reg_config_status_ri
 export const tasksByStatusCollection = getCollectionString("reg_config_status_task");
 export const controlByStatusCollection = getCollectionString("reg_config_status_control");
 export const mapUserCollection = getCollectionString("reg_map_user");
+export const impactAssessmentCollection =
+	getCollectionString("reg_assessments");
+export const impactAssessmentOwnersCollection = getCollectionString(
+	"reg_assessments_owners"
+);
 
 function getCollectionString(collectionName){
 	return `\`${regHubDataBase}\`.\`${collectionName}\``
