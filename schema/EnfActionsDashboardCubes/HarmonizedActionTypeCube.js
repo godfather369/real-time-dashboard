@@ -24,7 +24,7 @@ cube(`HarmonizedActionTypeCube`, {
       title: `harmonizedActionType`
     },
     _id: {
-      sql: `${CUBE}.\`_id\``,
+      sql: `CONVERT(${CUBE}.\`_id\`,CHAR)`,
       type: `string`,
       primaryKey: true
     }
