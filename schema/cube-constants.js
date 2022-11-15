@@ -1,5 +1,6 @@
 //Refresh keys
 export const USER_CUBE_REFRESH_KEY_TIME =  `20 minute`;
+export const GROUP_CUBE_REFRESH_KEY_TIME = `20 minute`;
 export const TENANTS_CUBE_REFRESH_KEY_TIME = `6 hour`;
 
 export const ALERT_CUBE_REFRESH_KEY_TIME =  `30 minute`;
