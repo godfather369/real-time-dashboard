@@ -1,6 +1,5 @@
 //Refresh keys
 export const USER_CUBE_REFRESH_KEY_TIME =  `20 minute`;
-export const GROUP_CUBE_REFRESH_KEY_TIME = `20 minute`;
 export const TENANTS_CUBE_REFRESH_KEY_TIME = `6 hour`;
 
 export const ALERT_CUBE_REFRESH_KEY_TIME =  `30 minute`;
@@ -32,6 +31,11 @@ export const MAP_USER_CUBE_REFRESH_KEY_TIME = `30 minute`;
 export const MAP_STATUS_CUBE_PRE_AGG_REFRESH_KEY_TIME = `1 hour`;
 export const OWNERS_STATUS_CUBE_PRE_AGG_REFRESH_KEY_TIME = `20 minute`;
 export const TASKS_CUBE_PRE_AGG_REFRESH_KEY_TIME = `1 hour`;
+
+export const IMPACT_ASSESSMENT_CUBE_REFRESH_KEY_TIME =  `30 minute`;
+export const IMPACT_ASSESSMENT_CUBE_PRE_AGG_REFRESH_KEY = `6 hour`;
+export const IMPACT_ASSESSMENT_IMPACTED_TEAM_CUBE_REFRESH_KEY_TIME = `30 minute`;
+export const IMPACT_ASSESSMENT_IMPACTED_TEAM_CUBE_PRE_AGG_REFRESH_KEY= `6 hour`
 
 //constants
 export const defaultTenantId = "598b984f530bf20f645373d3";
