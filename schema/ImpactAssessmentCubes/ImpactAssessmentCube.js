@@ -6,7 +6,7 @@ import {
 } from "./cube-constants";
 
 cube(`ImpactAssessmentCube`, {
-	sql: `SELECT * FROM ${impactAssessmentCollection} where ${impactAssessmentCollection}.archived=0`,
+	sql: `SELECT _id,tenantId,impactLevel,status,startDate FROM ${impactAssessmentCollection} where ${impactAssessmentCollection}.archived=0`,
 
 	sqlAlias: `impAsCube`,
 
@@ -40,6 +40,9 @@ cube(`ImpactAssessmentCube`, {
 				ImpactAssessmentCube.new,
 				ImpactAssessmentCube.closed,
 			],
+			dimensions: [
+				Tenants.tenantId
+			],
 			timeDimension: ImpactAssessmentCube.startDate,
 			granularity: `month`,
 			buildRangeStart: {
@@ -64,6 +67,9 @@ cube(`ImpactAssessmentCube`, {
 				ImpactAssessmentCube.high,
 				ImpactAssessmentCube.critical,
 			],
+			dimensions: [
+				Tenants.tenantId
+			],
 			timeDimension: ImpactAssessmentCube.startDate,
 			granularity: `month`,
 			buildRangeStart: {
@@ -85,7 +91,8 @@ cube(`ImpactAssessmentCube`, {
 			  ImpactAssessmentCube.count
 			],
 			dimensions: [
-			  ImpactAssessmentImpactedTeamCube.impactedTeam
+			  ImpactAssessmentImpactedTeamCube.impactedTeam,
+				Tenants.tenantId
 			],
 			timeDimension: ImpactAssessmentCube.startDate,
 			granularity: `month`,
@@ -98,7 +105,31 @@ cube(`ImpactAssessmentCube`, {
 			refreshKey: {
 			  every: IMPACT_ASSESSMENT_IMPACTED_TEAM_CUBE_PRE_AGG_REFRESH_KEY
 			}
-		  }
+		},
+		impactAssessmentOwnersRollUp: {
+			sqlAlias: "iaByOw",
+			type: `rollup`,
+			external: true,
+			scheduledRefresh: true,
+			measures: [
+			  ImpactAssessmentCube.count
+			],
+			dimensions: [
+			  Users.fullName,
+				Tenants.tenantId
+			],
+			timeDimension: ImpactAssessmentCube.startDate,
+			granularity: `day`,
+			buildRangeStart: {
+			  sql: `SELECT NOW() - interval '365 day'`,
+			},
+			buildRangeEnd: {
+			  sql: `SELECT NOW()`,
+			},
+			refreshKey: {
+			  every: IMPACT_ASSESSMENT_IMPACTED_TEAM_CUBE_PRE_AGG_REFRESH_KEY
+			}
+		}
 	},
 
 	measures: {
@@ -169,11 +200,11 @@ cube(`ImpactAssessmentCube`, {
 
 	dimensions: {
 		tenantId: {
-			sql: `${CUBE}.\`tenantId\``,
+			sql: `tenantId`,
 			type: `string`,
 		},
 		startDate: {
-			sql: `${CUBE}.\`startDate\``,
+			sql: `startDate`,
 			type: `time`,
 		},
 		_id: {
@@ -182,11 +213,11 @@ cube(`ImpactAssessmentCube`, {
 			primaryKey: true,
 		},
 		impactLevel: {
-			sql: `${CUBE}.\`impactLevel\``,
+			sql: `impactLevel`,
 			type: `string`,
 		},
 		status: {
-			sql: `${CUBE}.\`status\``,
+			sql: `status`,
 			type: `string`,
 		},
 	},

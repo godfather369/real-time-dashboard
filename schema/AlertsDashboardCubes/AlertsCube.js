@@ -170,6 +170,66 @@ cube(`AlertsCube`, {
       refreshKey: {
         every: ALERT_CUBE_PRE_AGG_REFRESH_KEY
       }
+		},
+		alertsByJurisdictionAndDocStat: {
+      sqlAlias: "alByJuDoc",
+      type: `rollup`,
+      external: true,
+      scheduledRefresh: true,
+      measures: [
+        AlertsCube.introducedDocStatus,
+				AlertsCube.originDocStatus,
+				AlertsCube.secondBodyStatus,
+				AlertsCube.diedStatus,
+				AlertsCube.becameLawStatus,
+				AlertsCube.statuteStatus,
+				AlertsCube.regulationStatus,
+				AlertsCube.agencyUpdateStatus
+      ],
+      dimensions: [
+        Tenants.tenantId,
+        JurisdictionsCube.displayName
+      ],
+      timeDimension: AlertsCube.publishedDate,
+      granularity: `day`,
+      buildRangeStart: {
+        sql: `SELECT NOW() - interval '365 day'`,
+      },
+      buildRangeEnd: {
+        sql: `SELECT NOW()`,
+      },
+      refreshKey: {
+        every: ALERT_CUBE_PRE_AGG_REFRESH_KEY
+      }
+    },
+		billsDocStatusRollUp :{
+			sqlAlias: "billDocRP",
+      type: `rollup`,
+      external: true,
+      scheduledRefresh: true,
+			measures: [
+				AlertsCube.introducedBills,
+        AlertsCube.passedOriginBills,
+        AlertsCube.passedSecondBodyBills,
+				AlertsCube.sentForSignatureBills,
+        AlertsCube.becameLawBills,
+				AlertsCube.totalBillsDocStatus
+      ],
+      dimensions: [
+        Tenants.tenantId,
+				JurisdictionsCube.displayName
+      ],
+			timeDimension: AlertsCube.publishedDate,
+      granularity: `day`,
+      buildRangeStart: {
+        sql: `SELECT NOW() - interval '365 day'`,
+      },
+      buildRangeEnd: {
+        sql: `SELECT NOW()`,
+      },
+      refreshKey: {
+        every: ALERT_CUBE_PRE_AGG_REFRESH_KEY
+      }
 		}
   },
 
@@ -250,6 +310,138 @@ cube(`AlertsCube`, {
       type: `number`,
       title: "billsCount",
     },
+		introducedDocStatus : {
+			sql: `${CUBE}.\`info.docStatus\``,
+			type: `count`,
+			filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Introduced'`
+        }
+      ]
+		},
+		originDocStatus : {
+			sql: `${CUBE}.\`info.docStatus\``,
+			type: `count`,
+			filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Passed Body of Origin'`
+        }
+      ]
+		},
+		secondBodyStatus : {
+			sql: `${CUBE}.\`info.docStatus\``,
+			type: `count`,
+			filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Passed Second Body'`
+        }
+      ]
+		},
+		diedStatus : {
+			sql: `${CUBE}.\`info.docStatus\``,
+			type: `count`,
+			filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Died'`
+        }
+      ]
+		},
+		becameLawStatus : {
+			sql: `${CUBE}.\`info.docStatus\``,
+			type: `count`,
+			filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Became Law'`
+        }
+      ]
+		},
+		statuteStatus : {
+			sql: `${CUBE}.\`info.docStatus\``,
+			type: `count`,
+			filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Statute'`
+        }
+      ]
+		},
+		regulationStatus : {
+			sql: `${CUBE}.\`info.docStatus\``,
+			type: `count`,
+			filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Regulation'`
+        }
+      ]
+		},
+		agencyUpdateStatus : {
+			sql: `${CUBE}.\`info.docStatus\``,
+			type: `count`,
+			filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\`= 'Bulletins/Reports' OR ${CUBE}.\`info.docStatus\`= 'Calendar' OR 
+					${CUBE}.\`info.docStatus\`= 'Enforcement Actions' OR ${CUBE}.\`info.docStatus\`= 'Feed' OR 
+					${CUBE}.\`info.docStatus\`= 'Guidance' OR ${CUBE}.\`info.docStatus\`= 'Information and Guidance' OR 
+					${CUBE}.\`info.docStatus\`= 'News/Press Releases' OR ${CUBE}.\`info.docStatus\`= 'Notice' OR 
+					${CUBE}.\`info.docStatus\`= 'Proposed Rule' OR ${CUBE}.\`info.docStatus\`= 'Public Notices' OR 
+					${CUBE}.\`info.docStatus\`= 'Publications/Communications' OR ${CUBE}.\`info.docStatus\`= 'Rule' OR 
+					${CUBE}.\`info.docStatus\`= 'Rulemaking' OR ${CUBE}.\`info.docStatus\`= 'Settlements' 
+					`
+        }
+      ]
+		},
+		introducedBills : {
+			sql: `${CUBE}.\`info.docStatus\``,
+			type: `count`,
+			filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Introduced' and ${CUBE.alertCategory} = 'Bills'`
+        }
+      ] 
+		},
+		passedOriginBills : {
+			sql: `${CUBE}.\`info.docStatus\``,
+			type: `count`,
+			filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Passed Body of Origin' 
+					and ${CUBE.alertCategory} = 'Bills'`
+        }
+      ] 
+		},
+		passedSecondBodyBills : {
+			sql: `${CUBE}.\`info.docStatus\``,
+			type: `count`,
+			filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Passed Second Body' 
+					and ${CUBE.alertCategory} = 'Bills'`
+        }
+      ] 
+		},
+		sentForSignatureBills : {
+			sql: `${CUBE}.\`info.docStatus\``,
+			type: `count`,
+			filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Sent for Signature' 
+					and ${CUBE.alertCategory} = 'Bills'`
+        }
+      ] 
+		},
+		becameLawBills : {
+			sql: `${CUBE}.\`info.docStatus\``,
+			type: `count`,
+			filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Became Law' 
+					and ${CUBE.alertCategory} = 'Bills'`
+        }
+      ] 
+		},
+		totalBillsDocStatus:{
+			sql: `${introducedBills} + ${passedOriginBills} + ${sentForSignatureBills} + ${becameLawBills}`,
+      type: `number`,
+		}
   },
 
   dimensions: {

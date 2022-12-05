@@ -49,6 +49,8 @@ export const alertsGroupsCollection = getCollectionString(
 	"reg_alert_parents_groups"
 );
 
+export const uniregCollection = getCollectionString("unireg");
+
 function getCollectionString(collectionName) {
 	return `\`${regHubDataBase}\`.\`${collectionName}\``;
 }
