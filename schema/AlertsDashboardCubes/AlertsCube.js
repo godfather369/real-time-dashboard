@@ -439,7 +439,7 @@ cube(`AlertsCube`, {
       ] 
 		},
 		totalBillsDocStatus:{
-			sql: `${introducedBills} + ${passedOriginBills} + ${sentForSignatureBills} + ${becameLawBills}`,
+			sql: `${introducedBills} + ${passedOriginBills} + ${passedSecondBodyBills} + ${sentForSignatureBills} + ${becameLawBills}`,
       type: `number`,
 		}
   },
