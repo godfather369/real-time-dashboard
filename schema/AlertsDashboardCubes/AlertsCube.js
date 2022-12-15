@@ -184,7 +184,8 @@ cube(`AlertsCube`, {
 				AlertsCube.becameLawStatus,
 				AlertsCube.statuteStatus,
 				AlertsCube.regulationStatus,
-				AlertsCube.agencyUpdateStatus
+				AlertsCube.agencyUpdateStatus,
+				AlertsCube.alertCategory
       ],
       dimensions: [
         Tenants.tenantId,

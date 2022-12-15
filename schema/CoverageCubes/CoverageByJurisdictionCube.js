@@ -53,6 +53,7 @@ cube(`CoverageByJurisdictionCube`, {
       ],
       dimensions: [
 				CoverageByJurisdictionCube.jurisdictionName,
+				CoverageByJurisdictionCube.status,
         Tenants.tenantId
       ],
       refreshKey: {
