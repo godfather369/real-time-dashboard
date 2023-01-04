@@ -184,12 +184,12 @@ cube(`AlertsCube`, {
 				AlertsCube.becameLawStatus,
 				AlertsCube.statuteStatus,
 				AlertsCube.regulationStatus,
-				AlertsCube.agencyUpdateStatus,
-				AlertsCube.alertCategory
+				AlertsCube.agencyUpdateStatus
       ],
       dimensions: [
         Tenants.tenantId,
-        JurisdictionsCube.displayName
+        JurisdictionsCube.displayName,
+				AlertsCube.alertCategory
       ],
       timeDimension: AlertsCube.publishedDate,
       granularity: `day`,

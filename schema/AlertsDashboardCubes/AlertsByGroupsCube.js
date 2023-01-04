@@ -100,6 +100,10 @@ cube(`AlertsByGroupsCube`, {
 			sql: `${CUBE}.\`status\``,
 			type: `string`,
 		},
+		grpId: {
+			sql: `${CUBE}.\`grpId\``,
+			type: `string`,
+		},
 		tenantId: {
 			sql: `${CUBE}.\`tenantId\``,
 			type: `string`,
