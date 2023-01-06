@@ -390,15 +390,8 @@ cube(`AlertsCube`, {
 			type: `count`,
 			filters: [
         {
-          sql: `${CUBE}.\`info.docStatus\`= 'Bulletins/Reports' OR ${CUBE}.\`info.docStatus\`= 'Calendar' OR 
-					${CUBE}.\`info.docStatus\`= 'Enforcement Actions' OR ${CUBE}.\`info.docStatus\`= 'Feed' OR 
-					${CUBE}.\`info.docStatus\`= 'Guidance' OR ${CUBE}.\`info.docStatus\`= 'Information and Guidance' OR 
-					${CUBE}.\`info.docStatus\`= 'News/Press Releases' OR ${CUBE}.\`info.docStatus\`= 'Notice' OR 
-					${CUBE}.\`info.docStatus\`= 'Proposed Rule' OR ${CUBE}.\`info.docStatus\`= 'Public Notices' OR 
-					${CUBE}.\`info.docStatus\`= 'Publications/Communications' OR ${CUBE}.\`info.docStatus\`= 'Rule' OR 
-					${CUBE}.\`info.docStatus\`= 'Rulemaking' OR ${CUBE}.\`info.docStatus\`= 'Settlements' 
-					`
-        }
+					sql: `${CUBE.alertCategory} = 'News & Publications'`,
+				}
       ]
 		},
 		introducedBills : {
