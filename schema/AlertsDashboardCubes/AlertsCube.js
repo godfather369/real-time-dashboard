@@ -180,6 +180,7 @@ cube(`AlertsCube`, {
         AlertsCube.introducedDocStatus,
 				AlertsCube.originDocStatus,
 				AlertsCube.secondBodyStatus,
+				AlertsCube.sentForSignatureStatus,
 				AlertsCube.diedStatus,
 				AlertsCube.becameLawStatus,
 				AlertsCube.statuteStatus,
@@ -213,6 +214,7 @@ cube(`AlertsCube`, {
         AlertsCube.passedOriginBills,
         AlertsCube.passedSecondBodyBills,
 				AlertsCube.sentForSignatureBills,
+				AlertsCube.diedBills,
         AlertsCube.becameLawBills,
 				AlertsCube.totalBillsDocStatus
       ],
@@ -338,6 +340,15 @@ cube(`AlertsCube`, {
         }
       ]
 		},
+    sentForSignatureStatus : {
+			sql: `${CUBE}.\`info.docStatus\``,
+			type: `count`,
+			filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Sent for Signature'`
+        }
+      ]
+		},
 		diedStatus : {
 			sql: `${CUBE}.\`info.docStatus\``,
 			type: `count`,
@@ -429,6 +440,16 @@ cube(`AlertsCube`, {
         }
       ] 
 		},
+    diedBills : {
+			sql: `${CUBE}.\`info.docStatus\``,
+			type: `count`,
+			filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Died' 
+					and ${CUBE.alertCategory} = 'Bills'`
+        }
+      ] 
+		},
 		becameLawBills : {
 			sql: `${CUBE}.\`info.docStatus\``,
 			type: `count`,
@@ -440,7 +461,7 @@ cube(`AlertsCube`, {
       ] 
 		},
 		totalBillsDocStatus:{
-			sql: `${introducedBills} + ${passedOriginBills} + ${passedSecondBodyBills} + ${sentForSignatureBills} + ${becameLawBills}`,
+			sql: `${introducedBills} + ${passedOriginBills} + ${passedSecondBodyBills} + ${sentForSignatureBills} + ${becameLawBills} + ${diedBills}`,
       type: `number`,
 		}
   },
