@@ -22,11 +22,11 @@ module.exports = {
 				"TenantId is not provided, fetching stats for default tenantId"
 			);
 		}
-		// query.filters.push({
-		//   member: "Tenants.tenantId",
-		//   operator: "equals",
-		//   values: tenantIds,
-		// });
+		query.filters.push({
+			member: "Tenants.tenantId",
+			operator: "equals",
+			values: tenantIds,
+		});
 		return query;
 	},
 	// contextToAppId: ({ securityContext }) => `C_APP_${securityContext.tenantId}`,
