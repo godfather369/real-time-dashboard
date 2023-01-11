@@ -49,7 +49,12 @@ export const alertsGroupsCollection = getCollectionString(
 	"reg_alert_parents_groups"
 );
 
+export const mapGenericCollection = getCollectionString("reg_map_generic");
+export const masterDatumCollection = getCollectionString("masterdatum");
+export const masterDatumMetaCollection = getCollectionString("masterdatum_meta_masterdata");
 export const uniregCollection = getCollectionString("unireg");
+export const uniregLineageCollection = getCollectionString("unireg_lineage");
+export const regSiteConfigCollection = getCollectionString("reg_site_config");
 
 function getCollectionString(collectionName) {
 	return `\`${regHubDataBase}\`.\`${collectionName}\``;
