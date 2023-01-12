@@ -56,6 +56,26 @@ cube(`AlertsByGroupsCube`, {
 				every: ALERT_CUBE_PRE_AGG_REFRESH_KEY_WORKFLOW,
 			},
 		},
+		alertGroupNameRollUp : {
+			sqlAlias: "alByGrpsName",
+			type: `rollup`,
+			external: true,
+			scheduledRefresh: true,
+			dimensions: [
+				Tenants.tenantId,
+				AlertsByGroupsCube.name,
+				AlertsByGroupsCube.grpId,
+			],
+			buildRangeStart: {
+				sql: `SELECT NOW() - interval '365 day'`,
+			},
+			buildRangeEnd: {
+				sql: `SELECT NOW()`,
+			},
+			refreshKey: {
+				every: ALERT_CUBE_PRE_AGG_REFRESH_KEY_WORKFLOW,
+			},
+		}
 	},
 
 	measures: {
