@@ -41,11 +41,20 @@ export const controlByStatusCollection = getCollectionString(
 	"reg_config_status_control"
 );
 export const mapUserCollection = getCollectionString("reg_map_user");
-export const impactAssessmentCollection =
-	getCollectionString("reg_assessments");
-export const impactAssessmentOwnersCollection = getCollectionString(
-	"reg_assessments_owners"
+export const impactAssessmentCollection= getCollectionString("reg_assessments");
+export const impactAssessmentOwnersCollection = getCollectionString("reg_assessments_owners");
+export const impactAssessmentImpactedTeamCollection =  getCollectionString("reg_assessments_customAttributes_I_E_F_IMPACTED_TEAM");
+export const groupCollection = getCollectionString("reg_groups");
+export const alertsGroupsCollection = getCollectionString(
+	"reg_alert_parents_groups"
 );
+
+export const mapGenericCollection = getCollectionString("reg_map_generic");
+export const masterDatumCollection = getCollectionString("masterdatum");
+export const masterDatumMetaCollection = getCollectionString("masterdatum_meta_masterdata");
+export const uniregCollection = getCollectionString("unireg");
+export const uniregLineageCollection = getCollectionString("unireg_lineage");
+export const regSiteConfigCollection = getCollectionString("reg_site_config");
 
 function getCollectionString(collectionName) {
 	return `\`${regHubDataBase}\`.\`${collectionName}\``;

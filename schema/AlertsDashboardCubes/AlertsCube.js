@@ -1,8 +1,8 @@
-import {alertsCollection  } from './collections';
+import {alertsCollection } from './collections';
 import { ALERT_CUBE_REFRESH_KEY_TIME , ALERT_CUBE_PRE_AGG_REFRESH_KEY, ALERT_CUBE_PRE_AGG_REFRESH_KEY_WORKFLOW } from './cube-constants';
 
 cube(`AlertsCube`, {
-  sql: `SELECT * FROM ${alertsCollection} where ${alertsCollection}.archived=0`,
+	sql : `SELECT * FROM  ${alertsCollection} where ${alertsCollection}.archived = 0`,
 
   sqlAlias: `AlCube`,
 
@@ -27,10 +27,10 @@ cube(`AlertsCube`, {
       relationship: `belongsTo`,
       sql: `${CUBE._id} = ${AlertAgencyNamesCube._id}`
     },
-		AlertsOwnersCube: {
-      relationship: `belongsTo`,
-      sql: `${CUBE._id} = ${AlertsOwnersCube._id}`
-    }
+		Users: {
+				relationship: `belongsTo`,
+				sql: `${CUBE.owners} = ${Users._id}`
+		}
   },
 
   preAggregations: {
@@ -89,31 +89,7 @@ cube(`AlertsCube`, {
       refreshKey: {
         every: ALERT_CUBE_PRE_AGG_REFRESH_KEY
       },
-    },
-    alertsByUsersRollUp: {
-      sqlAlias: "alByUsrsRP",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [
-        AlertsCube.unread,
-        AlertsCube.applicable,
-        AlertsCube.inProcess,
-        AlertsCube.totalCount
-      ],
-      dimensions: [Tenants.tenantId, Users.fullName, AlertsCube.alertCategory],
-      timeDimension: AlertsCube.publishedDate,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`
-      },
-      refreshKey: {
-           every: ALERT_CUBE_PRE_AGG_REFRESH_KEY_WORKFLOW
-      }
-    },
+		},
     feedPerJurisdictionRollUp: {
       sqlAlias: "feedRP",
       type: `rollup`,
@@ -181,6 +157,69 @@ cube(`AlertsCube`, {
       ],
       dimensions: [
         AlertsCube.alertType,
+				JurisdictionsCube.displayName
+      ],
+			timeDimension: AlertsCube.publishedDate,
+      granularity: `day`,
+      buildRangeStart: {
+        sql: `SELECT NOW() - interval '365 day'`,
+      },
+      buildRangeEnd: {
+        sql: `SELECT NOW()`,
+      },
+      refreshKey: {
+        every: ALERT_CUBE_PRE_AGG_REFRESH_KEY
+      }
+		},
+		alertsByJurisdictionAndDocStat: {
+      sqlAlias: "alByJuDoc",
+      type: `rollup`,
+      external: true,
+      scheduledRefresh: true,
+      measures: [
+        AlertsCube.introducedDocStatus,
+				AlertsCube.originDocStatus,
+				AlertsCube.secondBodyStatus,
+				AlertsCube.sentForSignatureStatus,
+				AlertsCube.diedStatus,
+				AlertsCube.becameLawStatus,
+				AlertsCube.statuteStatus,
+				AlertsCube.regulationStatus,
+				AlertsCube.agencyUpdateStatus
+      ],
+      dimensions: [
+        Tenants.tenantId,
+        JurisdictionsCube.displayName,
+				AlertsCube.alertCategory
+      ],
+      timeDimension: AlertsCube.publishedDate,
+      granularity: `day`,
+      buildRangeStart: {
+        sql: `SELECT NOW() - interval '365 day'`,
+      },
+      buildRangeEnd: {
+        sql: `SELECT NOW()`,
+      },
+      refreshKey: {
+        every: ALERT_CUBE_PRE_AGG_REFRESH_KEY
+      }
+    },
+		billsDocStatusRollUp :{
+			sqlAlias: "billDocRP",
+      type: `rollup`,
+      external: true,
+      scheduledRefresh: true,
+			measures: [
+				AlertsCube.introducedBills,
+        AlertsCube.passedOriginBills,
+        AlertsCube.passedSecondBodyBills,
+				AlertsCube.sentForSignatureBills,
+				AlertsCube.diedBills,
+        AlertsCube.becameLawBills,
+				AlertsCube.totalBillsDocStatus
+      ],
+      dimensions: [
+        Tenants.tenantId,
 				JurisdictionsCube.displayName
       ],
 			timeDimension: AlertsCube.publishedDate,
@@ -274,6 +313,157 @@ cube(`AlertsCube`, {
       type: `number`,
       title: "billsCount",
     },
+		introducedDocStatus : {
+			sql: `${CUBE}.\`info.docStatus\``,
+			type: `count`,
+			filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Introduced'`
+        }
+      ]
+		},
+		originDocStatus : {
+			sql: `${CUBE}.\`info.docStatus\``,
+			type: `count`,
+			filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Passed Body of Origin'`
+        }
+      ]
+		},
+		secondBodyStatus : {
+			sql: `${CUBE}.\`info.docStatus\``,
+			type: `count`,
+			filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Passed Second Body'`
+        }
+      ]
+		},
+    sentForSignatureStatus : {
+			sql: `${CUBE}.\`info.docStatus\``,
+			type: `count`,
+			filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Sent for Signature'`
+        }
+      ]
+		},
+		diedStatus : {
+			sql: `${CUBE}.\`info.docStatus\``,
+			type: `count`,
+			filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Died'`
+        }
+      ]
+		},
+		becameLawStatus : {
+			sql: `${CUBE}.\`info.docStatus\``,
+			type: `count`,
+			filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Became Law'`
+        }
+      ]
+		},
+		statuteStatus : {
+			sql: `${CUBE}.\`info.docStatus\``,
+			type: `count`,
+			filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Statute'`
+        }
+      ]
+		},
+		regulationStatus : {
+			sql: `${CUBE}.\`info.docStatus\``,
+			type: `count`,
+			filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Regulation'`
+        }
+      ]
+		},
+		agencyUpdateStatus : {
+			sql: `${CUBE}.\`info.docStatus\``,
+			type: `count`,
+			filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\`= 'Bulletins/Reports' OR ${CUBE}.\`info.docStatus\`= 'Calendar' OR 
+					${CUBE}.\`info.docStatus\`= 'Enforcement Actions' OR ${CUBE}.\`info.docStatus\`= 'Feed' OR 
+					${CUBE}.\`info.docStatus\`= 'Guidance' OR ${CUBE}.\`info.docStatus\`= 'Information and Guidance' OR 
+					${CUBE}.\`info.docStatus\`= 'News/Press Releases' OR ${CUBE}.\`info.docStatus\`= 'Notice' OR 
+					${CUBE}.\`info.docStatus\`= 'Proposed Rule' OR ${CUBE}.\`info.docStatus\`= 'Public Notices' OR 
+					${CUBE}.\`info.docStatus\`= 'Publications/Communications' OR ${CUBE}.\`info.docStatus\`= 'Rule' OR 
+					${CUBE}.\`info.docStatus\`= 'Rulemaking' OR ${CUBE}.\`info.docStatus\`= 'Settlements' 
+					`
+				},
+      ]
+		},
+		introducedBills : {
+			sql: `${CUBE}.\`info.docStatus\``,
+			type: `count`,
+			filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Introduced' and ${CUBE.alertCategory} = 'Bills'`
+        }
+      ] 
+		},
+		passedOriginBills : {
+			sql: `${CUBE}.\`info.docStatus\``,
+			type: `count`,
+			filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Passed Body of Origin' 
+					and ${CUBE.alertCategory} = 'Bills'`
+        }
+      ] 
+		},
+		passedSecondBodyBills : {
+			sql: `${CUBE}.\`info.docStatus\``,
+			type: `count`,
+			filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Passed Second Body' 
+					and ${CUBE.alertCategory} = 'Bills'`
+        }
+      ] 
+		},
+		sentForSignatureBills : {
+			sql: `${CUBE}.\`info.docStatus\``,
+			type: `count`,
+			filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Sent for Signature' 
+					and ${CUBE.alertCategory} = 'Bills'`
+        }
+      ] 
+		},
+    diedBills : {
+			sql: `${CUBE}.\`info.docStatus\``,
+			type: `count`,
+			filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Died' 
+					and ${CUBE.alertCategory} = 'Bills'`
+        }
+      ] 
+		},
+		becameLawBills : {
+			sql: `${CUBE}.\`info.docStatus\``,
+			type: `count`,
+			filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Became Law' 
+					and ${CUBE.alertCategory} = 'Bills'`
+        }
+      ] 
+		},
+		totalBillsDocStatus:{
+			sql: `${introducedBills} + ${passedOriginBills} + ${passedSecondBodyBills} + ${sentForSignatureBills} + ${becameLawBills} + ${diedBills}`,
+      type: `number`,
+		}
   },
 
   dimensions: {
@@ -293,12 +483,12 @@ cube(`AlertsCube`, {
       title: `Info repo`
     },
     _id: {
-      sql: `CONVERT(${CUBE}.\`_id\`,CHAR)`,
+      sql: `${CUBE}.\`_id\``,
       type: `string`,
       primaryKey: true
     },
     owner: {
-      sql: `CONVERT(${CUBE}.\`owner\`, CHAR)`,
+      sql: `${CUBE}.\`owner\``,
       type: `string`
     },
     status: {
@@ -332,6 +522,11 @@ cube(`AlertsCube`, {
       sql: `${CUBE}.\`alertType\``,
       type: `string`,
       title: `Alert Rule`
+    },
+		owners: {
+      sql: `${CUBE}.\`owners\``,
+      type: `string`,
+      title: `owners`
     }
   },
 

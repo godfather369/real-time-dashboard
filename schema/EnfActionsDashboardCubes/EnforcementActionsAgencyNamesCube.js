@@ -24,7 +24,7 @@ cube(`EnforcementActionsAgencyNamesCube`, {
       title: `agencyNames`
     },
     _id: {
-      sql: `CONVERT(${CUBE}.\`_id\`,CHAR)`,
+      sql: `${CUBE}.\`_id\``,
       type: `string`,
       primaryKey: true
     }
