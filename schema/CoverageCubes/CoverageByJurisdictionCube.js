@@ -1,8 +1,13 @@
-import {regMapStatusUniregJoin, regMapStatusUniregJoinCC , CorpusJurisdictionJoin ,RegSiteJurisdictionJoin} from "./sql-queries";
-import {COMPLIANCE_COVERAGE_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import {
+	regMapStatusUniregJoin,
+	regMapStatusUniregJoinCC,
+	CorpusJurisdictionJoin,
+	RegSiteJurisdictionJoin,
+} from "./sql-queries";
+import { COMPLIANCE_COVERAGE_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`CoverageByJurisdictionCube`, {
-	sql : `
+	sql: `
 	SELECT _id,tenantId ,displayName ,status FROM
 	(
 			(SELECT _id,tenantId ,repo ,status FROM ${regMapStatusUniregJoin}) AS RegMapUniregJoin
@@ -18,7 +23,7 @@ cube(`CoverageByJurisdictionCube`, {
 		(
 			SELECT regSiteUid ,displayName FROM ${RegSiteJurisdictionJoin} AS RegSiteJurisdictionJoin
 		ON RegMapUniregJoin.uid = RegSiteJurisdictionJoin.regSiteUid
-	)` ,
+	)`,
 
 	sqlAlias: `CvrgByJurCube`,
 
@@ -30,34 +35,32 @@ cube(`CoverageByJurisdictionCube`, {
 		Tenants: {
 			relationship: `hasOne`,
 			sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-		}
+		},
 	},
 
-	preAggregations: {	
+	preAggregations: {
 		CoverageByJurisdictionRollUp: {
-      sqlAlias: "covJurisRP",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [
-        CoverageByJurisdictionCube.count
-      ],
-      dimensions: [
+			sqlAlias: "covJurisRP",
+			type: `rollup`,
+			external: true,
+			scheduledRefresh: true,
+			measures: [CoverageByJurisdictionCube.count],
+			dimensions: [
 				CoverageByJurisdictionCube.jurisdictionName,
 				CoverageByJurisdictionCube.status,
-        Tenants.tenantId
-      ],
-      refreshKey: {
-        every: COMPLIANCE_COVERAGE_CUBE_REFRESH_KEY_TIME
-      }
-    }	
+				Tenants.tenantId,
+			],
+			refreshKey: {
+				every: COMPLIANCE_COVERAGE_CUBE_REFRESH_KEY_TIME,
+			},
+		},
 	},
 
 	measures: {
-		 count: {
-      sql: `_id`,
-      type: `count`,
-    }
+		count: {
+			sql: `_id`,
+			type: `count`,
+		},
 	},
 
 	dimensions: {

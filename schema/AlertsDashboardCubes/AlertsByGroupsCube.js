@@ -1,11 +1,15 @@
-import { alertsCollection, alertsGroupsCollection ,groupCollection } from "./collections";
+import {
+	alertsCollection,
+	alertsGroupsCollection,
+	groupCollection,
+} from "./collections";
 import {
 	ALERT_CUBE_REFRESH_KEY_TIME,
 	ALERT_CUBE_PRE_AGG_REFRESH_KEY_WORKFLOW,
 } from "./cube-constants";
 
 cube(`AlertsByGroupsCube`, {
-		sql: `SELECT * FROM 
+	sql: `SELECT * FROM 
 	((SELECT _id,publishedDate,status,tenantId,alertCategory,groups FROM ${alertsCollection} 
 		as alerts LEFT JOIN 
 	(SELECT _id as Id , groups FROM ${alertsGroupsCollection}) 
@@ -24,7 +28,7 @@ cube(`AlertsByGroupsCube`, {
 		Tenants: {
 			relationship: `hasOne`,
 			sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-		}
+		},
 	},
 
 	preAggregations: {
@@ -56,7 +60,7 @@ cube(`AlertsByGroupsCube`, {
 				every: ALERT_CUBE_PRE_AGG_REFRESH_KEY_WORKFLOW,
 			},
 		},
-		alertGroupNameRollUp : {
+		alertGroupNameRollUp: {
 			sqlAlias: "alByGrpsName",
 			type: `rollup`,
 			external: true,
@@ -75,7 +79,7 @@ cube(`AlertsByGroupsCube`, {
 			refreshKey: {
 				every: ALERT_CUBE_PRE_AGG_REFRESH_KEY_WORKFLOW,
 			},
-		}
+		},
 	},
 
 	measures: {
@@ -142,11 +146,11 @@ cube(`AlertsByGroupsCube`, {
 			type: `string`,
 			title: `groups`,
 		},
-		name : {
+		name: {
 			sql: `name`,
 			type: `string`,
 			title: `names`,
-		}
+		},
 	},
 
 	dataSource: `default`,

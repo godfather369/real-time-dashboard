@@ -2,7 +2,7 @@ import { impactAssessmentCollection } from "./collections";
 import {
 	IMPACT_ASSESSMENT_CUBE_REFRESH_KEY_TIME,
 	IMPACT_ASSESSMENT_CUBE_PRE_AGG_REFRESH_KEY,
-	IMPACT_ASSESSMENT_IMPACTED_TEAM_CUBE_PRE_AGG_REFRESH_KEY
+	IMPACT_ASSESSMENT_IMPACTED_TEAM_CUBE_PRE_AGG_REFRESH_KEY,
 } from "./cube-constants";
 
 cube(`ImpactAssessmentCube`, {
@@ -25,8 +25,8 @@ cube(`ImpactAssessmentCube`, {
 		},
 		ImpactAssessmentImpactedTeamCube: {
 			relationship: `belongsTo`,
-			sql: `${CUBE._id}=${ImpactAssessmentImpactedTeamCube.id}`
-		}
+			sql: `${CUBE._id}=${ImpactAssessmentImpactedTeamCube.id}`,
+		},
 	},
 
 	preAggregations: {
@@ -40,9 +40,7 @@ cube(`ImpactAssessmentCube`, {
 				ImpactAssessmentCube.new,
 				ImpactAssessmentCube.closed,
 			],
-			dimensions: [
-				Tenants.tenantId
-			],
+			dimensions: [Tenants.tenantId],
 			timeDimension: ImpactAssessmentCube.startDate,
 			granularity: `month`,
 			buildRangeStart: {
@@ -67,9 +65,7 @@ cube(`ImpactAssessmentCube`, {
 				ImpactAssessmentCube.high,
 				ImpactAssessmentCube.critical,
 			],
-			dimensions: [
-				Tenants.tenantId
-			],
+			dimensions: [Tenants.tenantId],
 			timeDimension: ImpactAssessmentCube.startDate,
 			granularity: `month`,
 			buildRangeStart: {
@@ -87,49 +83,42 @@ cube(`ImpactAssessmentCube`, {
 			type: `rollup`,
 			external: true,
 			scheduledRefresh: true,
-			measures: [
-			  ImpactAssessmentCube.count
-			],
+			measures: [ImpactAssessmentCube.count],
 			dimensions: [
-			  ImpactAssessmentImpactedTeamCube.impactedTeam,
-				Tenants.tenantId
+				ImpactAssessmentImpactedTeamCube.impactedTeam,
+				Tenants.tenantId,
 			],
 			timeDimension: ImpactAssessmentCube.startDate,
 			granularity: `month`,
 			buildRangeStart: {
-			  sql: `SELECT NOW() - interval '365 day'`,
+				sql: `SELECT NOW() - interval '365 day'`,
 			},
 			buildRangeEnd: {
-			  sql: `SELECT NOW()`,
+				sql: `SELECT NOW()`,
 			},
 			refreshKey: {
-			  every: IMPACT_ASSESSMENT_IMPACTED_TEAM_CUBE_PRE_AGG_REFRESH_KEY
-			}
+				every: IMPACT_ASSESSMENT_IMPACTED_TEAM_CUBE_PRE_AGG_REFRESH_KEY,
+			},
 		},
 		impactAssessmentOwnersRollUp: {
 			sqlAlias: "iaByOw",
 			type: `rollup`,
 			external: true,
 			scheduledRefresh: true,
-			measures: [
-			  ImpactAssessmentCube.count
-			],
-			dimensions: [
-			  Users.fullName,
-				Tenants.tenantId
-			],
+			measures: [ImpactAssessmentCube.count],
+			dimensions: [Users.fullName, Tenants.tenantId],
 			timeDimension: ImpactAssessmentCube.startDate,
 			granularity: `day`,
 			buildRangeStart: {
-			  sql: `SELECT NOW() - interval '365 day'`,
+				sql: `SELECT NOW() - interval '365 day'`,
 			},
 			buildRangeEnd: {
-			  sql: `SELECT NOW()`,
+				sql: `SELECT NOW()`,
 			},
 			refreshKey: {
-			  every: IMPACT_ASSESSMENT_IMPACTED_TEAM_CUBE_PRE_AGG_REFRESH_KEY
-			}
-		}
+				every: IMPACT_ASSESSMENT_IMPACTED_TEAM_CUBE_PRE_AGG_REFRESH_KEY,
+			},
+		},
 	},
 
 	measures: {
