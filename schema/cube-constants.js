@@ -41,4 +41,4 @@ export const IMPACT_ASSESSMENT_IMPACTED_TEAM_CUBE_PRE_AGG_REFRESH_KEY = `6 hour`
 export const COMPLIANCE_COVERAGE_CUBE_REFRESH_KEY_TIME = `1 hour`;
 
 //constants
-export const defaultTenantId = "598b984f530bf20f645373d3";
+export const defaultTenantId = "609acc9605af5653a2667be2";

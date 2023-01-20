@@ -1,0 +1,625 @@
+[
+	{
+		"id": "AlertsOverview",
+		"category": "Alerts",
+		"description": "Overview of all alerts, including alerts by time period, user, agency, regulation, and more.",
+		"name": "Alerts Overview",
+		"type": "System",
+		"order": 1,
+		"widgets": [
+			{
+				"layout": {
+					"x": 0,
+					"y": 0,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "AlertsByRegulation",
+				"viewType": [
+					"column",
+					"bar"
+				],
+				"defaultTimeFilter": "Last 90 days"
+			},
+			{
+				"layout": {
+					"x": 6,
+					"y": 0,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "AlertsByTimePeriod",
+				"viewType": [
+					"column",
+					"bar",
+					"line"
+				]
+			},
+			{
+				"layout": {
+					"x": 0,
+					"y": 2,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "AlertsWorkflowStatus",
+				"viewType": [
+					"line",
+					"column"
+				]
+			},
+			{
+				"layout": {
+					"x": 6,
+					"y": 2,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "AlertsByOwners",
+				"viewType": [
+					"column",
+					"table"
+				],
+				"defaultTimeFilter": "Last 90 days"
+			},
+			{
+				"layout": {
+					"x": 0,
+					"y": 4,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "AlertsByCorpus",
+				"viewType": [
+					"column",
+					"table"
+				],
+				"defaultTimeFilter": "Last 90 days"
+			},
+			{
+				"layout": {
+					"x": 6,
+					"y": 4,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "AlertsByAgency",
+				"viewType": [
+					"bar",
+					"column",
+					"table"
+				],
+				"defaultTimeFilter": "Last 30 days"
+			},
+			{
+				"layout": {
+					"x": 0,
+					"y": 6,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "BillsJurisdictionStatus",
+				"viewType": [
+					"column",
+					"bar",
+					"map",
+					"table"
+				],
+				"defaultTimeFilter": "Last 90 days"
+			},
+			{
+				"layout": {
+					"x": 6,
+					"y": 6,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "AgencyUpdatesAgencyFeed",
+				"viewType": [
+					"table"
+				],
+				"defaultTimeFilter": "Last 4 quarters"
+			},
+			{
+				"layout": {
+					"x": 0,
+					"y": 8,
+					"w": 12,
+					"h": 2
+				},
+				"widgetId": "AlertsJurisdictionDocumentStatus",
+				"viewType": [
+					"map",
+					"table",
+					"bar"
+				],
+				"defaultTimeFilter": "Last 90 days"
+			}
+		]
+	},
+	{
+		"id": "BillAlerts",
+		"category": "Alerts",
+		"description": "Overview of all alerts, including alerts by time period, user, agency, regulation, and more.",
+		"name": "Bill Alerts",
+		"type": "System",
+		"order": 2,
+		"widgets": [
+			{
+				"layout": {
+					"x": 0,
+					"y": 0,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "BillsTimePeriod",
+				"viewType": [
+					"column",
+					"bar",
+					"line"
+				]
+			},
+			{
+				"layout": {
+					"x": 6,
+					"y": 0,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "BillsWorkflowStatus",
+				"viewType": [
+					"line",
+					"column"
+				]
+			},
+			{
+				"layout": {
+					"x": 0,
+					"y": 2,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "BillsJurisdictionStatus",
+				"viewType": [
+					"column",
+					"bar",
+					"map",
+					"table"
+				],
+				"defaultTimeFilter": "Last 90 days"
+			},
+			{
+				"layout": {
+					"x": 6,
+					"y": 2,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "BillsOwner",
+				"viewType": [
+					"column",
+					"table"
+				],
+				"defaultTimeFilter": "Last 90 days"
+			},
+			{
+				"layout": {
+					"x": 0,
+					"y": 4,
+					"w": 12,
+					"h": 2
+				},
+				"widgetId": "BillsDocStatus",
+				"viewType": [
+					"map",
+					"table",
+					"bar"
+				],
+				"defaultTimeFilter": "Last 90 days"
+			}
+		]
+	},
+	{
+		"id": "RegulatoryChange",
+		"category": "Alerts",
+		"description": "Overview of all alerts, including alerts by time period, user, agency, regulation, and more.",
+		"name": "Regulatory Changes",
+		"type": "System",
+		"order": 3,
+		"widgets": [
+			{
+				"layout": {
+					"x": 0,
+					"y": 0,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "RegulatoryChangesTopic",
+				"viewType": [
+					"column",
+					"bar"
+				],
+				"defaultTimeFilter": "Last 90 days"
+			},
+			{
+				"layout": {
+					"x": 6,
+					"y": 0,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "RegulatoryChangesTimePeriod",
+				"viewType": [
+					"column",
+					"bar",
+					"line"
+				]
+			},
+			{
+				"layout": {
+					"x": 0,
+					"y": 2,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "RegulatoryChangesWorkflowStatus",
+				"viewType": [
+					"line",
+					"column"
+				]
+			},
+			{
+				"layout": {
+					"x": 6,
+					"y": 2,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "RegulatoryChangesOwner",
+				"viewType": [
+					"column",
+					"table"
+				],
+				"defaultTimeFilter": "Last 90 days"
+			},
+			{
+				"layout": {
+					"x": 0,
+					"y": 4,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "RegulatoryChangesCorpus",
+				"viewType": [
+					"column",
+					"table"
+				],
+				"defaultTimeFilter": "Last 90 days"
+			},
+			{
+				"layout": {
+					"x": 6,
+					"y": 4,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "RegulatoryChangesAgency",
+				"viewType": [
+					"bar",
+					"column",
+					"table"
+				],
+				"defaultTimeFilter": "Last 30 days"
+			}
+		]
+	},
+	{
+		"id": "AgencyUpdate",
+		"category": "Alerts",
+		"description": "Overview of all alerts, including alerts by time period, user, agency, regulation, and more.",
+		"name": "Agency Updates",
+		"type": "System",
+		"order": 4,
+		"widgets": [
+			{
+				"layout": {
+					"x": 0,
+					"y": 0,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "AgencyUpdatesAgency",
+				"viewType": [
+					"bar",
+					"column",
+					"table"
+				],
+				"defaultTimeFilter": "Last 30 days"
+			},
+			{
+				"layout": {
+					"x": 6,
+					"y": 0,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "AgencyUpdatesTimePeriod",
+				"viewType": [
+					"column",
+					"bar",
+					"line"
+				]
+			},
+			{
+				"layout": {
+					"x": 0,
+					"y": 2,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "AgencyUpdatesWorkflowStatus",
+				"viewType": [
+					"line",
+					"column"
+				]
+			},
+			{
+				"layout": {
+					"x": 6,
+					"y": 2,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "AgencyUpdatesOwner",
+				"viewType": [
+					"column",
+					"table"
+				],
+				"defaultTimeFilter": "Last 90 days"
+			},
+			{
+				"layout": {
+					"x": 0,
+					"y": 4,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "AgencyUpdatesAgencyFeed",
+				"viewType": [
+					"table"
+				],
+				"defaultTimeFilter": "Last 4 quarters"
+			}
+		]
+	},
+	{
+		"id": "EnforcementActionsOverview",
+		"category": "Enforcement Actions",
+		"description": "Overview of all enforcement actions, including penalties and restitutions, actions by agencies, regulations impacted, and more. ",
+		"name": "Enforcement Actions Overview",
+		"type": "System",
+		"order": 5,
+		"widgets": [
+			{
+				"layout": {
+					"x": 0,
+					"y": 0,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "EnforcementActionReport",
+				"viewType": [
+					"pie",
+					"table"
+				],
+				"defaultTimeFilter": "Last 90 days"
+			},
+			{
+				"layout": {
+					"x": 0,
+					"y": 2,
+					"w": 12,
+					"h": 2
+				},
+				"widgetId": "NoOfEnforcementActions",
+				"viewType": [
+					"bar",
+					"column",
+					"pie",
+					"table"
+				],
+				"defaultTimeFilter": "Last 4 quarters"
+			},
+			{
+				"layout": {
+					"x": 0,
+					"y": 4,
+					"w": 12,
+					"h": 2
+				},
+				"widgetId": "PenaltiesAndRestitutions",
+				"viewType": [
+					"column",
+					"bar",
+					"table"
+				],
+				"defaultTimeFilter": "Last 4 quarters"
+			},
+			{
+				"layout": {
+					"x": 0,
+					"y": 6,
+					"w": 12,
+					"h": 2
+				},
+				"widgetId": "ActionsByAgency",
+				"viewType": [
+					"column",
+					"table"
+				],
+				"defaultTimeFilter": "Last 90 days"
+			},
+			{
+				"layout": {
+					"x": 0,
+					"y": 8,
+					"w": 12,
+					"h": 2
+				},
+				"widgetId": "AuthoritativeDocumentsImpacted",
+				"viewType": [
+					"table"
+				],
+				"defaultTimeFilter": "Last 4 quarters"
+			}
+		]
+	},
+	{
+		"id": "ComplianceDashboard",
+		"category": "Compliance",
+		"description": "Overview of all compliance objects, including Risks, Controls, and Tasks.",
+		"name": "Compliance Overview",
+		"type": "System",
+		"order": 6,
+		"widgets": [
+			{
+				"layout": {
+					"x": 0,
+					"y": 0,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "RisksByStatus",
+				"viewType": [
+					"bar",
+					"column",
+					"pie"
+				]
+			},
+			{
+				"layout": {
+					"x": 6,
+					"y": 0,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "ControlsByStatus",
+				"viewType": [
+					"bar",
+					"column",
+					"pie"
+				]
+			},
+			{
+				"layout": {
+					"x": 0,
+					"y": 2,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "TasksByStatus",
+				"viewType": [
+					"bar",
+					"column",
+					"pie"
+				]
+			},
+			{
+				"layout": {
+					"x": 6,
+					"y": 2,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "OwnersOfRisksControlsTasks",
+				"viewType": [
+					"pie",
+					"bar",
+					"column",
+					"table"
+				]
+			},
+			{
+				"layout": {
+					"x": 0,
+					"y": 4,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "TasksOverdue",
+				"viewType": [
+					"column",
+					"bar",
+					"pie",
+					"table"
+				]
+			}
+		]
+	},
+	{
+		"id": "ImpactAssessmentDashboard",
+		"category": "Impact Assessment",
+		"description": "Overview of all impact assessment, including impact by time period, user and more.",
+		"name": "Impact Assessment Overview",
+		"type": "System",
+		"order": 7,
+		"widgets": [
+			{
+				"layout": {
+					"x": 0,
+					"y": 0,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "ImpactAssessmentByOwners",
+				"viewType": [
+					"pie",
+					"column",
+					"table"
+				],
+				"defaultTimeFilter": "Last 90 days"
+			},
+			{
+				"layout": {
+					"x": 6,
+					"y": 0,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "ImpactAssessmentByStatus",
+				"viewType": [
+					"line",
+					"column"
+				]
+			},
+			{
+				"layout": {
+					"x": 0,
+					"y": 2,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "ImpactAssessmentByImpactLevel",
+				"viewType": [
+					"line",
+					"column"
+				]
+			},
+			{
+				"layout": {
+					"x": 6,
+					"y": 2,
+					"w": 6,
+					"h": 2
+				},
+				"widgetId": "ImpactAssessmentByImpactedTeam",
+				"viewType": [
+					"pie",
+					"column",
+					"table"
+				],
+				"defaultTimeFilter": "Last 90 days"
+			}
+		]
+	}
+]

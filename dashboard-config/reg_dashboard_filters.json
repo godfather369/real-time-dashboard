@@ -1,0 +1,132 @@
+[
+	{
+		"id": "alertCategoryAll",
+		"name": "i18n_LBL_ALL_ALERTS",
+		"category": "Alerts",
+		"filter": {
+			"member": "AlertsCube.alertCategory",
+			"operator": "set",
+			"values": []
+		}
+	},
+	{
+		"id": "alertCategoryBills",
+		"name": "i18n_LBL_ALERTS_BILLS",
+		"category": "Alerts",
+		"filter": {
+			"member": "AlertsCube.alertCategory",
+			"operator": "equals",
+			"values": [
+				"Bills"
+			]
+		}
+	},
+	{
+		"id": "alertCategoryLaws",
+		"name": "i18n_LBL_ALERTS_LAWS_AND_REGULATIONS",
+		"category": "Alerts",
+		"filter": {
+			"member": "AlertsCube.alertCategory",
+			"operator": "equals",
+			"values": [
+				"Laws & Regulations"
+			]
+		}
+	},
+	{
+		"id": "alertCategoryNews",
+		"name": "i18n_LBL_ALERTS_AGENCY_UPDATES",
+		"category": "Alerts",
+		"filter": {
+			"member": "AlertsCube.alertCategory",
+			"operator": "equals",
+			"values": [
+				"News & Publications"
+			]
+		}
+	},
+	{
+		"id": "alertTopicLaws",
+		"name": "Alert topic : Laws & Regulations",
+		"category": "Alerts",
+		"filter": {
+			"member": "AlertsByTopic.alertCategory",
+			"operator": "equals",
+			"values": [
+				"Laws & Regulations"
+			]
+		}
+	},
+	{
+		"id": "alertCategoryOwnersBills",
+		"name": "Alert category Owners : Bills",
+		"category": "Alerts",
+		"filter": {
+			"member": "AlertsByOwnersCube.alertCategory",
+			"operator": "equals",
+			"values": [
+				"Bills"
+			]
+		}
+	},
+	{
+		"id": "alertCategoryOwnersLaws",
+		"name": "Alert category Owners : Laws and Regulations",
+		"category": "Alerts",
+		"filter": {
+			"member": "AlertsByOwnersCube.alertCategory",
+			"operator": "equals",
+			"values": [
+				"Laws & Regulations"
+			]
+		}
+	},
+	{
+		"id": "alertCategoryOwnersNews",
+		"name": "Alert category Owners: News & Publications",
+		"category": "Alerts",
+		"filter": {
+			"member": "AlertsByOwnersCube.alertCategory",
+			"operator": "equals",
+			"values": [
+				"News & Publications"
+			]
+		}
+	},
+	{
+		"id": "alertCategoryGroupsBills",
+		"name": "Alert category Groups : Bills",
+		"category": "Alerts",
+		"filter": {
+			"member": "AlertsByGroupsCube.alertCategory",
+			"operator": "equals",
+			"values": [
+				"Bills"
+			]
+		}
+	},
+	{
+		"id": "alertCategoryGroupsLaws",
+		"name": "Alert category Groups : Laws and Regulations",
+		"category": "Alerts",
+		"filter": {
+			"member": "AlertsByGroupsCube.alertCategory",
+			"operator": "equals",
+			"values": [
+				"Laws & Regulations"
+			]
+		}
+	},
+	{
+		"id": "alertCategoryGroupsNews",
+		"name": "Alert category Groups: News & Publications",
+		"category": "Alerts",
+		"filter": {
+			"member": "AlertsByGroupsCube.alertCategory",
+			"operator": "equals",
+			"values": [
+				"News & Publications"
+			]
+		}
+	}
+]

@@ -1,5 +1,5 @@
 // Cube.js configuration options: https://cube.dev/docs/config
-const defaultTenantId = "5cca09b667f18c546f102361";
+const defaultTenantId = "609acc9605af5653a2667be2";
 // Connection URL
 module.exports = {
 	http: {
@@ -13,7 +13,7 @@ module.exports = {
 		// const sc = securityContext;
 		// console.log("tenantIds");
 		// console.log(sc);
-		tenantId = "5cca09b667f18c546f102361";
+		tenantId = "609acc9605af5653a2667be2";
 		if (tenantId) {
 			console.log("Fetching stats for tenantId", tenantId);
 			tenantIds.push(tenantId);
@@ -29,7 +29,8 @@ module.exports = {
 		// });
 		return query;
 	},
-	// contextToAppId: ({ securityContext }) => `C_APP_${securityContext.tenantId}`,
+	contextToAppId: ({ securityContext }) =>
+		`CUBEJS_APP_${securityContext.tenantId}`,
 	// preAggregationsSchema: ({ securityContext }) =>
 	//   `pr_ag_${securityContext.tenantId}`,
 	// scheduledRefreshContexts: async () => {
