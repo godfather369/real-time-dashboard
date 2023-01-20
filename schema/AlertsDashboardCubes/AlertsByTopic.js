@@ -34,32 +34,6 @@ cube(`AlertsByTopic`, {
 		},
 	},
 
-	preAggregations: {
-		alertsByTopicRollUp: {
-			sqlAlias: "albyTRP",
-			external: true,
-			scheduledRefresh: true,
-			type: `rollup`,
-			measures: [AlertsByTopic.totalCount],
-			dimensions: [
-				AlertsByTopic.grpName,
-				AlertsByTopic.alertCategory,
-				Tenants.tenantId,
-			],
-			timeDimension: AlertsByTopic.publishedDate,
-			granularity: `day`,
-			buildRangeStart: {
-				sql: `SELECT NOW() - interval '365 day'`,
-			},
-			buildRangeEnd: {
-				sql: `SELECT NOW()`,
-			},
-			refreshKey: {
-				every: ALERT_CUBE_PRE_AGG_REFRESH_KEY,
-			},
-		},
-	},
-
 	measures: {
 		totalCount: {
 			sql: `status`,

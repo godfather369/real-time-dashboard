@@ -26,37 +26,6 @@ cube(`AlertsByOwnersCube`, {
 		},
 	},
 
-	preAggregations: {
-		alertsByUsersRollUp: {
-			sqlAlias: "alByUsrsRP",
-			type: `rollup`,
-			external: true,
-			scheduledRefresh: true,
-			measures: [
-				AlertsByOwnersCube.unread,
-				AlertsByOwnersCube.applicable,
-				AlertsByOwnersCube.inProcess,
-				AlertsByOwnersCube.totalCount,
-			],
-			dimensions: [
-				Tenants.tenantId,
-				Users.fullName,
-				AlertsByOwnersCube.alertCategory,
-			],
-			timeDimension: AlertsByOwnersCube.publishedDate,
-			granularity: `day`,
-			buildRangeStart: {
-				sql: `SELECT NOW() - interval '365 day'`,
-			},
-			buildRangeEnd: {
-				sql: `SELECT NOW()`,
-			},
-			refreshKey: {
-				every: ALERT_CUBE_PRE_AGG_REFRESH_KEY_WORKFLOW,
-			},
-		},
-	},
-
 	measures: {
 		count: {
 			type: `count`,

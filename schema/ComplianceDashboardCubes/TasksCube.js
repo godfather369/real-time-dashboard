@@ -26,19 +26,6 @@ cube(`TasksCube`, {
 		},
 	},
 
-	preAggregations: {
-		tasksRollUp: {
-			sqlAlias: "tRollUp",
-			external: true,
-			scheduledRefresh: true,
-			measures: [TasksCube.count],
-			dimensions: [Tenants.tenantId, TasksCube.dueDate],
-			refreshKey: {
-				every: TASKS_CUBE_PRE_AGG_REFRESH_KEY_TIME,
-			},
-		},
-	},
-
 	measures: {
 		count: {
 			type: `count`,

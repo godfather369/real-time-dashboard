@@ -32,19 +32,6 @@ cube(`MapStatusCubeTask`, {
 		},
 	},
 
-	preAggregations: {
-		tasksRollUp: {
-			sqlAlias: "tskRollUp",
-			external: true,
-			measures: [MapStatusCubeTask.count],
-			dimensions: [Tenants.tenantId, MapStatusCubeTask.status],
-			scheduledRefresh: true,
-			refreshKey: {
-				every: MAP_STATUS_CUBE_PRE_AGG_REFRESH_KEY_TIME,
-			},
-		},
-	},
-
 	dimensions: {
 		_id: {
 			sql: `${CUBE}.\`_id\``,

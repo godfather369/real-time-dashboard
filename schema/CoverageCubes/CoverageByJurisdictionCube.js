@@ -38,24 +38,6 @@ cube(`CoverageByJurisdictionCube`, {
 		},
 	},
 
-	preAggregations: {
-		CoverageByJurisdictionRollUp: {
-			sqlAlias: "covJurisRP",
-			type: `rollup`,
-			external: true,
-			scheduledRefresh: true,
-			measures: [CoverageByJurisdictionCube.count],
-			dimensions: [
-				CoverageByJurisdictionCube.jurisdictionName,
-				CoverageByJurisdictionCube.status,
-				Tenants.tenantId,
-			],
-			refreshKey: {
-				every: COMPLIANCE_COVERAGE_CUBE_REFRESH_KEY_TIME,
-			},
-		},
-	},
-
 	measures: {
 		count: {
 			sql: `_id`,

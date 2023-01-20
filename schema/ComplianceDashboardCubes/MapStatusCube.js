@@ -55,42 +55,6 @@ cube(`MapStatusCube`, {
 		},
 	},
 
-	preAggregations: {
-		controlsRollUp: {
-			sqlAlias: "conRollUp",
-			external: true,
-			measures: [MapStatusCube.count],
-			dimensions: [Tenants.tenantId, ControlsByStatusCube.controlStatus],
-			segments: [MapStatusCube.controlType],
-			scheduledRefresh: true,
-			refreshKey: {
-				every: MAP_STATUS_CUBE_PRE_AGG_REFRESH_KEY_TIME,
-			},
-		},
-		risksRollUp: {
-			sqlAlias: "risRollUp",
-			external: true,
-			measures: [MapStatusCube.count],
-			dimensions: [Tenants.tenantId, RisksByStatusCube.riskStatus],
-			segments: [MapStatusCube.riskType],
-			scheduledRefresh: true,
-			refreshKey: {
-				every: MAP_STATUS_CUBE_PRE_AGG_REFRESH_KEY_TIME,
-			},
-		},
-		tasksRollUp: {
-			sqlAlias: "tskRollUp",
-			external: true,
-			measures: [MapStatusCube.count],
-			dimensions: [Tenants.tenantId, TasksByStatusCube.taskStatus],
-			segments: [MapStatusCube.taskType],
-			scheduledRefresh: true,
-			refreshKey: {
-				every: MAP_STATUS_CUBE_PRE_AGG_REFRESH_KEY_TIME,
-			},
-		},
-	},
-
 	segments: {
 		riskType: {
 			sql: `${CUBE}.\`srcType\` = 'Risk' and ${RisksCube}.archived = 0 and ${ConfigCube.tenantId} = ${MapStatusCube.tenantId} and ${MapStatusCube.status} = ${RisksByStatusCube.riskId}`,

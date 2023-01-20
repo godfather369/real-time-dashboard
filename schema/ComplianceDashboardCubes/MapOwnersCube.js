@@ -43,24 +43,6 @@ cube(`MapOwnersCube`, {
 		},
 	},
 
-	preAggregations: {
-		ownersRollUp: {
-			sqlAlias: `oRollUp`,
-			external: true,
-			scheduledRefresh: true,
-			measures: [
-				MapOwnersCube.controlCount,
-				MapOwnersCube.riskCount,
-				MapOwnersCube.taskCount,
-				MapOwnersCube.total,
-			],
-			dimensions: [Tenants.tenantId, Users.fullName],
-			refreshKey: {
-				every: OWNERS_STATUS_CUBE_PRE_AGG_REFRESH_KEY_TIME,
-			},
-		},
-	},
-
 	measures: {
 		count: {
 			type: `count`,
