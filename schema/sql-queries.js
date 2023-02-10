@@ -1,6 +1,8 @@
 import { regMapStatusCollection ,
 	uniregCollection ,corpusCollection ,
-	regSiteConfigCollection,juridictionsCollection} from "./collections";
+	regSiteConfigCollection,juridictionsCollection,
+	regSubscriptionCollection,regSubscriptionFeedCollection} from "./collections";
+import {defaultTenantId} from "./cube-constants"
 
 export const regMapStatusUniregJoin = 
 				`(
@@ -41,3 +43,30 @@ export const RegSiteJurisdictionJoin =
 					(SELECT _id as jurisObjectId , displayName from ${juridictionsCollection})AS JurisdictionCollectionCube
 				ON RegSiteCube.jurisdiction = JurisdictionCollectionCube.jurisObjectId)
 			)`
+
+const feedId = '`feeds.feedId`';
+const archivedFeed = '`feeds.archived`';
+
+const RegSubscriptionFeedIds = 
+			`(
+				(SELECT _id ,tenantId from ${regSubscriptionCollection} ) as RegSubscriptions 
+				INNER JOIN 
+				(SELECT _id as Id , ${feedId} as feedId FROM ${regSubscriptionFeedCollection} WHERE  ${archivedFeed} = 0) as RegSubFeedIds
+				ON RegSubscriptions._id = RegSubFeedIds.Id
+			)`
+
+const UserFeeds = 
+	`(	
+			(SELECT _id, tenantId ,jurisdiction , corpusType FROM ${regSiteConfigCollection} where tenantId = "${defaultTenantId}" and ${regSiteConfigCollection}.archived = 0) AS regSiteConfigCube
+			  LEFT JOIN 
+			(SELECT feedId FROM ${RegSubscriptionFeedIds}) AS RegSubscribedFeedsCube
+				ON regSiteConfigCube._id  = RegSubscribedFeedsCube.feedId
+	  )`
+
+export const AggregateUserFeeds = 
+		`(
+		SELECT _id, tenantId ,jurisdiction , corpusType FROM ${UserFeeds} 
+			UNION ALL 
+		SELECT _id, tenantId ,jurisdiction ,corpusType FROM ${regSiteConfigCollection} WHERE tenantId != "${defaultTenantId}"
+		and ${regSiteConfigCollection}.archived = 0) AS AggFeedCube
+		`

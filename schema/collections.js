@@ -55,6 +55,8 @@ export const masterDatumMetaCollection = getCollectionString("masterdatum_meta_m
 export const uniregCollection = getCollectionString("unireg");
 export const uniregLineageCollection = getCollectionString("unireg_lineage");
 export const regSiteConfigCollection = getCollectionString("reg_site_config");
+export const regSubscriptionCollection = getCollectionString("reg_subscriptions");
+export const regSubscriptionFeedCollection = getCollectionString("reg_subscriptions_feeds");
 
 function getCollectionString(collectionName) {
 	return `\`${regHubDataBase}\`.\`${collectionName}\``;

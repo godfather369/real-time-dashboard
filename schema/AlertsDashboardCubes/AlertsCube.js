@@ -233,6 +233,44 @@ cube(`AlertsCube`, {
       refreshKey: {
         every: ALERT_CUBE_PRE_AGG_REFRESH_KEY
       }
+		},
+		agencyUpdatesDocStatus : {
+			sqlAlias: "agencyUpDocRP",
+      type: `rollup`,
+      external: true,
+      scheduledRefresh: true,
+			measures: [
+				AlertsCube.bulletinsReportCount,
+        AlertsCube.calendarCount,
+        AlertsCube.enfActionsCount,
+				AlertsCube.feedDocStatus,
+				AlertsCube.infoGuidanceCount,
+        AlertsCube.newsPressCount,
+				AlertsCube.noticeCount,
+				AlertsCube.proposedRuleCount,
+				AlertsCube.publicNoticesCount,
+				AlertsCube.publicationCommCount,
+				AlertsCube.ruleCount,
+				AlertsCube.ruleMakingCount,
+				AlertsCube.settlementsCount,
+				AlertsCube.totalAUDocStatusCount,
+      ],
+      dimensions: [
+        Tenants.tenantId,
+				JurisdictionsCube.displayName,
+				AlertsCube.alertCategory
+      ],
+			timeDimension: AlertsCube.publishedDate,
+      granularity: `day`,
+      buildRangeStart: {
+        sql: `SELECT NOW() - interval '365 day'`,
+      },
+      buildRangeEnd: {
+        sql: `SELECT NOW()`,
+      },
+      refreshKey: {
+        every: ALERT_CUBE_PRE_AGG_REFRESH_KEY
+      }
 		}
   },
 
@@ -462,6 +500,105 @@ cube(`AlertsCube`, {
 		},
 		totalBillsDocStatus:{
 			sql: `${introducedBills} + ${passedOriginBills} + ${passedSecondBodyBills} + ${sentForSignatureBills} + ${becameLawBills} + ${diedBills}`,
+      type: `number`,
+		},
+		bulletinsReportCount :{
+			sql : `${CUBE}.\`info.docStatus\``,
+			type : `count`,
+			filters : [{
+				sql: `${CUBE}.\`info.docStatus\` = 'Bulletins/Reports'`
+			}]
+		},
+		calendarCount : {
+			sql : `${CUBE}.\`info.docStatus\``,
+			type : `count`,
+			filters : [{
+				sql : `${CUBE}.\`info.docStatus\` = 'Calendar'`
+			}]
+		},
+		enfActionsCount : {
+			sql : `${CUBE}.\`info.docStatus\``,
+			type : `count`,
+			filters : [{
+				sql : `${CUBE}.\`info.docStatus\` = 'Enforcement Actions'`
+			}]
+		},
+		feedDocStatus : {
+			sql : `${CUBE}.\`info.docStatus\``,
+			type : `count`,
+			filters : [{
+				sql : `${CUBE}.\`info.docStatus\` = 'Feed'`
+			}]
+		},
+		infoGuidanceCount : {
+			sql : `${CUBE}.\`info.docStatus\``,
+			type : `count`,
+			filters : [{
+				sql : `${CUBE}.\`info.docStatus\` = 'Information and Guidance'`
+			}]
+		},
+		newsPressCount : {
+			sql : `${CUBE}.\`info.docStatus\``,
+			type : `count`,
+			filters : [{
+				sql : `${CUBE}.\`info.docStatus\` = 'News/Press Releases'`
+			}]
+		},
+		noticeCount : {
+			sql : `${CUBE}.\`info.docStatus\``,
+			type : `count`,
+			filters : [{
+				sql : `${CUBE}.\`info.docStatus\` = 'Notice'`
+			}]
+		},
+		proposedRuleCount : {
+			sql : `${CUBE}.\`info.docStatus\``,
+			type : `count`,
+			filters : [{
+				sql : `${CUBE}.\`info.docStatus\`= 'Proposed Rule'`
+			}]
+		},
+		publicNoticesCount : {
+			sql : `${CUBE}.\`info.docStatus\``,
+			type : `count`,
+			filters : [{
+				sql : `${CUBE}.\`info.docStatus\` = 'Public Notices'`
+			}]
+		},
+		publicationCommCount : {
+			sql : `${CUBE}.\`info.docStatus\``,
+			type : `count`,
+			filters : [{
+				sql : `${CUBE}.\`info.docStatus\` = 'Publications/Communications'`
+			}]
+		},
+		ruleCount : {
+			sql : `${CUBE}.\`info.docStatus\``,
+			type : `count`,
+			filters : [{
+				sql : `${CUBE}.\`info.docStatus\` = 'Rule'`
+			}]
+		},
+		ruleMakingCount : {
+			sql : `${CUBE}.\`info.docStatus\``,
+			type : `count`,
+			filters : [{
+				sql : `${CUBE}.\`info.docStatus\` = 'Rulemaking'`
+			}]
+		},
+		settlementsCount : {
+			sql : `${CUBE}.\`info.docStatus\``,
+			type : `count`,
+			filters : [{
+				sql : `${CUBE}.\`info.docStatus\` = 'Settlements'`
+			}]
+		},
+		totalAUDocStatusCount : {
+			sql: `${bulletinsReportCount} + ${calendarCount} +
+			 ${enfActionsCount} + ${feedDocStatus} 
+			 + ${infoGuidanceCount} + ${newsPressCount} + ${noticeCount} 
+			 + ${proposedRuleCount} + ${publicNoticesCount} + ${publicationCommCount}
+			 + ${ruleCount} + ${ruleMakingCount} + ${settlementsCount}`,
       type: `number`,
 		}
   },
