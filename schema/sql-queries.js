@@ -57,9 +57,9 @@ const RegSubscriptionFeedIds =
 
 const UserFeeds = 
 	`(	
-			(SELECT _id, tenantId ,jurisdiction , corpusType FROM ${regSiteConfigCollection} where tenantId = "${defaultTenantId}" and ${regSiteConfigCollection}.archived = 0) AS regSiteConfigCube
-			  LEFT JOIN 
-			(SELECT feedId FROM ${RegSubscriptionFeedIds}) AS RegSubscribedFeedsCube
+			(SELECT feedId,tenantId FROM ${RegSubscriptionFeedIds}) AS RegSubscribedFeedsCube
+			INNER JOIN
+			(SELECT _id ,jurisdiction , corpusType FROM ${regSiteConfigCollection} where tenantId = "${defaultTenantId}" and ${regSiteConfigCollection}.archived = 0) AS regSiteConfigCube		
 				ON regSiteConfigCube._id  = RegSubscribedFeedsCube.feedId
 	  )`
 
@@ -68,5 +68,4 @@ export const AggregateUserFeeds =
 		SELECT _id, tenantId ,jurisdiction , corpusType FROM ${UserFeeds} 
 			UNION ALL 
 		SELECT _id, tenantId ,jurisdiction ,corpusType FROM ${regSiteConfigCollection} WHERE tenantId != "${defaultTenantId}"
-		and ${regSiteConfigCollection}.archived = 0) AS AggFeedCube
-		`
+		and ${regSiteConfigCollection}.archived = 0) AS AggFeedCube`
