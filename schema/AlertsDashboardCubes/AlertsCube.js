@@ -43,6 +43,7 @@ cube(`AlertsCube`, {
         AlertsCube.unread,
         AlertsCube.applicable,
         AlertsCube.inProcess,
+        AlertsCube.following,
         AlertsCube.totalCount
       ],
       dimensions: [
@@ -71,6 +72,7 @@ cube(`AlertsCube`, {
         AlertsCube.unread,
         AlertsCube.applicable,
         AlertsCube.inProcess,
+        AlertsCube.following,
         AlertsCube.totalCount
       ],
       dimensions: [
@@ -125,7 +127,8 @@ cube(`AlertsCube`, {
         AlertsCube.unreadBillsCount,
         AlertsCube.applicableBillsCount,
         AlertsCube.inProcessBillsCount,
-				AlertsCube.totalBillsCount
+        AlertsCube.followingBillsCount,
+        AlertsCube.totalBillsCount
       ],
       dimensions: [
         Tenants.tenantId,
@@ -149,10 +152,11 @@ cube(`AlertsCube`, {
       type: `rollup`,
       external: true,
       scheduledRefresh: true,
-			measures: [
-				AlertsCube.unread,
+      measures: [
+        AlertsCube.unread,
         AlertsCube.applicable,
         AlertsCube.inProcess,
+        AlertsCube.following,
         AlertsCube.totalCount
       ],
       dimensions: [
@@ -303,8 +307,14 @@ cube(`AlertsCube`, {
       title: `inProcess`,
       filters: [{ sql: `${CUBE}.status = 'In Process'` }]
     },
+    following: {
+      type: `count`,
+      sql: `status`,
+      title: `Following`,
+      filters: [{ sql: `${CUBE}.status = 'Following'` }],
+    },
     totalCount: {
-      sql: `${unread} + ${applicable} + ${inProcess}`,
+      sql: `${unread} + ${applicable} + ${inProcess}+${following}`,
       type: `number`,
       title: "totalCount"
     },
@@ -346,8 +356,18 @@ cube(`AlertsCube`, {
         }
       ]
     },
+    followingBillsCount: {
+      sql: `status`,
+      type: `count`,
+      title: "Following Bills count",
+      filters: [
+        {
+          sql: `${CUBE}.status = 'Following' and ${CUBE.alertCategory} = 'Bills'`,
+        },
+      ],
+    },
 		totalBillsCount: {
-      sql: `${unreadBillsCount} + ${applicableBillsCount} + ${inProcessBillsCount}`,
+      sql: `${unreadBillsCount} + ${applicableBillsCount} + ${inProcessBillsCount}+${followingBillsCount}`,
       type: `number`,
       title: "billsCount",
     },
@@ -630,6 +650,10 @@ cube(`AlertsCube`, {
     },
     status: {
       sql: `${CUBE}.\`status\``,
+      type: `string`
+    },
+    docStatus: {
+      sql: `${CUBE}.\`info.docStatus\``,
       type: `string`
     },
     tenantId: {

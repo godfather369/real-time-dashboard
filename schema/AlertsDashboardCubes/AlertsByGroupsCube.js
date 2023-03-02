@@ -37,6 +37,7 @@ cube(`AlertsByGroupsCube`, {
 				AlertsByGroupsCube.unread,
 				AlertsByGroupsCube.applicable,
 				AlertsByGroupsCube.inProcess,
+				AlertsByGroupsCube.following,
 				AlertsByGroupsCube.totalCount,
 			],
 			dimensions: [
@@ -103,8 +104,14 @@ cube(`AlertsByGroupsCube`, {
 			title: `inProcess`,
 			filters: [{ sql: `${CUBE}.status = 'In Process'` }],
 		},
+		following: {
+			type: `count`,
+			sql: `status`,
+			title: `Following`,
+			filters: [{ sql: `${CUBE}.status =  'Following'` }],
+		},
 		totalCount: {
-			sql: `${unread} + ${applicable} + ${inProcess}`,
+			sql: `${unread} + ${applicable} + ${inProcess}+ ${following}`,
 			type: `number`,
 			title: "totalCount",
 		},
