@@ -6,7 +6,7 @@ import {
 } from "./cube-constants";
 
 cube(`ImpactAssessmentCube`, {
-	sql: `SELECT _id,tenantId,impactLevel,status,startDate FROM ${impactAssessmentCollection} where ${impactAssessmentCollection}.archived=0`,
+	sql: `SELECT _id,tenantId,impactLevel,status,startDate,created FROM ${impactAssessmentCollection} where ${impactAssessmentCollection}.archived=0`,
 
 	sqlAlias: `impAsCube`,
 
@@ -129,6 +129,33 @@ cube(`ImpactAssessmentCube`, {
 			refreshKey: {
 			  every: IMPACT_ASSESSMENT_IMPACTED_TEAM_CUBE_PRE_AGG_REFRESH_KEY
 			}
+		},
+		impactAssessmentApplicabilityRollUp: {
+			sqlAlias: "iaByApp",
+			type: `rollup`,
+			external: true,
+			scheduledRefresh: true,
+			measures: [
+			  ImpactAssessmentCube.open,
+				ImpactAssessmentCube.New,
+				ImpactAssessmentCube.inProcess,
+				ImpactAssessmentCube.closed
+			],
+			dimensions: [
+			  Users.fullName,
+				Tenants.tenantId
+			],
+			timeDimension: ImpactAssessmentCube.created,
+			granularity: `day`,
+			buildRangeStart: {
+			  sql: `SELECT NOW() - interval '90 day'`,
+			},
+			buildRangeEnd: {
+			  sql: `SELECT NOW()`,
+			},
+			refreshKey: {
+			  every: IMPACT_ASSESSMENT_IMPACTED_TEAM_CUBE_PRE_AGG_REFRESH_KEY
+			}
 		}
 	},
 
@@ -165,6 +192,21 @@ cube(`ImpactAssessmentCube`, {
 					sql: `${CUBE}.status = 'Closed'`,
 				},
 			],
+		},
+		New :{
+			sql: `status`,
+			type: "count",
+			title: "New",
+			filters: [
+				{
+					sql: `${CUBE}.status ='New'`,
+				},
+			],
+		},
+		open : {
+			sql: `${inProcess} + ${New}`,
+      type: `number`,
+      title: "open"
 		},
 		noImpact: {
 			type: `count`,
@@ -205,6 +247,10 @@ cube(`ImpactAssessmentCube`, {
 		},
 		startDate: {
 			sql: `startDate`,
+			type: `time`,
+		},
+		created: {
+			sql: `created`,
 			type: `time`,
 		},
 		_id: {

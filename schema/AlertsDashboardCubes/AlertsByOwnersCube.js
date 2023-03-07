@@ -48,6 +48,33 @@ cube(`AlertsByOwnersCube`, {
       refreshKey: {
            every: ALERT_CUBE_PRE_AGG_REFRESH_KEY_WORKFLOW
       }
+    },
+		alertsApplicabilityRollUp: {
+      sqlAlias: "alByAppRP",
+      type: `rollup`,
+      external: true,
+      scheduledRefresh: true,
+      measures: [
+       	AlertsByOwnersCube.unread,
+        AlertsByOwnersCube.applicable,
+				AlertsByOwnersCube.following,
+        AlertsByOwnersCube.inProcess,
+				AlertsByOwnersCube.excluded,
+				AlertsByOwnersCube.open,
+        AlertsByOwnersCube.closed
+      ],
+      dimensions: [Tenants.tenantId, Users.fullName, AlertsByOwnersCube.alertCategory],
+      timeDimension: AlertsByOwnersCube.created,
+      granularity: `day`,
+      buildRangeStart: {
+        sql: `SELECT NOW() - interval '90 day'`
+      },
+      buildRangeEnd: {
+        sql: `SELECT NOW()`
+      },
+      refreshKey: {
+           every: ALERT_CUBE_PRE_AGG_REFRESH_KEY_WORKFLOW
+      }
     }
 	},
 
@@ -80,12 +107,22 @@ cube(`AlertsByOwnersCube`, {
       title: `inProcess`,
       filters: [{ sql: `${CUBE}.status = 'In Process'` }]
     },
-    following: {
-      type: `count`,
-      sql: `status`,
-      title: `Following`,
-      filters: [{ sql: `${CUBE}.status = 'Following'` }],
-    },
+		following: {
+			type: `count`,
+			sql: `status`,
+			title: `Following`,
+			filters: [{ sql: `${CUBE}.status = 'Following'` }],
+		},
+		open : {
+			sql: `${unread} +${inProcess}`,
+      type: `number`,
+      title: "open"
+		},
+		closed : {
+			sql: `${following} +${applicable} + ${excluded}`,
+      type: `number`,
+      title: "closed"
+		},
     totalCount: {
       sql: `${unread} + ${applicable} + ${inProcess} +${following}`,
       type: `number`,
@@ -111,6 +148,10 @@ cube(`AlertsByOwnersCube`, {
       sql: `${CUBE}.\`publishedDate\``,
       type: `time`
     },
+		created : {
+			sql: `${CUBE}.\`created\``,
+      type: `time`
+		},
     alertCategory: {
       sql: `${CUBE}.\`alertCategory\``,
       type: `string`,

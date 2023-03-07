@@ -1,57 +1,65 @@
-import { alertGroupIdsCollection, alertsCollection, alertsMetaCollection } from './collections';
-import { ALERT_CUBE_REFRESH_KEY_TIME , ALERT_CUBE_PRE_AGG_REFRESH_KEY } from './cube-constants';
+import {
+  alertGroupIdsCollection,
+  alertsCollection,
+  masterDatumCollection,
+} from './collections'
+import {
+  ALERT_CUBE_REFRESH_KEY_TIME,
+  ALERT_CUBE_PRE_AGG_REFRESH_KEY,
+} from './cube-constants'
 
 cube(`AlertsByTopic`, {
-	sql: `
-  SELECT * FROM ((SELECT
-  status,
-  grpIds,
-  tenantId,
-  alertCategory,
-  publishedDate
-  FROM ${alertsCollection} as alerts INNER JOIN 
-	(SELECT _id as Id , grpIds  FROM ${alertGroupIdsCollection}) as grpIds ON CONVERT(alerts._id,CHAR) = CONVERT(grpIds.Id,CHAR) ))as alertsByTopic 
-	INNER JOIN (SELECT alertGrpId , alertGrpName FROM ${alertsMetaCollection} where ${alertsMetaCollection}.grpType != "jurisdiction") 
-	as alertsMeta On alertsByTopic.grpIds = CONVERT(alertsMeta.alertGrpId,CHAR)`,
+  sql: `
+	SELECT * FROM(
+		(SELECT * FROM
+		(
+			(SELECT _id,status,tenantId,alertCategory,publishedDate from ${alertsCollection} where ${alertsCollection}.archived = 0) AS Alerts
+				LEFT JOIN 
+			(SELECT _id as Id , grpIds  FROM ${alertGroupIdsCollection}) AS AlertGrpIds
+				ON Alerts._id = AlertGrpIds.Id
+		)) AS AlertsByGrpsJoin
+		LEFT JOIN 
+		(SELECT _id as  alertGrpId , name as alertGrpName FROM ${masterDatumCollection}) 
+		as AlertsMeta ON AlertsByGrpsJoin.grpIds = AlertsMeta.alertGrpId
+		)
+	`,
 
   refreshKey: {
-    every: ALERT_CUBE_REFRESH_KEY_TIME
+    every: ALERT_CUBE_REFRESH_KEY_TIME,
   },
 
   sqlAlias: `AlByT`,
 
   joins: {
     Tenants: {
-			relationship: `hasOne`,
-			sql :`${CUBE.tenantId} = ${Tenants.tenantId}` 
-		}
+      relationship: `hasOne`,
+      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
+    },
   },
 
   preAggregations: {
     alertsByTopicRollUp: {
-      sqlAlias: "albyTRP",
+      sqlAlias: 'albyTRP',
       external: true,
       scheduledRefresh: true,
-			type: `rollup`,
-      measures: [
-        AlertsByTopic.totalCount
-      ],
+      type: `rollup`,
+      measures: [AlertsByTopic.totalCount],
       dimensions: [
         AlertsByTopic.grpName,
         AlertsByTopic.alertCategory,
-        Tenants.tenantId
+        Tenants.tenantId,
       ],
       timeDimension: AlertsByTopic.publishedDate,
       granularity: `day`,
       buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`
+        sql: `SELECT NOW() - interval '365 day'`,
       },
       buildRangeEnd: {
-        sql: `SELECT NOW()`
+        sql: `SELECT NOW()`,
       },
       refreshKey: {
-        every: ALERT_CUBE_PRE_AGG_REFRESH_KEY
-      }
+        every: ALERT_CUBE_PRE_AGG_REFRESH_KEY,
+      },
     },
   },
 
@@ -59,45 +67,45 @@ cube(`AlertsByTopic`, {
     totalCount: {
       sql: `status`,
       type: `count`,
-			 filters: [
+      filters: [
         {
-          sql: `${CUBE}.status != "Excluded" `
-        }
+          sql: `${CUBE}.status != "Excluded" `,
+        },
       ],
-      title: "totalCount"
-    }
+      title: 'totalCount',
+    },
   },
 
   dimensions: {
     grpIds: {
       sql: `CONVERT(${CUBE}.\`grpIds\`,CHAR)`,
       type: `string`,
-      title: `Group Ids`
+      title: `Group Ids`,
     },
     grpName: {
       sql: `${CUBE}.\`alertGrpName\``,
       type: `string`,
-      title: `Group Name`
+      title: `Group Name`,
     },
     publishedDate: {
       sql: `${CUBE}.\`publishedDate\``,
       type: `time`,
-      title : `Published Date`
+      title: `Published Date`,
     },
     alertCategory: {
       sql: `${CUBE}.\`alertCategory\``,
       type: `string`,
-      title: `Alert Category`
+      title: `Alert Category`,
     },
-		tenantId : {
- 			sql: `${CUBE}.\`tenantId\``,
+    tenantId: {
+      sql: `${CUBE}.\`tenantId\``,
       type: `string`,
-      title: `Tenant Id`
-		},
+      title: `Tenant Id`,
+    },
     _id: {
       sql: `CONVERT(${CUBE}.\`_id\`,CHAR)`,
       type: `string`,
-      primaryKey: true
-    }
-  }
-});
+      primaryKey: true,
+    },
+  },
+})
