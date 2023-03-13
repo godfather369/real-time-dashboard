@@ -1,5 +1,5 @@
 import {alertsCollection } from './collections';
-import { ALERT_CUBE_REFRESH_KEY_TIME , ALERT_CUBE_PRE_AGG_REFRESH_KEY, ALERT_CUBE_PRE_AGG_REFRESH_KEY_WORKFLOW } from './cube-constants';
+import { ALERT_CUBE_REFRESH_KEY_TIME , ALERT_CUBE_PRE_AGG_REFRESH_KEY} from './cube-constants';
 
 cube(`AlertsCube`, {
 	sql : `SELECT * FROM  ${alertsCollection} where ${alertsCollection}.archived = 0`,

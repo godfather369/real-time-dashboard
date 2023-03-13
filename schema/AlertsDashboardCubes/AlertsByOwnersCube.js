@@ -3,8 +3,8 @@ import { ALERT_CUBE_REFRESH_KEY_TIME , ALERT_CUBE_PRE_AGG_REFRESH_KEY_WORKFLOW }
 
 cube(`AlertsByOwnersCube`, {
 	sql : `SELECT * FROM 
-	((SELECT * FROM ${alertsCollection} as alerts INNER JOIN 
-	(SELECT _id as Id , owners FROM ${alertsUsersCollection}) as ownerIds ON alerts._id = ownerIds.Id )) as alertsCube`,
+	(SELECT * FROM (SELECT * FROM ${alertsCollection} where ${alertsCollection}.archived=0) as alerts INNER JOIN 
+	(SELECT _id as Id , owners FROM ${alertsUsersCollection}) as ownerIds ON alerts._id = ownerIds.Id ) as alertsCube`,
 
   sqlAlias: `AlOwCube`,
 

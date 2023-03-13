@@ -1,15 +1,19 @@
-import { alertsCollection, alertsGroupsCollection ,groupCollection } from "./collections";
+import {
+	alertsCollection,
+	alertsGroupsCollection,
+	groupCollection,
+} from "./collections";
 import {
 	ALERT_CUBE_REFRESH_KEY_TIME,
 	ALERT_CUBE_PRE_AGG_REFRESH_KEY_WORKFLOW,
 } from "./cube-constants";
 
 cube(`AlertsByGroupsCube`, {
-		sql: `SELECT * FROM 
-	((SELECT _id,publishedDate,status,tenantId,alertCategory,groups FROM ${alertsCollection} 
+	sql: `SELECT * FROM 
+	(SELECT * FROM (SELECT _id,publishedDate,status,tenantId,alertCategory FROM ${alertsCollection} WHERE ${alertsCollection}.archived=0) 
 		as alerts LEFT JOIN 
 	(SELECT _id as Id , groups FROM ${alertsGroupsCollection}) 
-	as groupIds on alerts._id = groupIds.Id  )) 
+	as groupIds on alerts._id = groupIds.Id  )
 		as alertsGroupCube
 	 INNER JOIN (SELECT _id as grpId , name FROM ${groupCollection}) 
 		as groups on alertsGroupCube.groups = groups.grpId`,
