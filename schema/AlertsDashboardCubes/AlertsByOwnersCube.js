@@ -36,7 +36,7 @@ cube(`AlertsByOwnersCube`, {
         AlertsByOwnersCube.inProcess,
         AlertsByOwnersCube.totalCount
       ],
-      dimensions: [Tenants.tenantId, Users.fullName, AlertsByOwnersCube.alertCategory],
+      dimensions: [Tenants.tenantId, Users.fullName, Users._id, AlertsByOwnersCube.alertCategory],
       timeDimension: AlertsByOwnersCube.publishedDate,
       granularity: `day`,
       buildRangeStart: {
@@ -63,7 +63,7 @@ cube(`AlertsByOwnersCube`, {
 				AlertsByOwnersCube.open,
         AlertsByOwnersCube.closed
       ],
-      dimensions: [Tenants.tenantId, Users.fullName, AlertsByOwnersCube.alertCategory],
+      dimensions: [Tenants.tenantId, Users.fullName, Users._id, AlertsByOwnersCube.alertCategory],
       timeDimension: AlertsByOwnersCube.created,
       granularity: `day`,
       buildRangeStart: {

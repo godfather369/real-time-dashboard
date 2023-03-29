@@ -31,7 +31,7 @@ cube(`CorpusCube`, {
 			title: `Jurisdiction name`
     },
     _id: {
-      sql: `CONVERT(${CUBE}.\`_id\`,CHAR)`,
+      sql: `${CUBE}.\`_id\``,
       type: `string`,
       primaryKey: true
     },

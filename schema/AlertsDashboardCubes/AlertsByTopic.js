@@ -46,6 +46,7 @@ cube(`AlertsByTopic`, {
       measures: [AlertsByTopic.totalCount],
       dimensions: [
         AlertsByTopic.grpName,
+        AlertsByTopic.grpIds,
         AlertsByTopic.alertCategory,
         Tenants.tenantId,
       ],

@@ -3,6 +3,10 @@ const regHubDataBase = "RegHub";
 export const userCollection = getCollectionString("users");
 export const tenantCollection = getCollectionString("tenants");
 export const alertsCollection = getCollectionString("reg_alert_parents");
+export const agenciesCollection = getCollectionString("reg_agencies");
+export const agencyMapCollection = getCollectionString(
+	"reg_alert_parents_agencyMap"
+);
 export const agencyNamesCollection = getCollectionString(
 	"reg_alert_parents_agencyNames"
 );
@@ -42,6 +46,7 @@ export const controlByStatusCollection = getCollectionString(
 );
 export const mapUserCollection = getCollectionString("reg_map_user");
 export const impactAssessmentCollection= getCollectionString("reg_assessments");
+export const impactAssessmentGroupsCollection= getCollectionString("reg_assessments_groups");
 export const impactAssessmentOwnersCollection = getCollectionString("reg_assessments_owners");
 export const impactAssessmentImpactedTeamCollection =  getCollectionString("reg_assessments_customAttributes_I_E_F_IMPACTED_TEAM");
 export const groupCollection = getCollectionString("reg_groups");

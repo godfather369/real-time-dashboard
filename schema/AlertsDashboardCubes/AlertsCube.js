@@ -1,8 +1,13 @@
-import {alertsCollection } from './collections';
-import { ALERT_CUBE_REFRESH_KEY_TIME , ALERT_CUBE_PRE_AGG_REFRESH_KEY} from './cube-constants';
+import { alertsCollection, agencyMapCollection } from './collections'
+import {
+  ALERT_CUBE_REFRESH_KEY_TIME,
+  ALERT_CUBE_PRE_AGG_REFRESH_KEY
+} from './cube-constants'
 
 cube(`AlertsCube`, {
-	sql : `SELECT * FROM  ${alertsCollection} where ${alertsCollection}.archived = 0`,
+  sql: `SELECT * FROM 
+	(SELECT * FROM (SELECT * FROM ${alertsCollection} where ${alertsCollection}.archived=0) as alerts LEFT JOIN 
+	(SELECT _id as Id , agencyMap FROM ${agencyMapCollection}) as agencyMapCube ON alerts._id = agencyMapCube.Id ) as alertsCubeJoin`,
 
   sqlAlias: `AlCube`,
 
@@ -11,9 +16,9 @@ cube(`AlertsCube`, {
   },
 
   joins: {
-		Tenants: {
+    Tenants: {
       relationship: `hasOne`,
-      sql :`${CUBE.tenantId} = ${Tenants.tenantId}` 
+      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`
     },
     CorpusCube: {
       relationship: `belongsTo`,
@@ -23,19 +28,19 @@ cube(`AlertsCube`, {
       relationship: `hasOne`,
       sql: `${CUBE.jurisdiction} = ${JurisdictionsCube.jurisdictionId}`
     },
-		AlertAgencyNamesCube: {
+    AlertAgencyNamesCube: {
       relationship: `belongsTo`,
-      sql: `${CUBE._id} = ${AlertAgencyNamesCube._id}`
+      sql: `${CUBE.agencyMap} = ${AlertAgencyNamesCube._id}`
     },
-		Users: {
-				relationship: `belongsTo`,
-				sql: `${CUBE.owners} = ${Users._id}`
-		}
+    Users: {
+      relationship: `belongsTo`,
+      sql: `${CUBE.owners} = ${Users._id}`
+    }
   },
 
   preAggregations: {
     alertsByCorpusAndStatsReportRollUp: {
-      sqlAlias: "alByCorpStatRepsRP",
+      sqlAlias: 'alByCorpStatRepsRP',
       type: `rollup`,
       external: true,
       scheduledRefresh: true,
@@ -49,7 +54,8 @@ cube(`AlertsCube`, {
       dimensions: [
         Tenants.tenantId,
         AlertsCube.alertCategory,
-        CorpusCube.corpusName
+        CorpusCube.corpusName,
+        CorpusCube.id
       ],
       timeDimension: AlertsCube.publishedDate,
       granularity: `day`,
@@ -64,7 +70,7 @@ cube(`AlertsCube`, {
       }
     },
     alertsByAgencyRollUp: {
-      sqlAlias: "alByAgencyRP",
+      sqlAlias: 'alByAgencyRP',
       type: `rollup`,
       external: true,
       scheduledRefresh: true,
@@ -78,6 +84,7 @@ cube(`AlertsCube`, {
       dimensions: [
         Tenants.tenantId,
         AlertsCube.alertCategory,
+        AlertsCube.agencyMap,
         AlertAgencyNamesCube.agencyNames
       ],
       timeDimension: AlertsCube.publishedDate,
@@ -90,16 +97,14 @@ cube(`AlertsCube`, {
       },
       refreshKey: {
         every: ALERT_CUBE_PRE_AGG_REFRESH_KEY
-      },
-		},
+      }
+    },
     feedPerJurisdictionRollUp: {
-      sqlAlias: "feedRP",
+      sqlAlias: 'feedRP',
       type: `rollup`,
       external: true,
       scheduledRefresh: true,
-      measures: [
-        AlertsCube.feedCount
-      ],
+      measures: [AlertsCube.feedCount],
       dimensions: [
         Tenants.tenantId,
         JurisdictionsCube.displayName,
@@ -115,11 +120,11 @@ cube(`AlertsCube`, {
         sql: `SELECT NOW()`
       },
       refreshKey: {
-        every: ALERT_CUBE_PRE_AGG_REFRESH_KEY
+        every: ALERT_CUBE_PRE_AGG_REFRESH_KEY,
       }
     },
     activeBillsByJurisdictionRollUp: {
-      sqlAlias: "actBillsRP",
+      sqlAlias: 'actBillsRP',
       type: `rollup`,
       external: true,
       scheduledRefresh: true,
@@ -133,22 +138,24 @@ cube(`AlertsCube`, {
       dimensions: [
         Tenants.tenantId,
         JurisdictionsCube.displayName,
+        JurisdictionsCube.shortName,
+        JurisdictionsCube.jurisdictionId,
         AlertsCube.alertCategory
       ],
       timeDimension: AlertsCube.publishedDate,
       granularity: `day`,
       buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
+        sql: `SELECT NOW() - interval '365 day'`
       },
       buildRangeEnd: {
-        sql: `SELECT NOW()`,
+        sql: `SELECT NOW()`
       },
       refreshKey: {
         every: ALERT_CUBE_PRE_AGG_REFRESH_KEY
       }
     },
-		alertRulePerJurisdictionRollUp :{
-			sqlAlias: "alRuleJuRP",
+    alertRulePerJurisdictionRollUp: {
+      sqlAlias: 'alRuleJuRP',
       type: `rollup`,
       external: true,
       scheduledRefresh: true,
@@ -157,125 +164,119 @@ cube(`AlertsCube`, {
         AlertsCube.applicable,
         AlertsCube.inProcess,
         AlertsCube.following,
-        AlertsCube.totalCount
+        AlertsCube.totalCount,
       ],
-      dimensions: [
-        AlertsCube.alertType,
-				JurisdictionsCube.displayName
-      ],
-			timeDimension: AlertsCube.publishedDate,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`,
-      },
-      refreshKey: {
-        every: ALERT_CUBE_PRE_AGG_REFRESH_KEY
-      }
-		},
-		alertsByJurisdictionAndDocStat: {
-      sqlAlias: "alByJuDoc",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [
-        AlertsCube.introducedDocStatus,
-				AlertsCube.originDocStatus,
-				AlertsCube.secondBodyStatus,
-				AlertsCube.sentForSignatureStatus,
-				AlertsCube.diedStatus,
-				AlertsCube.becameLawStatus,
-				AlertsCube.statuteStatus,
-				AlertsCube.regulationStatus,
-				AlertsCube.agencyUpdateStatus
-      ],
-      dimensions: [
-        Tenants.tenantId,
-        JurisdictionsCube.displayName,
-				AlertsCube.alertCategory
-      ],
+      dimensions: [AlertsCube.alertType, JurisdictionsCube.displayName],
       timeDimension: AlertsCube.publishedDate,
       granularity: `day`,
       buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
+        sql: `SELECT NOW() - interval '365 day'`
       },
       buildRangeEnd: {
-        sql: `SELECT NOW()`,
+        sql: `SELECT NOW()`
       },
       refreshKey: {
         every: ALERT_CUBE_PRE_AGG_REFRESH_KEY
       }
     },
-		billsDocStatusRollUp :{
-			sqlAlias: "billDocRP",
+    alertsByJurisdictionAndDocStat: {
+      sqlAlias: 'alByJuDoc',
       type: `rollup`,
       external: true,
       scheduledRefresh: true,
-			measures: [
-				AlertsCube.introducedBills,
+      measures: [
+        AlertsCube.introducedDocStatus,
+        AlertsCube.originDocStatus,
+        AlertsCube.secondBodyStatus,
+        AlertsCube.sentForSignatureStatus,
+        AlertsCube.diedStatus,
+        AlertsCube.becameLawStatus,
+        AlertsCube.statuteStatus,
+        AlertsCube.regulationStatus,
+        AlertsCube.agencyUpdateStatus,
+      ],
+      dimensions: [
+        Tenants.tenantId,
+        JurisdictionsCube.displayName,
+        AlertsCube.alertCategory,
+      ],
+      timeDimension: AlertsCube.publishedDate,
+      granularity: `day`,
+      buildRangeStart: {
+        sql: `SELECT NOW() - interval '365 day'`
+      },
+      buildRangeEnd: {
+        sql: `SELECT NOW()`
+      },
+      refreshKey: {
+        every: ALERT_CUBE_PRE_AGG_REFRESH_KEY
+      }
+    },
+    billsDocStatusRollUp: {
+      sqlAlias: 'billDocRP',
+      type: `rollup`,
+      external: true,
+      scheduledRefresh: true,
+      measures: [
+        AlertsCube.introducedBills,
         AlertsCube.passedOriginBills,
         AlertsCube.passedSecondBodyBills,
-				AlertsCube.sentForSignatureBills,
-				AlertsCube.diedBills,
+        AlertsCube.sentForSignatureBills,
+        AlertsCube.diedBills,
         AlertsCube.becameLawBills,
-				AlertsCube.totalBillsDocStatus
+        AlertsCube.totalBillsDocStatus
       ],
-      dimensions: [
-        Tenants.tenantId,
-				JurisdictionsCube.displayName
-      ],
-			timeDimension: AlertsCube.publishedDate,
+      dimensions: [Tenants.tenantId, JurisdictionsCube.displayName],
+      timeDimension: AlertsCube.publishedDate,
       granularity: `day`,
       buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
+        sql: `SELECT NOW() - interval '365 day'`
       },
       buildRangeEnd: {
-        sql: `SELECT NOW()`,
+        sql: `SELECT NOW()`
       },
       refreshKey: {
         every: ALERT_CUBE_PRE_AGG_REFRESH_KEY
       }
-		},
-		agencyUpdatesDocStatus : {
-			sqlAlias: "agencyUpDocRP",
+    },
+    agencyUpdatesDocStatus: {
+      sqlAlias: 'agencyUpDocRP',
       type: `rollup`,
       external: true,
       scheduledRefresh: true,
-			measures: [
-				AlertsCube.bulletinsReportCount,
+      measures: [
+        AlertsCube.bulletinsReportCount,
         AlertsCube.calendarCount,
         AlertsCube.enfActionsCount,
-				AlertsCube.feedDocStatus,
-				AlertsCube.infoGuidanceCount,
+        AlertsCube.feedDocStatus,
+        AlertsCube.infoGuidanceCount,
         AlertsCube.newsPressCount,
-				AlertsCube.noticeCount,
-				AlertsCube.proposedRuleCount,
-				AlertsCube.publicNoticesCount,
-				AlertsCube.publicationCommCount,
-				AlertsCube.ruleCount,
-				AlertsCube.ruleMakingCount,
-				AlertsCube.settlementsCount,
-				AlertsCube.totalAUDocStatusCount,
+        AlertsCube.noticeCount,
+        AlertsCube.proposedRuleCount,
+        AlertsCube.publicNoticesCount,
+        AlertsCube.publicationCommCount,
+        AlertsCube.ruleCount,
+        AlertsCube.ruleMakingCount,
+        AlertsCube.settlementsCount,
+        AlertsCube.totalAUDocStatusCount
       ],
       dimensions: [
         Tenants.tenantId,
-				JurisdictionsCube.displayName,
-				AlertsCube.alertCategory
+        JurisdictionsCube.displayName,
+        AlertsCube.alertCategory
       ],
-			timeDimension: AlertsCube.publishedDate,
+      timeDimension: AlertsCube.publishedDate,
       granularity: `day`,
       buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
+        sql: `SELECT NOW() - interval '365 day'`
       },
       buildRangeEnd: {
-        sql: `SELECT NOW()`,
+        sql: `SELECT NOW()`
       },
       refreshKey: {
         every: ALERT_CUBE_PRE_AGG_REFRESH_KEY
       }
-		}
+    }
   },
 
   measures: {
@@ -311,45 +312,45 @@ cube(`AlertsCube`, {
       type: `count`,
       sql: `status`,
       title: `Following`,
-      filters: [{ sql: `${CUBE}.status = 'Following'` }],
+      filters: [{ sql: `${CUBE}.status = 'Following'` }]
     },
     totalCount: {
       sql: `${unread} + ${applicable} + ${inProcess}+${following}`,
       type: `number`,
-      title: "totalCount"
+      title: 'totalCount'
     },
-		feedCount: {
+    feedCount: {
       sql: `status`,
       type: `count`,
-      title: "In Process Feed count",
+      title: 'In Process Feed count',
       filters: [
         { sql: `${CUBE}.status != 'Excluded' and ${CUBE.srcType} = 'FEED'` }
       ]
     },
-		unreadBillsCount: {
+    unreadBillsCount: {
       sql: `status`,
       type: `count`,
-      title: "Unread Bills count",
+      title: 'Unread Bills count',
       filters: [
         {
           sql: `${CUBE}.status = 'Unread' and ${CUBE.alertCategory} = 'Bills'`
         }
       ]
     },
-		inProcessBillsCount: {
+    inProcessBillsCount: {
       sql: `status`,
       type: `count`,
-      title: "In Process Bills count",
+      title: 'In Process Bills count',
       filters: [
         {
           sql: `${CUBE}.status = 'In Process' and ${CUBE.alertCategory} = 'Bills'`
         }
       ]
     },
-		applicableBillsCount: {
+    applicableBillsCount: {
       sql: `status`,
       type: `count`,
-      title: "Applicable Bills count",
+      title: 'Applicable Bills count',
       filters: [
         {
           sql: `${CUBE}.status = 'Applicable' and ${CUBE.alertCategory} = 'Bills'`
@@ -359,94 +360,94 @@ cube(`AlertsCube`, {
     followingBillsCount: {
       sql: `status`,
       type: `count`,
-      title: "Following Bills count",
+      title: 'Following Bills count',
       filters: [
         {
-          sql: `${CUBE}.status = 'Following' and ${CUBE.alertCategory} = 'Bills'`,
-        },
-      ],
+          sql: `${CUBE}.status = 'Following' and ${CUBE.alertCategory} = 'Bills'`
+        }
+      ]
     },
-		totalBillsCount: {
+    totalBillsCount: {
       sql: `${unreadBillsCount} + ${applicableBillsCount} + ${inProcessBillsCount}+${followingBillsCount}`,
       type: `number`,
-      title: "billsCount",
+      title: 'billsCount'
     },
-		introducedDocStatus : {
-			sql: `${CUBE}.\`info.docStatus\``,
-			type: `count`,
-			filters: [
+    introducedDocStatus: {
+      sql: `${CUBE}.\`info.docStatus\``,
+      type: `count`,
+      filters: [
         {
           sql: `${CUBE}.\`info.docStatus\` = 'Introduced'`
         }
       ]
-		},
-		originDocStatus : {
-			sql: `${CUBE}.\`info.docStatus\``,
-			type: `count`,
-			filters: [
+    },
+    originDocStatus: {
+      sql: `${CUBE}.\`info.docStatus\``,
+      type: `count`,
+      filters: [
         {
           sql: `${CUBE}.\`info.docStatus\` = 'Passed Body of Origin'`
         }
       ]
-		},
-		secondBodyStatus : {
-			sql: `${CUBE}.\`info.docStatus\``,
-			type: `count`,
-			filters: [
+    },
+    secondBodyStatus: {
+      sql: `${CUBE}.\`info.docStatus\``,
+      type: `count`,
+      filters: [
         {
           sql: `${CUBE}.\`info.docStatus\` = 'Passed Second Body'`
         }
       ]
-		},
-    sentForSignatureStatus : {
-			sql: `${CUBE}.\`info.docStatus\``,
-			type: `count`,
-			filters: [
+    },
+    sentForSignatureStatus: {
+      sql: `${CUBE}.\`info.docStatus\``,
+      type: `count`,
+      filters: [
         {
           sql: `${CUBE}.\`info.docStatus\` = 'Sent for Signature'`
         }
       ]
-		},
-		diedStatus : {
-			sql: `${CUBE}.\`info.docStatus\``,
-			type: `count`,
-			filters: [
+    },
+    diedStatus: {
+      sql: `${CUBE}.\`info.docStatus\``,
+      type: `count`,
+      filters: [
         {
           sql: `${CUBE}.\`info.docStatus\` = 'Died'`
         }
       ]
-		},
-		becameLawStatus : {
-			sql: `${CUBE}.\`info.docStatus\``,
-			type: `count`,
-			filters: [
+    },
+    becameLawStatus: {
+      sql: `${CUBE}.\`info.docStatus\``,
+      type: `count`,
+      filters: [
         {
           sql: `${CUBE}.\`info.docStatus\` = 'Became Law'`
         }
       ]
-		},
-		statuteStatus : {
-			sql: `${CUBE}.\`info.docStatus\``,
-			type: `count`,
-			filters: [
+    },
+    statuteStatus: {
+      sql: `${CUBE}.\`info.docStatus\``,
+      type: `count`,
+      filters: [
         {
           sql: `${CUBE}.\`info.docStatus\` = 'Statute'`
         }
       ]
-		},
-		regulationStatus : {
-			sql: `${CUBE}.\`info.docStatus\``,
-			type: `count`,
-			filters: [
+    },
+    regulationStatus: {
+      sql: `${CUBE}.\`info.docStatus\``,
+      type: `count`,
+      filters: [
         {
           sql: `${CUBE}.\`info.docStatus\` = 'Regulation'`
         }
       ]
-		},
-		agencyUpdateStatus : {
-			sql: `${CUBE}.\`info.docStatus\``,
-			type: `count`,
-			filters: [
+    },
+    agencyUpdateStatus: {
+      sql: `${CUBE}.\`info.docStatus\``,
+      type: `count`,
+      filters: [
         {
           sql: `${CUBE}.\`info.docStatus\`= 'Bulletins/Reports' OR ${CUBE}.\`info.docStatus\`= 'Calendar' OR 
 					${CUBE}.\`info.docStatus\`= 'Enforcement Actions' OR ${CUBE}.\`info.docStatus\`= 'Feed' OR 
@@ -456,171 +457,197 @@ cube(`AlertsCube`, {
 					${CUBE}.\`info.docStatus\`= 'Publications/Communications' OR ${CUBE}.\`info.docStatus\`= 'Rule' OR 
 					${CUBE}.\`info.docStatus\`= 'Rulemaking' OR ${CUBE}.\`info.docStatus\`= 'Settlements' 
 					`
-				},
+        }
       ]
-		},
-		introducedBills : {
-			sql: `${CUBE}.\`info.docStatus\``,
-			type: `count`,
-			filters: [
+    },
+    introducedBills: {
+      sql: `${CUBE}.\`info.docStatus\``,
+      type: `count`,
+      filters: [
         {
           sql: `${CUBE}.\`info.docStatus\` = 'Introduced' and ${CUBE.alertCategory} = 'Bills'`
-        }
-      ] 
-		},
-		passedOriginBills : {
-			sql: `${CUBE}.\`info.docStatus\``,
-			type: `count`,
-			filters: [
+				}
+      ]
+    },
+    passedOriginBills: {
+      sql: `${CUBE}.\`info.docStatus\``,
+      type: `count`,
+      filters: [
         {
           sql: `${CUBE}.\`info.docStatus\` = 'Passed Body of Origin' 
 					and ${CUBE.alertCategory} = 'Bills'`
         }
-      ] 
-		},
-		passedSecondBodyBills : {
-			sql: `${CUBE}.\`info.docStatus\``,
-			type: `count`,
-			filters: [
+      ]
+    },
+    passedSecondBodyBills: {
+      sql: `${CUBE}.\`info.docStatus\``,
+      type: `count`,
+      filters: [
         {
           sql: `${CUBE}.\`info.docStatus\` = 'Passed Second Body' 
 					and ${CUBE.alertCategory} = 'Bills'`
         }
-      ] 
-		},
-		sentForSignatureBills : {
-			sql: `${CUBE}.\`info.docStatus\``,
-			type: `count`,
-			filters: [
+      ]
+    },
+    sentForSignatureBills: {
+      sql: `${CUBE}.\`info.docStatus\``,
+      type: `count`,
+      filters: [
         {
           sql: `${CUBE}.\`info.docStatus\` = 'Sent for Signature' 
 					and ${CUBE.alertCategory} = 'Bills'`
         }
-      ] 
-		},
-    diedBills : {
-			sql: `${CUBE}.\`info.docStatus\``,
-			type: `count`,
-			filters: [
+      ]
+    },
+    diedBills: {
+      sql: `${CUBE}.\`info.docStatus\``,
+      type: `count`,
+      filters: [
         {
           sql: `${CUBE}.\`info.docStatus\` = 'Died' 
 					and ${CUBE.alertCategory} = 'Bills'`
         }
-      ] 
-		},
-		becameLawBills : {
-			sql: `${CUBE}.\`info.docStatus\``,
-			type: `count`,
-			filters: [
+      ]
+    },
+    becameLawBills: {
+      sql: `${CUBE}.\`info.docStatus\``,
+      type: `count`,
+      filters: [
         {
           sql: `${CUBE}.\`info.docStatus\` = 'Became Law' 
 					and ${CUBE.alertCategory} = 'Bills'`
         }
-      ] 
-		},
-		totalBillsDocStatus:{
-			sql: `${introducedBills} + ${passedOriginBills} + ${passedSecondBodyBills} + ${sentForSignatureBills} + ${becameLawBills} + ${diedBills}`,
-      type: `number`,
-		},
-		bulletinsReportCount :{
-			sql : `${CUBE}.\`info.docStatus\``,
-			type : `count`,
-			filters : [{
-				sql: `${CUBE}.\`info.docStatus\` = 'Bulletins/Reports'`
-			}]
-		},
-		calendarCount : {
-			sql : `${CUBE}.\`info.docStatus\``,
-			type : `count`,
-			filters : [{
-				sql : `${CUBE}.\`info.docStatus\` = 'Calendar'`
-			}]
-		},
-		enfActionsCount : {
-			sql : `${CUBE}.\`info.docStatus\``,
-			type : `count`,
-			filters : [{
-				sql : `${CUBE}.\`info.docStatus\` = 'Enforcement Actions'`
-			}]
-		},
-		feedDocStatus : {
-			sql : `${CUBE}.\`info.docStatus\``,
-			type : `count`,
-			filters : [{
-				sql : `${CUBE}.\`info.docStatus\` = 'Feed'`
-			}]
-		},
-		infoGuidanceCount : {
-			sql : `${CUBE}.\`info.docStatus\``,
-			type : `count`,
-			filters : [{
-				sql : `${CUBE}.\`info.docStatus\` = 'Information and Guidance'`
-			}]
-		},
-		newsPressCount : {
-			sql : `${CUBE}.\`info.docStatus\``,
-			type : `count`,
-			filters : [{
-				sql : `${CUBE}.\`info.docStatus\` = 'News/Press Releases'`
-			}]
-		},
-		noticeCount : {
-			sql : `${CUBE}.\`info.docStatus\``,
-			type : `count`,
-			filters : [{
-				sql : `${CUBE}.\`info.docStatus\` = 'Notice'`
-			}]
-		},
-		proposedRuleCount : {
-			sql : `${CUBE}.\`info.docStatus\``,
-			type : `count`,
-			filters : [{
-				sql : `${CUBE}.\`info.docStatus\`= 'Proposed Rule'`
-			}]
-		},
-		publicNoticesCount : {
-			sql : `${CUBE}.\`info.docStatus\``,
-			type : `count`,
-			filters : [{
-				sql : `${CUBE}.\`info.docStatus\` = 'Public Notices'`
-			}]
-		},
-		publicationCommCount : {
-			sql : `${CUBE}.\`info.docStatus\``,
-			type : `count`,
-			filters : [{
-				sql : `${CUBE}.\`info.docStatus\` = 'Publications/Communications'`
-			}]
-		},
-		ruleCount : {
-			sql : `${CUBE}.\`info.docStatus\``,
-			type : `count`,
-			filters : [{
-				sql : `${CUBE}.\`info.docStatus\` = 'Rule'`
-			}]
-		},
-		ruleMakingCount : {
-			sql : `${CUBE}.\`info.docStatus\``,
-			type : `count`,
-			filters : [{
-				sql : `${CUBE}.\`info.docStatus\` = 'Rulemaking'`
-			}]
-		},
-		settlementsCount : {
-			sql : `${CUBE}.\`info.docStatus\``,
-			type : `count`,
-			filters : [{
-				sql : `${CUBE}.\`info.docStatus\` = 'Settlements'`
-			}]
-		},
-		totalAUDocStatusCount : {
-			sql: `${bulletinsReportCount} + ${calendarCount} +
+      ]
+    },
+    totalBillsDocStatus: {
+      sql: `${introducedBills} + ${passedOriginBills} + ${passedSecondBodyBills} + ${sentForSignatureBills} + ${becameLawBills} + ${diedBills}`,
+      type: `number`
+    },
+    bulletinsReportCount: {
+      sql: `${CUBE}.\`info.docStatus\``,
+      type: `count`,
+      filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Bulletins/Reports'`
+        }
+      ]
+    },
+    calendarCount: {
+      sql: `${CUBE}.\`info.docStatus\``,
+      type: `count`,
+      filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Calendar'`
+        }
+      ]
+    },
+    enfActionsCount: {
+      sql: `${CUBE}.\`info.docStatus\``,
+      type: `count`,
+      filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Enforcement Actions'`
+        }
+      ]
+    },
+    feedDocStatus: {
+      sql: `${CUBE}.\`info.docStatus\``,
+      type: `count`,
+      filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Feed'`
+        }
+      ]
+    },
+    infoGuidanceCount: {
+      sql: `${CUBE}.\`info.docStatus\``,
+      type: `count`,
+      filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Information and Guidance'`,
+        }
+      ]
+    },
+    newsPressCount: {
+      sql: `${CUBE}.\`info.docStatus\``,
+      type: `count`,
+      filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'News/Press Releases'`
+        }
+      ]
+    },
+    noticeCount: {
+      sql: `${CUBE}.\`info.docStatus\``,
+      type: `count`,
+      filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Notice'`
+        }
+      ]
+    },
+    proposedRuleCount: {
+      sql: `${CUBE}.\`info.docStatus\``,
+      type: `count`,
+      filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\`= 'Proposed Rule'`
+        }
+      ]
+    },
+    publicNoticesCount: {
+      sql: `${CUBE}.\`info.docStatus\``,
+      type: `count`,
+      filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Public Notices'`
+        }
+      ]
+    },
+    publicationCommCount: {
+      sql: `${CUBE}.\`info.docStatus\``,
+      type: `count`,
+      filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Publications/Communications'`
+        }
+      ]
+    },
+    ruleCount: {
+      sql: `${CUBE}.\`info.docStatus\``,
+      type: `count`,
+      filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Rule'`
+        }
+      ]
+    },
+    ruleMakingCount: {
+      sql: `${CUBE}.\`info.docStatus\``,
+      type: `count`,
+      filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Rulemaking'`
+        }
+      ]
+    },
+    settlementsCount: {
+      sql: `${CUBE}.\`info.docStatus\``,
+      type: `count`,
+      filters: [
+        {
+          sql: `${CUBE}.\`info.docStatus\` = 'Settlements'`
+        }
+      ]
+    },
+    totalAUDocStatusCount: {
+      sql: `${bulletinsReportCount} + ${calendarCount} +
 			 ${enfActionsCount} + ${feedDocStatus} 
 			 + ${infoGuidanceCount} + ${newsPressCount} + ${noticeCount} 
 			 + ${proposedRuleCount} + ${publicNoticesCount} + ${publicationCommCount}
 			 + ${ruleCount} + ${ruleMakingCount} + ${settlementsCount}`,
-      type: `number`,
-		}
+      type: `number`
+    }
   },
 
   dimensions: {
@@ -684,12 +711,17 @@ cube(`AlertsCube`, {
       type: `string`,
       title: `Alert Rule`
     },
-		owners: {
+    owners: {
       sql: `${CUBE}.\`owners\``,
       type: `string`,
       title: `owners`
+    },
+    agencyMap: {
+      sql: `${CUBE}.\`agencyMap\``,
+      type: `string`,
+      title: `agencyMap`
     }
   },
 
   dataSource: `default`,
-});
+})

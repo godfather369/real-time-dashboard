@@ -10,8 +10,8 @@ import {
 
 cube(`AlertsByGroupsCube`, {
 	sql: `SELECT * FROM 
-	(SELECT * FROM (SELECT _id,publishedDate,status,tenantId,alertCategory FROM ${alertsCollection} WHERE ${alertsCollection}.archived=0) 
-		as alerts LEFT JOIN 
+	(SELECT * FROM (SELECT _id,publishedDate,status,created,tenantId,alertCategory FROM ${alertsCollection} WHERE ${alertsCollection}.archived=0) 
+		as alerts INNER JOIN 
 	(SELECT _id as Id , groups FROM ${alertsGroupsCollection}) 
 	as groupIds on alerts._id = groupIds.Id  )
 		as alertsGroupCube
@@ -80,7 +80,35 @@ cube(`AlertsByGroupsCube`, {
 			refreshKey: {
 				every: ALERT_CUBE_PRE_AGG_REFRESH_KEY_WORKFLOW,
 			},
-		}
+		},
+		alertsGroupApplicabilityRollUp: {
+      sqlAlias: "alGByAppRP",
+      type: `rollup`,
+      external: true,
+      scheduledRefresh: true,
+      measures: [
+        AlertsByGroupsCube.unread,
+        AlertsByGroupsCube.applicable,
+        AlertsByGroupsCube.inProcess,
+        AlertsByGroupsCube.following,
+        AlertsByGroupsCube.excluded,
+        AlertsByGroupsCube.open,
+        AlertsByGroupsCube.closed,
+        AlertsByGroupsCube.totalCount
+      ],
+      dimensions: [Tenants.tenantId, AlertsByGroupsCube.name],
+      timeDimension: AlertsByGroupsCube.created,
+      granularity: `day`,
+      buildRangeStart: {
+        sql: `SELECT NOW() - interval '365 day'`
+      },
+      buildRangeEnd: {
+        sql: `SELECT NOW()`
+      },
+      refreshKey: {
+        every: ALERT_CUBE_PRE_AGG_REFRESH_KEY_WORKFLOW
+      }
+    }
 	},
 
 	measures: {
@@ -114,6 +142,16 @@ cube(`AlertsByGroupsCube`, {
 			title: `Following`,
 			filters: [{ sql: `${CUBE}.status =  'Following'` }],
 		},
+		open: {
+      sql: `${unread} +${inProcess}`,
+      type: `number`,
+      title: "open"
+    },
+    closed: {
+      sql: `${following} +${applicable} + ${excluded}`,
+      type: `number`,
+      title: "closed"
+    },
 		totalCount: {
 			sql: `${unread} + ${applicable} + ${inProcess}+ ${following}`,
 			type: `number`,
@@ -143,6 +181,10 @@ cube(`AlertsByGroupsCube`, {
 			sql: `${CUBE}.\`publishedDate\``,
 			type: `time`,
 		},
+		created: {
+      sql: `${CUBE}.\`created\``,
+      type: `time`
+    },
 		alertCategory: {
 			sql: `${CUBE}.\`alertCategory\``,
 			type: `string`,
