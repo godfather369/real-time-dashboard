@@ -85,7 +85,8 @@ cube(`AlertsCube`, {
         Tenants.tenantId,
         AlertsCube.alertCategory,
         AlertsCube.agencyMap,
-        AlertAgencyNamesCube.agencyNames
+        AlertAgencyNamesCube.agencyNames,
+        AlertAgencyNamesCube.shortCode
       ],
       timeDimension: AlertsCube.publishedDate,
       granularity: `day`,
@@ -166,7 +167,12 @@ cube(`AlertsCube`, {
         AlertsCube.following,
         AlertsCube.totalCount,
       ],
-      dimensions: [AlertsCube.alertType, JurisdictionsCube.displayName],
+      dimensions: [
+        AlertsCube.alertType,
+        JurisdictionsCube.shortName,
+        JurisdictionsCube.jurisdictionId,
+        JurisdictionsCube.displayName
+      ],
       timeDimension: AlertsCube.publishedDate,
       granularity: `day`,
       buildRangeStart: {
@@ -198,6 +204,8 @@ cube(`AlertsCube`, {
       dimensions: [
         Tenants.tenantId,
         JurisdictionsCube.displayName,
+        JurisdictionsCube.shortName,
+        JurisdictionsCube.jurisdictionId,
         AlertsCube.alertCategory,
       ],
       timeDimension: AlertsCube.publishedDate,
@@ -226,7 +234,12 @@ cube(`AlertsCube`, {
         AlertsCube.becameLawBills,
         AlertsCube.totalBillsDocStatus
       ],
-      dimensions: [Tenants.tenantId, JurisdictionsCube.displayName],
+      dimensions: [
+        Tenants.tenantId,
+        JurisdictionsCube.shortName,
+        JurisdictionsCube.jurisdictionId,
+        JurisdictionsCube.displayName
+      ],
       timeDimension: AlertsCube.publishedDate,
       granularity: `day`,
       buildRangeStart: {
@@ -262,6 +275,8 @@ cube(`AlertsCube`, {
       ],
       dimensions: [
         Tenants.tenantId,
+        JurisdictionsCube.shortName,
+        JurisdictionsCube.jurisdictionId,
         JurisdictionsCube.displayName,
         AlertsCube.alertCategory
       ],

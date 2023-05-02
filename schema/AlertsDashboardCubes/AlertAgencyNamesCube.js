@@ -3,7 +3,7 @@ import {agenciesCollection} from './collections';
 import { ALERT_AGENCY_NAMES_CUBE_REFRESH_KEY_TIME  } from './cube-constants';
 
 cube(`AlertAgencyNamesCube`, {
-  sql: `SELECT _id , name as agencyNames FROM ${agenciesCollection}`,
+  sql: `SELECT _id , name as agencyNames, shortCode FROM ${agenciesCollection}`,
 
   sqlAlias: `AgNameCu`,
 
@@ -16,6 +16,11 @@ cube(`AlertAgencyNamesCube`, {
       sql: `${CUBE}.\`agencyNames\``,
       type: `string`,
       title: `agencyNames`
+    },
+    shortCode: {
+      sql: `${CUBE}.\`shortCode\``,
+      type: `string`,
+      title: `shortCode`
     },
     _id: {
       sql: `${CUBE}.\`_id\``,
