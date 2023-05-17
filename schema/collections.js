@@ -20,8 +20,8 @@ export const alertsMetaCollection = getCollectionString("alerts_meta");
 export const juridictionsCollection = getCollectionString("reg_jurisdictions");
 export const enforcementActionsCollection =
 	getCollectionString("reg_ea_alerts");
-export const enforcementActionsAgencyNameCollection = getCollectionString(
-	"reg_ea_alerts_agencyNames"
+export const enforcementActionsAgencyMapCollection = getCollectionString(
+	"reg_ea_alerts_agencyMap"
 );
 export const corpusCollection = getCollectionString("reg_corpus");
 export const harmonizedActionCollection = getCollectionString(

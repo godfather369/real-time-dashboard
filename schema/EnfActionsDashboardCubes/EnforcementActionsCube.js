@@ -1,8 +1,10 @@
 import { ENFORCEMENT_CUBE_REFRESH_KEY_TIME , ENFORCEMENT_CUBE_PRE_AGG_REFRESH_KEY } from "./cube-constants";
-import { enforcementActionsCollection } from "./collections"
+import { enforcementActionsCollection, enforcementActionsAgencyMapCollection } from "./collections"
 
 cube(`EnforcementActionsCube`, {
-  sql: `SELECT *  FROM ${enforcementActionsCollection} where ${enforcementActionsCollection}.archived=0 `,
+  sql: `SELECT * FROM 
+	(SELECT * FROM (SELECT * FROM ${enforcementActionsCollection} where ${enforcementActionsCollection}.archived=0) as EAalerts LEFT JOIN 
+	(SELECT _id as Id , agencyMap FROM ${enforcementActionsAgencyMapCollection}) as EAagencyMapCube ON EAalerts._id = EAagencyMapCube.Id ) as EAalertsCubeJoin`,
   
   sqlAlias: `eARep`,
 
@@ -27,10 +29,10 @@ cube(`EnforcementActionsCube`, {
       relationship: `hasMany`,
       sql: `${CUBE._id} = ${RegulationsCube._id}`
     },
-		EnforcementActionsAgencyNamesCube: {
+    AlertAgencyNamesCube: {
       relationship: `belongsTo`,
-      sql: `${CUBE._id} = ${EnforcementActionsAgencyNamesCube._id}`
-    }
+      sql: `${CUBE.agencyMap} = ${AlertAgencyNamesCube._id}`
+    },
   },
 
   preAggregations: {
@@ -41,7 +43,13 @@ cube(`EnforcementActionsCube`, {
       external: true,
       scheduledRefresh: true,
       measures: [EnforcementActionsCube.count , EnforcementActionsCube.netAmount],
-      dimensions: [EnforcementActionsAgencyNamesCube.agencyNames , EnforcementActionsCube.currency , Tenants.tenantId],
+      dimensions: [
+        EnforcementActionsCube.agencyMap,
+        AlertAgencyNamesCube.shortCode,
+        AlertAgencyNamesCube.agencyNames,
+        EnforcementActionsCube.currency,
+        Tenants.tenantId
+      ],
       timeDimension: EnforcementActionsCube.effectiveDate,
       granularity: `day`,
       buildRangeStart: {
@@ -61,7 +69,9 @@ cube(`EnforcementActionsCube`, {
 			scheduledRefresh: true,
       measures: [EnforcementActionsCube.count],
       dimensions: [
-        EnforcementActionsAgencyNamesCube.agencyNames,
+        EnforcementActionsCube.agencyMap,
+        AlertAgencyNamesCube.shortCode,
+        AlertAgencyNamesCube.agencyNames,
         HarmonizedActionTypeCube.harmonizedActionType,
         Tenants.tenantId
       ],
@@ -131,6 +141,11 @@ cube(`EnforcementActionsCube`, {
     tenantId: {
       sql: `${CUBE}.\`tenantId\``,
       type: `string`
+    },
+    agencyMap: {
+      sql: `${CUBE}.\`agencyMap\``,
+      type: `string`,
+      title: `agencyMap`
     }
   }
 });

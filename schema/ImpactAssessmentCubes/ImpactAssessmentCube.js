@@ -116,6 +116,7 @@ cube(`ImpactAssessmentCube`, {
 			],
 			dimensions: [
 			  Users.fullName,
+				Users._id,
 				Tenants.tenantId
 			],
 			timeDimension: ImpactAssessmentCube.startDate,

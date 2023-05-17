@@ -51,7 +51,7 @@ cube(`MapOwnersCube`, {
         MapOwnersCube.taskCount,
         MapOwnersCube.total
       ],
-      dimensions: [Tenants.tenantId, Users.fullName],
+      dimensions: [Tenants.tenantId, Users.fullName, Users._id],
       refreshKey: {
         every: OWNERS_STATUS_CUBE_PRE_AGG_REFRESH_KEY_TIME
       },

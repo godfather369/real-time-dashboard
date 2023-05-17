@@ -207,6 +207,7 @@ cube(`AlertsCube`, {
         JurisdictionsCube.shortName,
         JurisdictionsCube.jurisdictionId,
         AlertsCube.alertCategory,
+        AlertsCube.status
       ],
       timeDimension: AlertsCube.publishedDate,
       granularity: `day`,
@@ -238,7 +239,9 @@ cube(`AlertsCube`, {
         Tenants.tenantId,
         JurisdictionsCube.shortName,
         JurisdictionsCube.jurisdictionId,
-        JurisdictionsCube.displayName
+        JurisdictionsCube.displayName,
+        AlertsCube.status,
+        AlertsCube.docStatus
       ],
       timeDimension: AlertsCube.publishedDate,
       granularity: `day`,
@@ -278,7 +281,8 @@ cube(`AlertsCube`, {
         JurisdictionsCube.shortName,
         JurisdictionsCube.jurisdictionId,
         JurisdictionsCube.displayName,
-        AlertsCube.alertCategory
+        AlertsCube.alertCategory,
+        AlertsCube.docStatus
       ],
       timeDimension: AlertsCube.publishedDate,
       granularity: `day`,
