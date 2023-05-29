@@ -1,4 +1,4 @@
-import { MAP_OWNERS_CUBE_REFRESH_KEY_TIME , OWNERS_STATUS_CUBE_PRE_AGG_REFRESH_KEY_TIME } from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME , PRE_AGG_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`MapOwnersCube`, {
   sql: `
@@ -26,7 +26,7 @@ cube(`MapOwnersCube`, {
   sqlAlias: `MapOwCube`,
 
   refreshKey: {
-    every: MAP_OWNERS_CUBE_REFRESH_KEY_TIME
+    every: CUBE_REFRESH_KEY_TIME
   },
 
   joins: {
@@ -53,7 +53,7 @@ cube(`MapOwnersCube`, {
       ],
       dimensions: [Tenants.tenantId, Users.fullName, Users._id],
       refreshKey: {
-        every: OWNERS_STATUS_CUBE_PRE_AGG_REFRESH_KEY_TIME
+        every: PRE_AGG_REFRESH_KEY_TIME
       },
     },
   },

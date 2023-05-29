@@ -4,8 +4,8 @@ import {
   masterDatumCollection,
 } from './collections'
 import {
-  ALERT_CUBE_REFRESH_KEY_TIME,
-  ALERT_CUBE_PRE_AGG_REFRESH_KEY,
+  CUBE_REFRESH_KEY_TIME,
+  PRE_AGG_REFRESH_KEY_TIME,
 } from './cube-constants'
 
 cube(`AlertsByTopic`, {
@@ -25,7 +25,7 @@ cube(`AlertsByTopic`, {
 	`,
 
   refreshKey: {
-    every: ALERT_CUBE_REFRESH_KEY_TIME,
+    every: CUBE_REFRESH_KEY_TIME,
   },
 
   sqlAlias: `AlByT`,
@@ -59,7 +59,7 @@ cube(`AlertsByTopic`, {
         sql: `SELECT NOW()`,
       },
       refreshKey: {
-        every: ALERT_CUBE_PRE_AGG_REFRESH_KEY,
+        every: PRE_AGG_REFRESH_KEY_TIME,
       },
     },
   },

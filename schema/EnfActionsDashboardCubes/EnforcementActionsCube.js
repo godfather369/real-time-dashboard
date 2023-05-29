@@ -1,4 +1,4 @@
-import { ENFORCEMENT_CUBE_REFRESH_KEY_TIME , ENFORCEMENT_CUBE_PRE_AGG_REFRESH_KEY } from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME , PRE_AGG_REFRESH_KEY_TIME } from "./cube-constants";
 import { enforcementActionsCollection, enforcementActionsAgencyMapCollection } from "./collections"
 
 cube(`EnforcementActionsCube`, {
@@ -9,7 +9,7 @@ cube(`EnforcementActionsCube`, {
   sqlAlias: `eARep`,
 
   refreshKey: {
-    every: `${ENFORCEMENT_CUBE_REFRESH_KEY_TIME}`
+    every: `${CUBE_REFRESH_KEY_TIME}`
   },
 
   joins: {
@@ -59,7 +59,7 @@ cube(`EnforcementActionsCube`, {
         sql: `SELECT NOW()`,
       },
       refreshKey: {
-        every: ENFORCEMENT_CUBE_PRE_AGG_REFRESH_KEY,
+        every: PRE_AGG_REFRESH_KEY_TIME,
       },
     },
     actionsByAgencyRollUpJoin: {
@@ -84,7 +84,7 @@ cube(`EnforcementActionsCube`, {
         sql: `SELECT NOW()`
       },
       refreshKey: {
-        every: ENFORCEMENT_CUBE_PRE_AGG_REFRESH_KEY
+        every: PRE_AGG_REFRESH_KEY_TIME
       }
     },
 		authDocImpactedRollUp: {
@@ -101,7 +101,7 @@ cube(`EnforcementActionsCube`, {
       timeDimension: EnforcementActionsCube.effectiveDate,
       granularity: `day`,
       refreshKey: {
-        every: ENFORCEMENT_CUBE_PRE_AGG_REFRESH_KEY,
+        every: PRE_AGG_REFRESH_KEY_TIME,
       },
       buildRangeStart: {
         sql: `SELECT NOW() - interval '365 day'`,

@@ -1,6 +1,6 @@
 import { AggregateUserFeeds} from "./sql-queries";
 import {juridictionsCollection} from "./collections";
-import {COMPLIANCE_COVERAGE_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME, PRE_AGG_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`AgencyCoverageCube`, {
   sql: `
@@ -15,7 +15,7 @@ cube(`AgencyCoverageCube`, {
   sqlAlias: `AgenCov`,
 
 	refreshKey: {
-		every: COMPLIANCE_COVERAGE_CUBE_REFRESH_KEY_TIME,
+		every: CUBE_REFRESH_KEY_TIME,
 	},
 
 
@@ -34,7 +34,7 @@ cube(`AgencyCoverageCube`, {
         Tenants.tenantId
       ],
       refreshKey: {
-        every: COMPLIANCE_COVERAGE_CUBE_REFRESH_KEY_TIME
+        every: PRE_AGG_REFRESH_KEY_TIME
       }
     }	
 	},

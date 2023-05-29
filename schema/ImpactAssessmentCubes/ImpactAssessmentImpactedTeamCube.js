@@ -1,12 +1,12 @@
 import {impactAssessmentImpactedTeamCollection} from './collections';
-import { IMPACT_ASSESSMENT_IMPACTED_TEAM_CUBE_REFRESH_KEY_TIME} from './cube-constants';
+import { CUBE_REFRESH_KEY_TIME} from './cube-constants';
 
 cube(`ImpactAssessmentImpactedTeamCube`, {
     sql: `SELECT * FROM ${impactAssessmentImpactedTeamCollection} `,
     sqlAlias: `impAsTmCube`,
 
     refreshKey: {
-        every: IMPACT_ASSESSMENT_IMPACTED_TEAM_CUBE_REFRESH_KEY_TIME
+        every: CUBE_REFRESH_KEY_TIME
     },
 
     dimensions: {

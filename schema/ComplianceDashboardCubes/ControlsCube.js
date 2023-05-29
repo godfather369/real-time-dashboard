@@ -1,4 +1,4 @@
-import { CONTROL_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 import { controlsCollection } from "./collections";
 
 cube(`ControlsCube`, {
@@ -9,7 +9,7 @@ cube(`ControlsCube`, {
   sqlAlias : `ConCube`,
   
   refreshKey: {
-    every: CONTROL_CUBE_REFRESH_KEY_TIME
+    every: CUBE_REFRESH_KEY_TIME
   },
 
   measures: {

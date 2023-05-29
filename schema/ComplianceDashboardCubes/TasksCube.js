@@ -1,4 +1,4 @@
-import { TASK_CUBE_REFRESH_KEY_TIME , TASKS_CUBE_PRE_AGG_REFRESH_KEY_TIME } from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME , PRE_AGG_REFRESH_KEY_TIME } from "./cube-constants";
 import { tasksCollection } from "./collections";
 
 cube(`TasksCube`, {
@@ -9,7 +9,7 @@ cube(`TasksCube`, {
   sqlAlias : `TskCube`,
   
   refreshKey: {
-    every: TASK_CUBE_REFRESH_KEY_TIME
+    every: CUBE_REFRESH_KEY_TIME
   },
 
   joins: {
@@ -31,7 +31,7 @@ cube(`TasksCube`, {
       measures: [TasksCube.count],
       dimensions: [Tenants.tenantId, TasksCube.dueDate],
       refreshKey: {
-        every: TASKS_CUBE_PRE_AGG_REFRESH_KEY_TIME
+        every: PRE_AGG_REFRESH_KEY_TIME
       },
     },
   },

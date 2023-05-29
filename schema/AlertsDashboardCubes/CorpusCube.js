@@ -1,4 +1,4 @@
-import { CORPUS_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 import { corpusCollection } from "./collections";
 
 cube(`CorpusCube`, {
@@ -7,7 +7,7 @@ cube(`CorpusCube`, {
   sqlAlias : `CorpCube`,
 
 	refreshKey: {
-    every: CORPUS_CUBE_REFRESH_KEY_TIME,
+    every: CUBE_REFRESH_KEY_TIME,
   },
 
   joins: {

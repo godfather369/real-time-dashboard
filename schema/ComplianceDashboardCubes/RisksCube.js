@@ -1,5 +1,5 @@
 import { risksCollection } from "./collections";
-import { RISK_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`RisksCube`, {
 	
@@ -10,7 +10,7 @@ cube(`RisksCube`, {
   sqlAlias : `RiCube`,
   
   refreshKey: {
-    every: RISK_CUBE_REFRESH_KEY_TIME
+    every: CUBE_REFRESH_KEY_TIME
   },
 
   measures: {

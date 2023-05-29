@@ -1,7 +1,7 @@
 import { alertsCollection, agencyMapCollection } from './collections'
 import {
-  ALERT_CUBE_REFRESH_KEY_TIME,
-  ALERT_CUBE_PRE_AGG_REFRESH_KEY
+  CUBE_REFRESH_KEY_TIME,
+  PRE_AGG_REFRESH_KEY_TIME
 } from './cube-constants'
 
 cube(`AlertsCube`, {
@@ -12,7 +12,7 @@ cube(`AlertsCube`, {
   sqlAlias: `AlCube`,
 
   refreshKey: {
-    every: ALERT_CUBE_REFRESH_KEY_TIME
+    every: CUBE_REFRESH_KEY_TIME
   },
 
   joins: {
@@ -66,7 +66,7 @@ cube(`AlertsCube`, {
         sql: `SELECT NOW()`
       },
       refreshKey: {
-        every: ALERT_CUBE_PRE_AGG_REFRESH_KEY
+        every: PRE_AGG_REFRESH_KEY_TIME
       }
     },
     alertsByAgencyRollUp: {
@@ -97,7 +97,7 @@ cube(`AlertsCube`, {
         sql: `SELECT NOW()`
       },
       refreshKey: {
-        every: ALERT_CUBE_PRE_AGG_REFRESH_KEY
+        every: PRE_AGG_REFRESH_KEY_TIME
       }
     },
     feedPerJurisdictionRollUp: {
@@ -121,7 +121,7 @@ cube(`AlertsCube`, {
         sql: `SELECT NOW()`
       },
       refreshKey: {
-        every: ALERT_CUBE_PRE_AGG_REFRESH_KEY,
+        every: PRE_AGG_REFRESH_KEY_TIME
       }
     },
     activeBillsByJurisdictionRollUp: {
@@ -152,7 +152,7 @@ cube(`AlertsCube`, {
         sql: `SELECT NOW()`
       },
       refreshKey: {
-        every: ALERT_CUBE_PRE_AGG_REFRESH_KEY
+        every: PRE_AGG_REFRESH_KEY_TIME
       }
     },
     alertRulePerJurisdictionRollUp: {
@@ -182,7 +182,7 @@ cube(`AlertsCube`, {
         sql: `SELECT NOW()`
       },
       refreshKey: {
-        every: ALERT_CUBE_PRE_AGG_REFRESH_KEY
+        every: PRE_AGG_REFRESH_KEY_TIME
       }
     },
     alertsByJurisdictionAndDocStat: {
@@ -218,7 +218,7 @@ cube(`AlertsCube`, {
         sql: `SELECT NOW()`
       },
       refreshKey: {
-        every: ALERT_CUBE_PRE_AGG_REFRESH_KEY
+        every: PRE_AGG_REFRESH_KEY_TIME
       }
     },
     billsDocStatusRollUp: {
@@ -252,7 +252,7 @@ cube(`AlertsCube`, {
         sql: `SELECT NOW()`
       },
       refreshKey: {
-        every: ALERT_CUBE_PRE_AGG_REFRESH_KEY
+        every: PRE_AGG_REFRESH_KEY_TIME
       }
     },
     agencyUpdatesDocStatus: {
@@ -293,7 +293,7 @@ cube(`AlertsCube`, {
         sql: `SELECT NOW()`
       },
       refreshKey: {
-        every: ALERT_CUBE_PRE_AGG_REFRESH_KEY
+        every: PRE_AGG_REFRESH_KEY_TIME
       }
     }
   },

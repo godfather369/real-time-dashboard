@@ -1,4 +1,4 @@
-import { ENFORCEMENT_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 import { regulationsCollection } from "./collections";
 
 cube(`RegulationsCube`, {
@@ -6,7 +6,7 @@ cube(`RegulationsCube`, {
   sqlAlias: `ReglCube`,
 
   refreshKey: {
-    every: `${ENFORCEMENT_CUBE_REFRESH_KEY_TIME}`
+    every: `${CUBE_REFRESH_KEY_TIME}`
   },
 
   measures: {

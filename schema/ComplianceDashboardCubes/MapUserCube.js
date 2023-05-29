@@ -1,11 +1,11 @@
-import { MAP_USER_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 import { mapUserCollection } from "./collections";
 
 cube(`MapUserCube`, {
   sql: `SELECT user , srcObject FROM ${mapUserCollection} where ${mapUserCollection}.archived = 0 `,
 
   refreshKey: {
-    every: MAP_USER_CUBE_REFRESH_KEY_TIME
+    every: CUBE_REFRESH_KEY_TIME
   },
 
   sqlAlias: `MapUsCube`,

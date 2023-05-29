@@ -4,8 +4,8 @@ import {
 	groupCollection,
 } from "./collections";
 import {
-	ALERT_CUBE_REFRESH_KEY_TIME,
-	ALERT_CUBE_PRE_AGG_REFRESH_KEY_WORKFLOW,
+	CUBE_REFRESH_KEY_TIME,
+	PRE_AGG_REFRESH_KEY_TIME,
 } from "./cube-constants";
 
 cube(`AlertsByGroupsCube`, {
@@ -21,7 +21,7 @@ cube(`AlertsByGroupsCube`, {
 	sqlAlias: `AlGrpCube`,
 
 	refreshKey: {
-		every: ALERT_CUBE_REFRESH_KEY_TIME,
+		every: CUBE_REFRESH_KEY_TIME,
 	},
 
 	joins: {
@@ -59,7 +59,7 @@ cube(`AlertsByGroupsCube`, {
 				sql: `SELECT NOW()`,
 			},
 			refreshKey: {
-				every: ALERT_CUBE_PRE_AGG_REFRESH_KEY_WORKFLOW,
+				every: PRE_AGG_REFRESH_KEY_TIME,
 			},
 		},
 		alertGroupNameRollUp: {
@@ -79,7 +79,7 @@ cube(`AlertsByGroupsCube`, {
 				sql: `SELECT NOW()`,
 			},
 			refreshKey: {
-				every: ALERT_CUBE_PRE_AGG_REFRESH_KEY_WORKFLOW,
+				every: PRE_AGG_REFRESH_KEY_TIME,
 			},
 		},
 		alertsGroupApplicabilityRollUp: {
@@ -111,7 +111,7 @@ cube(`AlertsByGroupsCube`, {
 				sql: `SELECT NOW()`,
 			},
 			refreshKey: {
-				every: ALERT_CUBE_PRE_AGG_REFRESH_KEY_WORKFLOW,
+				every: PRE_AGG_REFRESH_KEY_TIME,
 			},
 		},
 	},

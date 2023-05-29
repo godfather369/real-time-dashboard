@@ -1,5 +1,5 @@
 import {regMapStatusUniregJoin, regMapStatusUniregJoinCC , CorpusJurisdictionJoin ,RegSiteJurisdictionJoin} from "./sql-queries";
-import {COMPLIANCE_COVERAGE_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import {CUBE_REFRESH_KEY_TIME, PRE_AGG_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`CoverageByJurisdictionCube`, {
 	sql : `
@@ -23,7 +23,7 @@ cube(`CoverageByJurisdictionCube`, {
 	sqlAlias: `CvrgByJurCube`,
 
 	refreshKey: {
-		every: COMPLIANCE_COVERAGE_CUBE_REFRESH_KEY_TIME,
+		every: CUBE_REFRESH_KEY_TIME,
 	},
 
 	joins: {
@@ -48,7 +48,7 @@ cube(`CoverageByJurisdictionCube`, {
         Tenants.tenantId
       ],
       refreshKey: {
-        every: COMPLIANCE_COVERAGE_CUBE_REFRESH_KEY_TIME
+        every: PRE_AGG_REFRESH_KEY_TIME
       }
     }	
 	},

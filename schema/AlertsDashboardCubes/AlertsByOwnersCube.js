@@ -1,5 +1,5 @@
 import {alertsCollection ,alertsUsersCollection } from './collections';
-import { ALERT_CUBE_REFRESH_KEY_TIME , ALERT_CUBE_PRE_AGG_REFRESH_KEY_WORKFLOW } from './cube-constants';
+import { CUBE_REFRESH_KEY_TIME , PRE_AGG_REFRESH_KEY_TIME } from './cube-constants';
 
 cube(`AlertsByOwnersCube`, {
 	sql : `SELECT * FROM 
@@ -9,7 +9,7 @@ cube(`AlertsByOwnersCube`, {
   sqlAlias: `AlOwCube`,
 
   refreshKey: {
-    every: ALERT_CUBE_REFRESH_KEY_TIME
+    every: CUBE_REFRESH_KEY_TIME
   },
 
   joins: {
@@ -46,7 +46,7 @@ cube(`AlertsByOwnersCube`, {
         sql: `SELECT NOW()`
       },
       refreshKey: {
-           every: ALERT_CUBE_PRE_AGG_REFRESH_KEY_WORKFLOW
+           every: PRE_AGG_REFRESH_KEY_TIME
       }
     },
 		alertsApplicabilityRollUp: {
@@ -73,7 +73,7 @@ cube(`AlertsByOwnersCube`, {
         sql: `SELECT NOW()`
       },
       refreshKey: {
-           every: ALERT_CUBE_PRE_AGG_REFRESH_KEY_WORKFLOW
+           every: PRE_AGG_REFRESH_KEY_TIME
       }
     }
 	},

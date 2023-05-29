@@ -1,5 +1,5 @@
 import  { regMapStatusCollection , tasksCollection  } from "./collections";
-import {  MAP_STATUS_CUBE_REFRESH_KEY_TIME , MAP_STATUS_CUBE_PRE_AGG_REFRESH_KEY_TIME } from "./cube-constants";
+import {  CUBE_REFRESH_KEY_TIME , PRE_AGG_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`MapStatusCubeTask`, {
   sql: `SELECT status   , tenantId , _id  FROM
@@ -11,7 +11,7 @@ cube(`MapStatusCubeTask`, {
 			AS  TasksCube ON   TasksCube.id = MapStatusCube.srcObject `,
 
   refreshKey: {
-    every: MAP_STATUS_CUBE_REFRESH_KEY_TIME 
+    every: CUBE_REFRESH_KEY_TIME 
   },
 
   sqlAlias: `MapStCube`,
@@ -37,7 +37,7 @@ cube(`MapStatusCubeTask`, {
       dimensions: [Tenants.tenantId , MapStatusCubeTask.status],
       scheduledRefresh: true,
       refreshKey: {
-        every: MAP_STATUS_CUBE_PRE_AGG_REFRESH_KEY_TIME,
+        every: PRE_AGG_REFRESH_KEY_TIME,
       },
     },
   },

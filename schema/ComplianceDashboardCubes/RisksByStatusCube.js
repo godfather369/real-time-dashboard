@@ -1,4 +1,4 @@
-import { RISK_STATUS_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 import { risksByStatusCollection } from "./collections";
 
 cube(`RisksByStatusCube`, {
@@ -7,7 +7,7 @@ cube(`RisksByStatusCube`, {
   sqlAlias : `RisByStatCube`,
   
   refreshKey: {
-    every: RISK_STATUS_CUBE_REFRESH_KEY_TIME
+    every: CUBE_REFRESH_KEY_TIME
   },
 
   dimensions: {

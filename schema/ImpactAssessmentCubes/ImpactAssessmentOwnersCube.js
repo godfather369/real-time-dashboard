@@ -1,6 +1,6 @@
 
 import { impactAssessmentOwnersCollection} from './collections';
-import { IMPACT_ASSESSMENT_CUBE_REFRESH_KEY_TIME } from './cube-constants';
+import { CUBE_REFRESH_KEY_TIME } from './cube-constants';
 
 cube(`ImpactAssessmentOwnersCube`, {
   sql: `SELECT * FROM ${impactAssessmentOwnersCollection}`,
@@ -8,7 +8,7 @@ cube(`ImpactAssessmentOwnersCube`, {
   sqlAlias : `ImAsOwnCube`,
 
   refreshKey: {
-    every: IMPACT_ASSESSMENT_CUBE_REFRESH_KEY_TIME ,
+    every: CUBE_REFRESH_KEY_TIME ,
   },
 
 	joins :{

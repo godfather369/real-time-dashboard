@@ -4,8 +4,8 @@ import {
   groupCollection
 } from "./collections";
 import {
-  IMPACT_ASSESSMENT_CUBE_REFRESH_KEY_TIME,
-  IMPACT_ASSESSMENT_IMPACTED_TEAM_CUBE_PRE_AGG_REFRESH_KEY
+  CUBE_REFRESH_KEY_TIME,
+  PRE_AGG_REFRESH_KEY_TIME
 } from "./cube-constants";
 
 cube(`ImpactAssessmentGroupCube`, {
@@ -21,7 +21,7 @@ cube(`ImpactAssessmentGroupCube`, {
 	sqlAlias: `ImpGrpCube`,
 
 	refreshKey: {
-		every: IMPACT_ASSESSMENT_CUBE_REFRESH_KEY_TIME,
+		every: CUBE_REFRESH_KEY_TIME,
 	},
 
 	joins: {
@@ -57,7 +57,7 @@ cube(`ImpactAssessmentGroupCube`, {
 				sql: `SELECT NOW()`,
 			},
 			refreshKey: {
-				every: IMPACT_ASSESSMENT_IMPACTED_TEAM_CUBE_PRE_AGG_REFRESH_KEY,
+				every: PRE_AGG_REFRESH_KEY_TIME,
 			},
 		},
 	},

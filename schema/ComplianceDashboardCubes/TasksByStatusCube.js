@@ -1,4 +1,4 @@
-import { TASK_STATUS_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 import { tasksByStatusCollection } from "./collections"
 
 cube(`TasksByStatusCube`, {
@@ -7,7 +7,7 @@ cube(`TasksByStatusCube`, {
   sqlAlias :`TskStatCube`,
   
   refreshKey: {
-    every: TASK_STATUS_CUBE_REFRESH_KEY_TIME
+    every: CUBE_REFRESH_KEY_TIME
   },
 
   dimensions: {

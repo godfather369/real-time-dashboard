@@ -1,4 +1,4 @@
-import { CONTROL_STATUS_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 import { controlByStatusCollection } from "./collections";
 
 cube(`ControlsByStatusCube`, {
@@ -6,7 +6,7 @@ cube(`ControlsByStatusCube`, {
   sql: `SELECT * FROM ${controlByStatusCollection}`,
 
   refreshKey: {
-    every: CONTROL_STATUS_CUBE_REFRESH_KEY_TIME
+    every: CUBE_REFRESH_KEY_TIME
   },
 
   sqlAlias : `ConByStatCube`,

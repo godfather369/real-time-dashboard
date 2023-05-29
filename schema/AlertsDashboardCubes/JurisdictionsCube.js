@@ -1,4 +1,4 @@
-import { JURISDICTIONS_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 import { juridictionsCollection } from "./collections";
 
 cube(`JurisdictionsCube`, {
@@ -7,7 +7,7 @@ cube(`JurisdictionsCube`, {
   sqlAlias: `JursCube`,
 
   refreshKey: {
-    every: JURISDICTIONS_CUBE_REFRESH_KEY_TIME,
+    every: CUBE_REFRESH_KEY_TIME,
   },
 
   joins: {
