@@ -1,7 +1,7 @@
 import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 import { juridictionsCollection } from "./collections";
 
-cube(`JurisdictionsCube`, {
+cube(`Jurisdiction`, {
   sql: `SELECT jurisdictionId , displayName , tenantId, shortName FROM ${juridictionsCollection}`,
 	
   sqlAlias: `JursCube`,

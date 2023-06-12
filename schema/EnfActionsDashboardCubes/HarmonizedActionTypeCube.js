@@ -7,7 +7,7 @@ cube(`HarmonizedActionTypeCube`, {
   sqlAlias: `HaAcCube`,
 
   refreshKey: {
-    every: `${CUBE_REFRESH_KEY_TIME}`
+    every: CUBE_REFRESH_KEY_TIME
   },
 
   measures: {

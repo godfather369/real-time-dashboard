@@ -1,9 +1,9 @@
-import { userCollection } from "./collections";
+import { masterDatumCollection } from "./collections";
 import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
-cube(`Users`, {
-	sql: `SELECT _id , fullName , tenantId FROM ${userCollection} where ${userCollection}.archived=false `,
-	sqlAlias: `usrs`,
+cube(`MasterDatum`, {
+	sql: `SELECT _id , name , tenantId FROM ${masterDatumCollection} `,
+	sqlAlias: `MsDm`,
 
 	refreshKey: {
 		every: CUBE_REFRESH_KEY_TIME,
@@ -19,7 +19,7 @@ cube(`Users`, {
 	measures: {
 		count: {
 			type: `count`,
-			drillMembers: [fullName, tenantId, _id],
+			drillMembers: [tenantId, _id],
 		},
 	},
 
@@ -30,8 +30,8 @@ cube(`Users`, {
 			primaryKey: true,
 			shown: true,
 		},
-		fullName: {
-			sql: `${CUBE}.\`fullName\``,
+		name: {
+			sql: `${CUBE}.\`name\``,
 			type: `string`,
 		},
 		tenantId: {

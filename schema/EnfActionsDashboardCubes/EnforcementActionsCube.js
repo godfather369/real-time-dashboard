@@ -9,7 +9,7 @@ cube(`EnforcementActionsCube`, {
   sqlAlias: `eARep`,
 
   refreshKey: {
-    every: `${CUBE_REFRESH_KEY_TIME}`
+    every: CUBE_REFRESH_KEY_TIME
   },
 
   joins: {
@@ -29,9 +29,9 @@ cube(`EnforcementActionsCube`, {
       relationship: `hasMany`,
       sql: `${CUBE._id} = ${RegulationsCube._id}`
     },
-    AlertAgencyNamesCube: {
+    Agency: {
       relationship: `belongsTo`,
-      sql: `${CUBE.agencyMap} = ${AlertAgencyNamesCube._id}`
+      sql: `${CUBE.agencyMap} = ${Agency._id}`
     },
   },
 
@@ -45,8 +45,8 @@ cube(`EnforcementActionsCube`, {
       measures: [EnforcementActionsCube.count , EnforcementActionsCube.netAmount],
       dimensions: [
         EnforcementActionsCube.agencyMap,
-        AlertAgencyNamesCube.shortCode,
-        AlertAgencyNamesCube.agencyNames,
+        Agency.shortCode,
+        Agency.agencyNames,
         EnforcementActionsCube.currency,
         Tenants.tenantId
       ],
@@ -70,8 +70,8 @@ cube(`EnforcementActionsCube`, {
       measures: [EnforcementActionsCube.count],
       dimensions: [
         EnforcementActionsCube.agencyMap,
-        AlertAgencyNamesCube.shortCode,
-        AlertAgencyNamesCube.agencyNames,
+        Agency.shortCode,
+        Agency.agencyNames,
         HarmonizedActionTypeCube.harmonizedActionType,
         Tenants.tenantId
       ],

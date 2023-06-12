@@ -1,11 +1,11 @@
 import { impactAssessmentCollection } from "./collections";
 import {
 	CUBE_REFRESH_KEY_TIME,
-	PRE_AGG_REFRESH_KEY_TIME
+	PRE_AGG_REFRESH_KEY_TIME,
 } from "./cube-constants";
 
 cube(`ImpactAssessmentCube`, {
-	sql: `SELECT _id,tenantId,impactLevel,status,startDate,created FROM ${impactAssessmentCollection} where ${impactAssessmentCollection}.archived=0`,
+	sql: `SELECT _id, tenantId, impactLevel, status, startDate FROM ${impactAssessmentCollection} where ${impactAssessmentCollection}.archived=0`,
 
 	sqlAlias: `impAsCube`,
 
@@ -18,14 +18,6 @@ cube(`ImpactAssessmentCube`, {
 			relationship: `hasOne`,
 			sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
 		},
-		ImpactAssessmentOwnersCube: {
-			relationship: `belongsTo`,
-			sql: `${CUBE._id} = ${ImpactAssessmentOwnersCube._id}`,
-		},
-		ImpactAssessmentImpactedTeamCube: {
-			relationship: `belongsTo`,
-			sql: `${CUBE._id}=${ImpactAssessmentImpactedTeamCube.id}`
-		}
 	},
 
 	preAggregations: {
@@ -39,11 +31,9 @@ cube(`ImpactAssessmentCube`, {
 				ImpactAssessmentCube.new,
 				ImpactAssessmentCube.closed,
 			],
-			dimensions: [
-				Tenants.tenantId
-			],
+			dimensions: [Tenants.tenantId],
 			timeDimension: ImpactAssessmentCube.startDate,
-			granularity: `month`,
+			granularity: `day`,
 			buildRangeStart: {
 				sql: `SELECT NOW() - interval '365 day'`,
 			},
@@ -66,11 +56,9 @@ cube(`ImpactAssessmentCube`, {
 				ImpactAssessmentCube.high,
 				ImpactAssessmentCube.critical,
 			],
-			dimensions: [
-				Tenants.tenantId
-			],
+			dimensions: [Tenants.tenantId],
 			timeDimension: ImpactAssessmentCube.startDate,
-			granularity: `month`,
+			granularity: `day`,
 			buildRangeStart: {
 				sql: `SELECT NOW() - interval '365 day'`,
 			},
@@ -81,83 +69,6 @@ cube(`ImpactAssessmentCube`, {
 				every: PRE_AGG_REFRESH_KEY_TIME,
 			},
 		},
-		impactAssessmentImpactedTeamRollUp: {
-			sqlAlias: "iaByTm",
-			type: `rollup`,
-			external: true,
-			scheduledRefresh: true,
-			measures: [
-			  ImpactAssessmentCube.count
-			],
-			dimensions: [
-			  ImpactAssessmentImpactedTeamCube.impactedTeam,
-				Tenants.tenantId
-			],
-			timeDimension: ImpactAssessmentCube.startDate,
-			granularity: `month`,
-			buildRangeStart: {
-			  sql: `SELECT NOW() - interval '365 day'`,
-			},
-			buildRangeEnd: {
-			  sql: `SELECT NOW()`,
-			},
-			refreshKey: {
-			  every: PRE_AGG_REFRESH_KEY_TIME
-			}
-		},
-		impactAssessmentOwnersRollUp: {
-			sqlAlias: "iaByOw",
-			type: `rollup`,
-			external: true,
-			scheduledRefresh: true,
-			measures: [
-			  ImpactAssessmentCube.count
-			],
-			dimensions: [
-			  Users.fullName,
-				Users._id,
-				Tenants.tenantId
-			],
-			timeDimension: ImpactAssessmentCube.startDate,
-			granularity: `day`,
-			buildRangeStart: {
-			  sql: `SELECT NOW() - interval '365 day'`,
-			},
-			buildRangeEnd: {
-			  sql: `SELECT NOW()`,
-			},
-			refreshKey: {
-			  every: PRE_AGG_REFRESH_KEY_TIME
-			}
-		},
-		impactAssessmentApplicabilityRollUp: {
-			sqlAlias: "iaByApp",
-			type: `rollup`,
-			external: true,
-			scheduledRefresh: true,
-			measures: [
-			  ImpactAssessmentCube.open,
-				ImpactAssessmentCube.New,
-				ImpactAssessmentCube.inProcess,
-				ImpactAssessmentCube.closed
-			],
-			dimensions: [
-			  Users.fullName,
-				Users._id,
-				Tenants.tenantId
-			],
-			timeDimension: ImpactAssessmentCube.created,
-			granularity: `day`,
-			buildRangeStart: {
-			  sql: `SELECT NOW() - interval '90 day'`,
-			},
-			buildRangeEnd: {
-			  sql: `SELECT NOW()`,
-			},
-			refreshKey: {
-			  every: PRE_AGG_REFRESH_KEY_TIME
-			}
-		}
 	},
 
 	measures: {
@@ -193,21 +104,6 @@ cube(`ImpactAssessmentCube`, {
 					sql: `${CUBE}.status = 'Closed'`,
 				},
 			],
-		},
-		New :{
-			sql: `status`,
-			type: "count",
-			title: "New",
-			filters: [
-				{
-					sql: `${CUBE}.status ='New'`,
-				},
-			],
-		},
-		open : {
-			sql: `${inProcess} + ${New}`,
-      type: `number`,
-      title: "open"
 		},
 		noImpact: {
 			type: `count`,
@@ -248,10 +144,6 @@ cube(`ImpactAssessmentCube`, {
 		},
 		startDate: {
 			sql: `startDate`,
-			type: `time`,
-		},
-		created: {
-			sql: `created`,
 			type: `time`,
 		},
 		_id: {

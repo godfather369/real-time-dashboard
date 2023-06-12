@@ -1,24 +1,17 @@
 import {
-  impactAssessmentCollection,
-  impactAssessmentGroupsCollection,
-  groupCollection
+	impactAssessmentCollection,
+	impactAssessmentGroupsCollection,
 } from "./collections";
 import {
-  CUBE_REFRESH_KEY_TIME,
-  PRE_AGG_REFRESH_KEY_TIME
+	CUBE_REFRESH_KEY_TIME,
+	PRE_AGG_REFRESH_KEY_TIME,
 } from "./cube-constants";
 
-cube(`ImpactAssessmentGroupCube`, {
-	sql: `SELECT * FROM 
-	(SELECT * FROM (SELECT _id, created,tenantId,status FROM ${impactAssessmentCollection} WHERE ${impactAssessmentCollection}.archived=0) 
-		as impactAssesment LEFT JOIN 
-	(SELECT _id as Id , groups FROM ${impactAssessmentGroupsCollection}) 
-	as groupIds on impactAssesment._id = groupIds.Id  )
-		as impactGroupCube
-	 INNER JOIN (SELECT _id as grpId , name FROM ${groupCollection}) 
-		as groups on impactGroupCube.groups = groups.grpId`,
+cube(`ImpactsByGroupCube`, {
+	sql: `SELECT * FROM (SELECT _id, tenantId, startDate, created, status  FROM ${impactAssessmentCollection} where ${impactAssessmentCollection}.archived=0) as impacts INNER JOIN 
+	(SELECT _id as Id , groups FROM ${impactAssessmentGroupsCollection}) as grpIds ON impacts._id = grpIds.Id`,
 
-	sqlAlias: `ImpGrpCube`,
+	sqlAlias: `IAGrCube`,
 
 	refreshKey: {
 		every: CUBE_REFRESH_KEY_TIME,
@@ -29,26 +22,27 @@ cube(`ImpactAssessmentGroupCube`, {
 			relationship: `hasOne`,
 			sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
 		},
+		Groups: {
+			relationship: `belongsTo`,
+			sql: `${CUBE.groups} = ${Groups._id}`,
+		},
 	},
 
 	preAggregations: {
-		ImpactsByGroupssRollUp: {
-			sqlAlias: "ImpByGrpsRP",
+		impactsGroupsRollUp: {
+			sqlAlias: "IAByAppRP",
 			type: `rollup`,
 			external: true,
 			scheduledRefresh: true,
 			measures: [
-				ImpactAssessmentGroupCube.open,
-				ImpactAssessmentGroupCube.New,
-				ImpactAssessmentGroupCube.inProcess,
-				ImpactAssessmentGroupCube.closed,
+				ImpactsByGroupCube.count,
+				ImpactsByGroupCube.open,
+				ImpactsByGroupCube.New,
+				ImpactsByGroupCube.inProcess,
+				ImpactsByGroupCube.closed,
 			],
-			dimensions: [
-				Tenants.tenantId,
-				ImpactAssessmentGroupCube.grpId,
-				ImpactAssessmentGroupCube.name,
-			],
-			timeDimension: ImpactAssessmentGroupCube.created,
+			dimensions: [Tenants.tenantId, Groups.name, Groups._id],
+			timeDimension: ImpactsByGroupCube.created,
 			granularity: `day`,
 			buildRangeStart: {
 				sql: `SELECT NOW() - interval '365 day'`,
@@ -63,20 +57,29 @@ cube(`ImpactAssessmentGroupCube`, {
 	},
 
 	measures: {
+		count: {
+			type: `count`,
+			drillMembers: [_id],
+		},
+		closed: {
+			sql: `status`,
+			type: "count",
+			title: "Closed",
+			filters: [
+				{
+					sql: `${CUBE}.status = 'Closed'`,
+				},
+			],
+		},
 		New: {
 			sql: `status`,
 			type: "count",
-			title: "New",
+			title: "Open",
 			filters: [
 				{
 					sql: `${CUBE}.status ='New'`,
 				},
 			],
-		},
-		open: {
-			sql: `${inProcess} + ${New}`,
-			type: `number`,
-			title: "open",
 		},
 		inProcess: {
 			sql: `status`,
@@ -88,15 +91,10 @@ cube(`ImpactAssessmentGroupCube`, {
 				},
 			],
 		},
-		closed: {
-			sql: `status`,
-			type: "count",
-			title: "Closed",
-			filters: [
-				{
-					sql: `${CUBE}.status = 'Closed'`,
-				},
-			],
+		open: {
+			sql: `${inProcess} + ${New}`,
+			type: `number`,
+			title: "open",
 		},
 	},
 
@@ -110,19 +108,23 @@ cube(`ImpactAssessmentGroupCube`, {
 			sql: `${CUBE}.\`tenantId\``,
 			type: `string`,
 		},
+		startDate: {
+			sql: `${CUBE}.\`startDate\``,
+			type: `time`,
+		},
 		created: {
 			sql: `${CUBE}.\`created\``,
 			type: `time`,
 		},
-		name: {
-			sql: `${CUBE}.\`name\``,
+		groups: {
+			sql: `groups`,
 			type: `string`,
-			title: `names`,
+			title: `groups`,
 		},
-		grpId: {
-			sql: `${CUBE}.\`grpId\``,
+		status: {
+			sql: `status`,
 			type: `string`,
-		}
+		},
 	},
 
 	dataSource: `default`,

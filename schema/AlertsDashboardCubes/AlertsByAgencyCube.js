@@ -1,14 +1,14 @@
-import { alertsCollection, alertsGroupsCollection } from "./collections";
+import { alertsCollection, agencyMapCollection } from "./collections";
 import {
 	CUBE_REFRESH_KEY_TIME,
 	PRE_AGG_REFRESH_KEY_TIME,
 } from "./cube-constants";
 
-cube(`AlertsByGroupsCube`, {
-	sql: `SELECT * FROM (SELECT _id, status, tenantId, publishedDate, created, alertCategory  FROM ${alertsCollection} where ${alertsCollection}.archived=0) as alerts INNER JOIN 
-	(SELECT _id as Id , groups FROM ${alertsGroupsCollection}) as groupIds ON alerts._id = groupIds.Id`,
+cube(`AlertsByAgencyCube`, {
+	sql: `SELECT * FROM (SELECT _id, status, tenantId, publishedDate, alertCategory  FROM ${alertsCollection} where ${alertsCollection}.archived=0) as alerts INNER JOIN 
+	(SELECT _id as Id , agencyMap FROM ${agencyMapCollection}) as agencies ON alerts._id = agencies.Id`,
 
-	sqlAlias: `AlOwCube`,
+	sqlAlias: `AlAgCube`,
 
 	refreshKey: {
 		every: CUBE_REFRESH_KEY_TIME,
@@ -19,60 +19,33 @@ cube(`AlertsByGroupsCube`, {
 			relationship: `hasOne`,
 			sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
 		},
-		Groups: {
+		Agency: {
 			relationship: `belongsTo`,
-			sql: `${CUBE.groups} = ${Groups._id}`,
+			sql: `${CUBE.agencyMap} = ${Agency._id}`,
 		},
 	},
 
 	preAggregations: {
-		alertsByGroupsRollUp: {
-			sqlAlias: "alByGrpsRP",
+		alertsByAgenciesRollUp: {
+			sqlAlias: "alByAgRP",
 			type: `rollup`,
 			external: true,
 			scheduledRefresh: true,
 			measures: [
-				AlertsByGroupsCube.unread,
-				AlertsByGroupsCube.applicable,
-				AlertsByGroupsCube.following,
-				AlertsByGroupsCube.inProcess,
-				AlertsByGroupsCube.totalCount,
+				AlertsByAgencyCube.unread,
+				AlertsByAgencyCube.applicable,
+				AlertsByAgencyCube.following,
+				AlertsByAgencyCube.inProcess,
+				AlertsByAgencyCube.totalCount,
 			],
 			dimensions: [
 				Tenants.tenantId,
-				Groups.name,
-				Groups._id,
-				AlertsByGroupsCube.alertCategory,
+				AlertsByAgencyCube.alertCategory,
+				AlertsByAgencyCube.agencyMap,
+				Agency.agencyNames,
+				Agency.shortCode,
 			],
-			timeDimension: AlertsByGroupsCube.publishedDate,
-			granularity: `day`,
-			buildRangeStart: {
-				sql: `SELECT NOW() - interval '365 day'`,
-			},
-			buildRangeEnd: {
-				sql: `SELECT NOW()`,
-			},
-			refreshKey: {
-				every: PRE_AGG_REFRESH_KEY_TIME,
-			},
-		},
-		alertsGroupsSLARollUp: {
-			sqlAlias: "alByGrApRP",
-			type: `rollup`,
-			external: true,
-			scheduledRefresh: true,
-			measures: [
-				AlertsByGroupsCube.unread,
-				AlertsByGroupsCube.applicable,
-				AlertsByGroupsCube.following,
-				AlertsByGroupsCube.inProcess,
-				AlertsByGroupsCube.totalCount,
-				AlertsByGroupsCube.open,
-				AlertsByGroupsCube.closed,
-				AlertsByGroupsCube.excluded,
-			],
-			dimensions: [Tenants.tenantId, Groups.name, Groups._id],
-			timeDimension: AlertsByGroupsCube.created,
+			timeDimension: AlertsByAgencyCube.publishedDate,
 			granularity: `day`,
 			buildRangeStart: {
 				sql: `SELECT NOW() - interval '365 day'`,
@@ -121,16 +94,6 @@ cube(`AlertsByGroupsCube`, {
 			title: `Following`,
 			filters: [{ sql: `${CUBE}.status = 'Following'` }],
 		},
-		open: {
-			sql: `${unread} +${inProcess}`,
-			type: `number`,
-			title: "open",
-		},
-		closed: {
-			sql: `${following} +${applicable} + ${excluded}`,
-			type: `number`,
-			title: "closed",
-		},
 		totalCount: {
 			sql: `${unread} + ${applicable} + ${inProcess} +${following}`,
 			type: `number`,
@@ -156,19 +119,15 @@ cube(`AlertsByGroupsCube`, {
 			sql: `${CUBE}.\`publishedDate\``,
 			type: `time`,
 		},
-		created: {
-			sql: `${CUBE}.\`created\``,
-			type: `time`,
-		},
 		alertCategory: {
 			sql: `${CUBE}.\`alertCategory\``,
 			type: `string`,
 			title: `Alert Category`,
 		},
-		groups: {
-			sql: `groups`,
+		agencyMap: {
+			sql: `agencyMap`,
 			type: `string`,
-			title: `groups`,
+			title: `agencyMap`,
 		},
 	},
 

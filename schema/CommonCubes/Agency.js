@@ -2,10 +2,10 @@
 import {agenciesCollection} from './collections';
 import { CUBE_REFRESH_KEY_TIME  } from './cube-constants';
 
-cube(`AlertAgencyNamesCube`, {
+cube(`Agency`, {
   sql: `SELECT _id , name as agencyNames, shortCode FROM ${agenciesCollection}`,
 
-  sqlAlias: `AgNameCu`,
+  sqlAlias: `AgCu`,
 
   refreshKey: {
     every: CUBE_REFRESH_KEY_TIME ,
