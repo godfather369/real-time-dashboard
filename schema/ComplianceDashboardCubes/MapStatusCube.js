@@ -15,10 +15,6 @@ cube(`MapStatusCube`, {
       relationship: `hasOne`,
       sql :`${CUBE.tenantId} = ${Tenants.tenantId}` 
     },
-    Users: {
-      relationship: `belongsTo`,
-      sql: `TRIM(CONVERT(${CUBE.owner}, CHAR)) = TRIM(CONVERT(${Users._id}, CHAR))`
-    },
     RisksCube: {
       relationship: `hasOne`,
       sql: `${CUBE.srcObject}= ${RisksCube._id}`,
