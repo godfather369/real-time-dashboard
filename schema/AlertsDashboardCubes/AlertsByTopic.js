@@ -8,7 +8,7 @@ cube(`AlertsByTopic`, {
 	sql: `SELECT * FROM (SELECT _id, status, tenantId, publishedDate, alertCategory  FROM ${alertsCollection} where ${alertsCollection}.archived=0) as alerts INNER JOIN 
 	(SELECT _id as Id , grpIds FROM ${alertGroupIdsCollection}) as TopicIds ON alerts._id = TopicIds.Id`,
 
-	sqlAlias: `AlTopCube`,
+	sqlAlias: `AlOwCube`,
 
 	refreshKey: {
 		every: CUBE_REFRESH_KEY_TIME,
