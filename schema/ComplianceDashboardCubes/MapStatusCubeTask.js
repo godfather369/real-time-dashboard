@@ -14,7 +14,7 @@ cube(`MapStatusCubeTask`, {
     every: CUBE_REFRESH_KEY_TIME 
   },
 
-  sqlAlias: `MapStCube`,
+  sqlAlias: `MapStTaskCube`,
 
   joins: {
     Tenants: {

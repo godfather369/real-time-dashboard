@@ -96,7 +96,6 @@ cube(`EnforcementActionsCube`, {
       dimensions: [
         RegulationsCube.authoritativeDocuments,
         RegulationsCube.citations,
-        RegulationsCube._id,
         Tenants.tenantId
       ],
       timeDimension: EnforcementActionsCube.effectiveDate,

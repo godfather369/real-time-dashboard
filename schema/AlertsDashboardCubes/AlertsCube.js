@@ -99,8 +99,6 @@ cube(`AlertsCube`, {
 				AlertsCube.becameLawStatus,
 				AlertsCube.statuteStatus,
 				AlertsCube.regulationStatus,
-				AlertsCube.ruleStatus,
-				AlertsCube.proposedRuleStatus,
 				AlertsCube.agencyUpdateStatus,
 			],
 			dimensions: [
@@ -333,30 +331,19 @@ cube(`AlertsCube`, {
 				},
 			],
 		},
-		ruleStatus: {
-			sql: `docStatus`,
-			type: `count`,
-			filters: [
-				{
-					sql: `${CUBE}.docStatus = 'Rule' AND ${CUBE}.alertCategory = 'Laws & Regulations'`,
-				},
-			],
-		},
-		proposedRuleStatus: {
-			sql: `docStatus`,
-			type: `count`,
-			filters: [
-				{
-					sql: `${CUBE}.docStatus = 'Proposed Rule' AND ${CUBE}.alertCategory = 'Laws & Regulations'`,
-				},
-			],
-		},
 		agencyUpdateStatus: {
 			sql: `docStatus`,
 			type: `count`,
 			filters: [
 				{
-					sql: `${CUBE}.alertCategory = 'News & Publications'`,
+					sql: `${CUBE}.docStatus= 'Bulletins/Reports' OR ${CUBE}.docStatus= 'Calendar' OR 
+					${CUBE}.docStatus= 'Enforcement Actions' OR ${CUBE}.docStatus= 'Feed' OR 
+					${CUBE}.docStatus= 'Guidance' OR ${CUBE}.docStatus= 'Information and Guidance' OR 
+					${CUBE}.docStatus= 'News/Press Releases' OR ${CUBE}.docStatus= 'Notice' OR 
+					${CUBE}.docStatus= 'Proposed Rule' OR ${CUBE}.docStatus= 'Public Notices' OR 
+					${CUBE}.docStatus= 'Publications/Communications' OR ${CUBE}.docStatus= 'Rule' OR 
+					${CUBE}.docStatus= 'Rulemaking' OR ${CUBE}.docStatus= 'Settlements' 
+					`,
 				},
 			],
 		},

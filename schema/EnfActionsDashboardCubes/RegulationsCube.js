@@ -2,7 +2,7 @@ import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 import { regulationsCollection } from "./collections";
 
 cube(`RegulationsCube`, {
-  sql: `SELECT \`info.regulations.title\`, \`info.regulations.document_number\`, _id FROM ${regulationsCollection}`,
+  sql: `SELECT * FROM ${regulationsCollection}`,
   sqlAlias: `ReglCube`,
 
   refreshKey: {
@@ -28,7 +28,7 @@ cube(`RegulationsCube`, {
       title: `Citations`
     },
     _id: {
-      sql: `${CUBE}._id`,
+      sql: `${CUBE}.\`_id\``,
       type: `string`,
       primaryKey: true
     }
