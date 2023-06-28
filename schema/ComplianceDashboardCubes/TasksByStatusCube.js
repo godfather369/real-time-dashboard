@@ -2,31 +2,31 @@ import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 import { tasksByStatusCollection } from "./collections"
 
 cube(`TasksByStatusCube`, {
-	sql: `SELECT * FROM ${tasksByStatusCollection}`,
+  sql: `SELECT * FROM ${tasksByStatusCollection}`,
 
-	sqlAlias: `TskStatCube`,
+  sqlAlias :`TskStatCube`,
+  
+  refreshKey: {
+    every: CUBE_REFRESH_KEY_TIME
+  },
 
-	refreshKey: {
-		every: CUBE_REFRESH_KEY_TIME,
-	},
+  dimensions: {
+    taskStatus: {
+      sql: `${CUBE}.\`status.task.name\``,
+      type: `string`,
+      title: `Status`
+    },
+    taskId: {
+      sql: `${CUBE}.\`status.task.id\``,
+      type: `string`,
+      primaryKey: true,
+      shown: true
+    },
+    _id: {
+      sql: `CONVERT(${CUBE}.\`_id\`,CHAR)`,
+      type: `string`
+    }
+  },
 
-	dimensions: {
-		taskStatus: {
-			sql: `${CUBE}.\`status.task.name\``,
-			type: `string`,
-			title: `Status`,
-		},
-		taskId: {
-			sql: `${CUBE}.\`status.task.id\``,
-			type: `string`,
-			primaryKey: true,
-			shown: true,
-		},
-		_id: {
-			sql: `CONVERT(${CUBE}.\`_id\`,CHAR)`,
-			type: `string`,
-		},
-	},
-
-	dataSource: `default`,
+  dataSource: `default`
 });
