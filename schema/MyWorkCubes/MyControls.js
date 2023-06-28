@@ -12,7 +12,7 @@ cube(`MyControls`, {
 	sql: `SELECT _id, status, user, tenantId FROM 
 	(SELECT _id,status, tenantId FROM 
 		(SELECT _id, tenantId from ${controlsCollection} where ${controlsCollection}.archived=0) AS controls 
-        LEFT JOIN (SELECT  srcObject, status FROM ${regMapStatusCollection} WHERE ${regMapStatusCollection}.archived=0 AND ${regMapStatusCollection}.srcType="Control") AS status 
+        INNER JOIN (SELECT  srcObject, status FROM ${regMapStatusCollection} WHERE ${regMapStatusCollection}.archived=0 AND ${regMapStatusCollection}.srcType="Control") AS status 
         ON status.srcObject=controls._id) as mapStatus INNER JOIN
 	(SELECT srcObject, user FROM ${mapUserCollection} where ${mapUserCollection}.archived=0 AND ${mapUserCollection}.srcType="Control") as userMap 
         ON mapStatus._id=userMap.srcObject`,

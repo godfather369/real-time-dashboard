@@ -12,7 +12,7 @@ cube(`MyRisks`, {
 	sql: `SELECT _id, status, user, tenantId FROM 
 	(SELECT _id,status, tenantId FROM 
 		(SELECT _id, tenantId from ${risksCollection} where ${risksCollection}.archived=0) AS risks 
-        LEFT JOIN (SELECT  srcObject, status FROM ${regMapStatusCollection} WHERE ${regMapStatusCollection}.archived=0 AND ${regMapStatusCollection}.srcType="Risk") AS status 
+        INNER JOIN (SELECT  srcObject, status FROM ${regMapStatusCollection} WHERE ${regMapStatusCollection}.archived=0 AND ${regMapStatusCollection}.srcType="Risk") AS status 
         ON status.srcObject=risks._id) as mapStatus INNER JOIN
 	(SELECT srcObject, user FROM ${mapUserCollection} where ${mapUserCollection}.archived=0 AND ${mapUserCollection}.srcType="Risk") as userMap 
         ON mapStatus._id=userMap.srcObject`,

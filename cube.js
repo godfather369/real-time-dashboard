@@ -10,10 +10,10 @@ module.exports = {
 	//adding tenantId filters in query
 	queryTransformer: (query, { securityContext }) => {
 		const tenantIds = [];
-		// const sc = securityContext;
+		const sc = securityContext;
 		// console.log("tenantIds");
 		// console.log(sc);
-		tenantId = "609acc9605af5653a2667be2";
+		tenantId = "5cca09b667f18c546f102361";
 		if (tenantId) {
 			console.log("Fetching stats for tenantId", tenantId);
 			tenantIds.push(tenantId);
@@ -31,8 +31,8 @@ module.exports = {
 	},
 	// contextToAppId: ({ securityContext }) =>
 	// 	`CUBEJS_APP_${securityContext.tenantId}`,
-	// preAggregationsSchema: ({ securityContext }) =>
-	//   `pr_ag_${securityContext.tenantId}`,
+	preAggregationsSchema: ({ securityContext }) =>
+		`pr_ag_${securityContext.tenantId}`,
 	// scheduledRefreshContexts: async () => {
 	//   const tenantIds = await fetchTenants();
 	//   return tenantIds.map((id) => {
