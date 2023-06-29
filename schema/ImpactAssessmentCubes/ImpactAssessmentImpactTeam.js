@@ -11,7 +11,7 @@ cube(`ImpactsByTeamCube`, {
 	sql: `SELECT * FROM (SELECT _id, tenantId, startDate  FROM ${impactAssessmentCollection} where ${impactAssessmentCollection}.archived=0) as impacts INNER JOIN 
 	(SELECT _id as Id , \`customAttributes.I_E_F_IMPACTED_TEAM\` as team FROM ${impactAssessmentImpactedTeamCollection}) as teamIds ON impacts._id = teamIds.Id`,
 
-	sqlAlias: `IAGrCube`,
+	sqlAlias: `IAITCube`,
 
 	refreshKey: {
 		every: CUBE_REFRESH_KEY_TIME,
