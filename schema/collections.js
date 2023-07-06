@@ -1,7 +1,6 @@
 const regHubDataBase = "RegHub";
 
 export const userCollection = getCollectionString("users");
-export const groupsOfUserCollection = getCollectionString("users_functionalRole");
 export const tenantCollection = getCollectionString("tenants");
 export const alertsCollection = getCollectionString("reg_alert_parents");
 export const agenciesCollection = getCollectionString("reg_agencies");
