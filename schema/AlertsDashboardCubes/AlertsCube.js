@@ -173,6 +173,7 @@ cube(`AlertsCube`, {
 				AlertsCube.ruleCount,
 				AlertsCube.ruleMakingCount,
 				AlertsCube.settlementsCount,
+				AlertsCube.presidentialDocument,
 				AlertsCube.totalAUDocStatusCount,
 			],
 			dimensions: [
@@ -481,12 +482,21 @@ cube(`AlertsCube`, {
 				},
 			],
 		},
+		presidentialDocument: {
+			sql: `docStatus`,
+			type: `count`,
+			filters: [
+				{
+					sql: `${CUBE}.docStatus = 'Presidential Document'`,
+				},
+			],
+		},
 		totalAUDocStatusCount: {
 			sql: `${bulletinsReportCount} + ${calendarCount} +
 			 ${enfActionsCount} + ${feedDocStatus} 
 			 + ${infoGuidanceCount} + ${newsPressCount} + ${noticeCount} 
 			 + ${proposedRuleCount} + ${publicNoticesCount} + ${publicationCommCount}
-			 + ${ruleCount} + ${ruleMakingCount} + ${settlementsCount}`,
+			 + ${ruleCount} + ${ruleMakingCount} + ${settlementsCount} + ${presidentialDocument}`,
 			type: `number`,
 		},
 		feedCount: {
