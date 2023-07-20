@@ -25,10 +25,6 @@ cube(`MyImpactsSLA`, {
 			relationship: `belongsTo`,
 			sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
 		},
-		Users: {
-			relationship: `belongsTo`,
-			sql: `${CUBE.user} = ${Users._id}`,
-		},
 	},
 
 	preAggregations: {
@@ -38,7 +34,7 @@ cube(`MyImpactsSLA`, {
 			external: true,
 			scheduledRefresh: true,
 			measures: [MyImpactsSLA.count],
-			dimensions: [Tenants.tenantId, Users._id, MyImpactsSLA.status],
+			dimensions: [Tenants.tenantId, MyImpactsSLA.user, MyImpactsSLA.status],
 			timeDimension: MyImpactsSLA.created,
 			granularity: `day`,
 			buildRangeStart: {

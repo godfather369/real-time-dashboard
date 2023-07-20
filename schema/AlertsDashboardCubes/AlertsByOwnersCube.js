@@ -5,7 +5,7 @@ import {
 } from "./cube-constants";
 
 cube(`AlertsByOwnersCube`, {
-	sql: `SELECT * FROM (SELECT _id, status, tenantId, publishedDate, created, alertCategory  FROM ${alertsCollection} where ${alertsCollection}.archived=0) as alerts INNER JOIN 
+	sql: `SELECT * FROM (SELECT _id, status, tenantId, publishedDate, created, alertCategory, \`info.docStatus\` as docStatus  FROM ${alertsCollection} where ${alertsCollection}.archived=0) as alerts INNER JOIN 
 	(SELECT _id as Id , owners FROM ${alertsUsersCollection}) as ownerIds ON alerts._id = ownerIds.Id`,
 
 	sqlAlias: `AlOwCube`,
@@ -71,7 +71,7 @@ cube(`AlertsByOwnersCube`, {
 				AlertsByOwnersCube.closed,
 				AlertsByOwnersCube.excluded,
 			],
-			dimensions: [Tenants.tenantId, Users.fullName, Users._id],
+			dimensions: [Tenants.tenantId, Users.fullName, Users._id, AlertsByOwnersCube.docStatus],
 			timeDimension: AlertsByOwnersCube.created,
 			granularity: `day`,
 			buildRangeStart: {
@@ -169,6 +169,11 @@ cube(`AlertsByOwnersCube`, {
 			sql: `owners`,
 			type: `string`,
 			title: `owners`,
+		},
+		docStatus: {
+			sql: `${CUBE}.\`docStatus\``,
+			type: `string`,
+			title: `Doc Status`,
 		},
 	},
 

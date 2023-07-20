@@ -1,7 +1,4 @@
-import {
-	tasksCollection,
-	regMapStatusCollection,
-} from "./collections";
+import { tasksCollection, regMapStatusCollection } from "./collections";
 import {
 	CUBE_REFRESH_KEY_TIME,
 	PRE_AGG_REFRESH_KEY_TIME,
@@ -24,10 +21,6 @@ cube(`MyTasks`, {
 			relationship: `hasOne`,
 			sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
 		},
-		Users: {
-			relationship: `belongsTo`,
-			sql: `${CUBE.owner} = ${Users._id}`,
-		},
 		TaskStatus: {
 			relationship: `hasOne`,
 			sql: `${CUBE.status} = ${TaskStatus.statusId} AND ${CUBE.tenantId} = ${TaskStatus.tenantId}`,
@@ -44,7 +37,7 @@ cube(`MyTasks`, {
 				MyTasks.overWeek,
 				MyTasks.count,
 			],
-			dimensions: [MyTasks.tenantId, TaskStatus.statusName, Users._id],
+			dimensions: [MyTasks.tenantId, TaskStatus.statusName, MyTasks.user],
 			scheduledRefresh: true,
 			refreshKey: {
 				every: PRE_AGG_REFRESH_KEY_TIME,
@@ -97,7 +90,7 @@ cube(`MyTasks`, {
 			sql: `${CUBE}.tenantId`,
 			type: `string`,
 		},
-		owner: {
+		user: {
 			sql: `${CUBE}.owner`,
 			type: `string`,
 		},

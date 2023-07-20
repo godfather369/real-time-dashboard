@@ -38,7 +38,7 @@ cube(`MyAlertsSLA`, {
 			external: true,
 			scheduledRefresh: true,
 			measures: [MyAlertsSLA.count],
-			dimensions: [Tenants.tenantId, Users._id, MyAlertsSLA.status],
+			dimensions: [Tenants.tenantId, MyAlertsSLA.user, MyAlertsSLA.status],
 			timeDimension: MyAlertsSLA.created,
 			granularity: `day`,
 			buildRangeStart: {

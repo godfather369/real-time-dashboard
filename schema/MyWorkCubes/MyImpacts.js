@@ -38,7 +38,7 @@ cube(`MyImpacts`, {
 			external: true,
 			scheduledRefresh: true,
 			measures: [MyImpacts.inProcess, MyImpacts.New, MyImpacts.closed],
-			dimensions: [Tenants.tenantId, Users._id, MyImpacts.impactLevel],
+			dimensions: [Tenants.tenantId, MyImpacts.user, MyImpacts.impactLevel],
 			timeDimension: MyImpacts.startDate,
 			granularity: `day`,
 			buildRangeStart: {

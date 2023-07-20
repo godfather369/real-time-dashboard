@@ -28,10 +28,6 @@ cube(`MyRisks`, {
 			relationship: `hasOne`,
 			sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
 		},
-		Users: {
-			relationship: `belongsTo`,
-			sql: `${CUBE.user} = ${Users._id}`,
-		},
 		RiskStatus: {
 			relationship: `hasOne`,
 			sql: `${CUBE.status} = ${RiskStatus.statusId} AND ${CUBE.tenantId} = ${RiskStatus.tenantId}`,
@@ -43,7 +39,7 @@ cube(`MyRisks`, {
 			sqlAlias: "riskRP",
 			external: true,
 			measures: [MyRisks.count],
-			dimensions: [MyRisks.tenantId, RiskStatus.statusName, Users._id],
+			dimensions: [MyRisks.tenantId, RiskStatus.statusName, MyRisks.user],
 			scheduledRefresh: true,
 			refreshKey: {
 				every: PRE_AGG_REFRESH_KEY_TIME,

@@ -28,28 +28,28 @@ cube(`MyControls`, {
 			relationship: `hasOne`,
 			sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
 		},
-		Users: {
-			relationship: `belongsTo`,
-			sql: `${CUBE.user} = ${Users._id}`,
-		},
 		ControlStatus: {
 			relationship: `hasOne`,
 			sql: `${CUBE.status} = ${ControlStatus.statusId} AND ${CUBE.tenantId} = ${ControlStatus.tenantId}`,
 		},
 	},
 
-	// preAggregations: {
-	// 	controlsRollUp: {
-	// 		sqlAlias: "controlRP",
-	// 		external: true,
-	// 		measures: [MyControls.count],
-	// 		dimensions: [MyControls.tenantId, ControlStatus.statusName, Users._id],
-	// 		scheduledRefresh: true,
-	// 		refreshKey: {
-	// 			every: PRE_AGG_REFRESH_KEY_TIME,
-	// 		},
-	// 	},
-	// },
+	preAggregations: {
+		controlsRollUp: {
+			sqlAlias: "controlRP",
+			external: true,
+			measures: [MyControls.count],
+			dimensions: [
+				MyControls.tenantId,
+				ControlStatus.statusName,
+				MyControls.user,
+			],
+			scheduledRefresh: true,
+			refreshKey: {
+				every: PRE_AGG_REFRESH_KEY_TIME,
+			},
+		},
+	},
 
 	measures: {
 		count: {

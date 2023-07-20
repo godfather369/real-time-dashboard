@@ -5,7 +5,7 @@ import {
 } from "./cube-constants";
 
 cube(`AlertsByGroupsCube`, {
-	sql: `SELECT * FROM (SELECT _id, status, tenantId, publishedDate, created, alertCategory  FROM ${alertsCollection} where ${alertsCollection}.archived=0) as alerts INNER JOIN 
+	sql: `SELECT * FROM (SELECT _id, status, tenantId, publishedDate, created, alertCategory, \`info.docStatus\` as docStatus  FROM ${alertsCollection} where ${alertsCollection}.archived=0) as alerts INNER JOIN 
 	(SELECT _id as Id , groups FROM ${alertsGroupsCollection}) as groupIds ON alerts._id = groupIds.Id`,
 
 	sqlAlias: `AlGrCube`,
@@ -71,7 +71,7 @@ cube(`AlertsByGroupsCube`, {
 				AlertsByGroupsCube.closed,
 				AlertsByGroupsCube.excluded,
 			],
-			dimensions: [Tenants.tenantId, Groups.name, Groups._id],
+			dimensions: [Tenants.tenantId, Groups.name, Groups._id, AlertsByGroupsCube.docStatus],
 			timeDimension: AlertsByGroupsCube.created,
 			granularity: `day`,
 			buildRangeStart: {
@@ -169,6 +169,11 @@ cube(`AlertsByGroupsCube`, {
 			sql: `groups`,
 			type: `string`,
 			title: `groups`,
+		},
+		docStatus: {
+			sql: `${CUBE}.\`docStatus\``,
+			type: `string`,
+			title: `Doc Status`,
 		},
 	},
 

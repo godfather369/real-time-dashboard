@@ -25,10 +25,6 @@ cube(`MyAlerts`, {
 			relationship: `belongsTo`,
 			sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
 		},
-		Users: {
-			relationship: `belongsTo`,
-			sql: `${CUBE.user} = ${Users._id}`,
-		},
 	},
 
 	preAggregations: {
@@ -43,7 +39,7 @@ cube(`MyAlerts`, {
 				MyAlerts.agencyUpdates,
 				MyAlerts.count,
 			],
-			dimensions: [Tenants.tenantId, Users._id],
+			dimensions: [Tenants.tenantId, MyAlerts.user],
 			timeDimension: MyAlerts.publishedDate,
 			granularity: `day`,
 			buildRangeStart: {
