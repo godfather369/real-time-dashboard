@@ -10,7 +10,7 @@ import {
 } from "./cube-constants";
 
 cube(`MyImpactsSLA`, {
-	sql: `SELECT DISTINCT(CONCAT(_id, user)),_id, tenantId, status, created, user  FROM (SELECT _id, tenantId, status, created, IFNULL(owners,ugId)as user FROM(SELECT * FROM(SELECT * FROM (SELECT _id, tenantId, status, created FROM ${impactAssessmentCollection} where ${impactAssessmentCollection}.archived=0) as impacts LEFT JOIN 
+	sql: `SELECT DISTINCT(CONCAT(CONVERT(_id, char), CONVERT( user, char))),_id, tenantId, status, created, user  FROM (SELECT _id, tenantId, status, created, IFNULL(owners,ugId)as user FROM(SELECT * FROM(SELECT * FROM (SELECT _id, tenantId, status, created FROM ${impactAssessmentCollection} where ${impactAssessmentCollection}.archived=0) as impacts LEFT JOIN 
 	(SELECT _id as UId , owners FROM ${impactAssessmentOwnersCollection}) as users ON impacts._id = users.UId) as impactUsers LEFT JOIN 
 	(SELECT _id as GId , groups FROM ${impactAssessmentGroupsCollection}) as groupIds ON impactUsers._id = groupIds.GId) as impactUsersGroups LEFT JOIN
 	(SELECT _id as ugId , functionalRole FROM ${groupsOfUserCollection}) as userGroups ON impactUsersGroups.owners = userGroups.ugId ||impactUsersGroups.groups = userGroups.functionalRole) AS MyImpactsSLA`,

@@ -10,7 +10,7 @@ import {
 } from "./cube-constants";
 
 cube(`MyAlertsSLA`, {
-	sql: `SELECT DISTINCT(CONCAT(_id, user)),_id, created, tenantId,status, user FROM (SELECT _id, created, tenantId, status, IFNULL(owners,ugId)as user FROM(SELECT * FROM(SELECT * FROM (SELECT _id, created, tenantId, status FROM ${alertsCollection} where ${alertsCollection}.archived=0) as alerts LEFT JOIN 
+	sql: `SELECT DISTINCT(CONCAT(CONVERT(_id, char), CONVERT( user, char))),_id, created, tenantId,status, user FROM (SELECT _id, created, tenantId, status, IFNULL(owners,ugId)as user FROM(SELECT * FROM(SELECT * FROM (SELECT _id, created, tenantId, status FROM ${alertsCollection} where ${alertsCollection}.archived=0) as alerts LEFT JOIN 
 	(SELECT _id as UId , owners FROM ${alertsUsersCollection}) as users ON alerts._id = users.UId) as alertsUsers LEFT JOIN 
 	(SELECT _id as GId , groups FROM ${alertsGroupsCollection}) as groupIds ON alertsUsers._id = groupIds.GId) as alertsUsersGroups LEFT JOIN
 	(SELECT _id as ugId , functionalRole FROM ${groupsOfUserCollection}) as userGroups ON alertsUsersGroups.owners = userGroups.ugId ||alertsUsersGroups.groups = userGroups.functionalRole) as MyAlertsSLA`,
@@ -24,10 +24,6 @@ cube(`MyAlertsSLA`, {
 		Tenants: {
 			relationship: `belongsTo`,
 			sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-		},
-		Users: {
-			relationship: `belongsTo`,
-			sql: `${CUBE.user} = ${Users._id}`,
 		},
 	},
 
