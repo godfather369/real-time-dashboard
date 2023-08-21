@@ -71,7 +71,12 @@ cube(`AlertsByGroupsCube`, {
 				AlertsByGroupsCube.closed,
 				AlertsByGroupsCube.excluded,
 			],
-			dimensions: [Tenants.tenantId, Groups.name, Groups._id, AlertsByGroupsCube.docStatus],
+			dimensions: [
+				Tenants.tenantId,
+				Groups.name,
+				Groups._id,
+				AlertsByGroupsCube.docStatus,
+			],
 			timeDimension: AlertsByGroupsCube.created,
 			granularity: `day`,
 			buildRangeStart: {
@@ -132,7 +137,7 @@ cube(`AlertsByGroupsCube`, {
 			title: "closed",
 		},
 		totalCount: {
-			sql: `${unread} + ${applicable} + ${inProcess} +${following}`,
+			sql: `${unread} + ${applicable} + ${inProcess} +${following} + ${excluded}`,
 			type: `number`,
 			title: "totalCount",
 		},
