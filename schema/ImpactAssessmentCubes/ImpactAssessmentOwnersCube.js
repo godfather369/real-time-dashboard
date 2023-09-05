@@ -1,6 +1,8 @@
 import {
 	impactAssessmentCollection,
 	impactAssessmentOwnersCollection,
+	regMapGenericCollection,
+	alertsCollection,
 } from "./collections";
 import {
 	CUBE_REFRESH_KEY_TIME,
@@ -8,8 +10,7 @@ import {
 } from "./cube-constants";
 
 cube(`ImpactsByOwnersCube`, {
-	sql: `SELECT * FROM (SELECT _id, tenantId, startDate, created, status  FROM ${impactAssessmentCollection} where ${impactAssessmentCollection}.archived=0) as impacts INNER JOIN 
-	(SELECT _id as Id , owners FROM ${impactAssessmentOwnersCollection}) as ownerIds ON impacts._id = ownerIds.Id`,
+	sql: `SELECT _id, tenantId, status, startDate, docStatus, created, owners FROM (SELECT _id, tenantId, status, startDate, srcObject, created, owners FROM (SELECT _id, tenantId, startDate, created, status, owners FROM (SELECT _id, tenantId, startDate, created, status  FROM ${impactAssessmentCollection} where ${impactAssessmentCollection}.archived=0) as impacts INNER JOIN (SELECT _id as Id , owners FROM ${impactAssessmentOwnersCollection}) as ownerIds ON impacts._id = ownerIds.Id) as UserImpacts INNER JOIN (SELECT srcObject, destObject FROM ${regMapGenericCollection} WHERE ${regMapGenericCollection}.archived=0 AND ${regMapGenericCollection}.srcType="Alert" AND ${regMapGenericCollection}.destType="ImpactAssessment") as Maps ON UserImpacts._id=Maps.destObject) as mappedImpacts INNER JOIN (SELECT _id as Id, \`info.docStatus\` as docStatus FROM ${alertsCollection} WHERE ${alertsCollection}.archived=0) as alerts ON mappedImpacts.srcObject=alerts.Id`,
 
 	sqlAlias: `IAOwCube`,
 
@@ -24,7 +25,7 @@ cube(`ImpactsByOwnersCube`, {
 		},
 		Users: {
 			relationship: `belongsTo`,
-			sql: `${CUBE.owners} = ${Users._id}`,
+			sql: `TRIM(CONVERT(${CUBE.owners}, CHAR)) = TRIM(CONVERT(${Users._id}, CHAR))`,
 		},
 	},
 
@@ -60,7 +61,12 @@ cube(`ImpactsByOwnersCube`, {
 				ImpactsByOwnersCube.inProcess,
 				ImpactsByOwnersCube.closed,
 			],
-			dimensions: [Tenants.tenantId, Users.fullName, Users._id],
+			dimensions: [
+				Tenants.tenantId,
+				Users.fullName,
+				Users._id,
+				ImpactsByOwnersCube.docStatus,
+			],
 			timeDimension: ImpactsByOwnersCube.created,
 			granularity: `day`,
 			buildRangeStart: {
@@ -143,6 +149,11 @@ cube(`ImpactsByOwnersCube`, {
 		status: {
 			sql: `status`,
 			type: `string`,
+		},
+		docStatus: {
+			sql: `${CUBE}.\`docStatus\``,
+			type: `string`,
+			title: `Doc Status`,
 		},
 	},
 
