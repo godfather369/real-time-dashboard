@@ -29,8 +29,8 @@ module.exports = {
 		// });
 		return query;
 	},
-	// contextToAppId: ({ securityContext }) =>
-	// 	`CUBEJS_APP_${securityContext.tenantId}`,
+	contextToAppId: ({ securityContext }) =>
+		`CUBEJS_APP_${securityContext.userId}`,
 	preAggregationsSchema: ({ securityContext }) =>
 		`pr_ag_${securityContext.tenantId}`,
 	// scheduledRefreshContexts: async () => {

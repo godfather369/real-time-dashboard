@@ -32,7 +32,6 @@ export const regulationsCollection = getCollectionString(
 	"reg_ea_alerts_info_regulations"
 );
 export const regConfigCollection = getCollectionString("reg_config");
-export const regMapGenericCollection = getCollectionString("reg_map_generic");
 export const regMapStatusCollection = getCollectionString("reg_map_status");
 export const risksCollection = getCollectionString("risks");
 export const tasksCollection = getCollectionString("tasks");

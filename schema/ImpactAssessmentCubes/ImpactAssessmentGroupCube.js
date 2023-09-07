@@ -1,8 +1,6 @@
 import {
 	impactAssessmentCollection,
 	impactAssessmentGroupsCollection,
-	regMapGenericCollection,
-	alertsCollection,
 } from "./collections";
 import {
 	CUBE_REFRESH_KEY_TIME,
@@ -10,7 +8,8 @@ import {
 } from "./cube-constants";
 
 cube(`ImpactsByGroupCube`, {
-	sql: `SELECT _id, tenantId, status, startDate, docStatus, created, groups FROM (SELECT _id, tenantId, status, startDate, srcObject, created, groups FROM (SELECT _id, tenantId, startDate, created, status, groups FROM (SELECT _id, tenantId, startDate, created, status  FROM ${impactAssessmentCollection} where ${impactAssessmentCollection}.archived=0) as impacts INNER JOIN (SELECT _id as Id , groups FROM ${impactAssessmentGroupsCollection}) as groupIds ON impacts._id = groupIds.Id) as UserImpacts INNER JOIN (SELECT srcObject, destObject FROM ${regMapGenericCollection} WHERE ${regMapGenericCollection}.archived=0 AND ${regMapGenericCollection}.srcType="Alert" AND ${regMapGenericCollection}.destType="ImpactAssessment") as Maps ON UserImpacts._id=Maps.destObject) as mappedImpacts INNER JOIN (SELECT _id as Id, \`info.docStatus\` as docStatus FROM ${alertsCollection} WHERE ${alertsCollection}.archived=0) as alerts ON mappedImpacts.srcObject=alerts.Id`,
+	sql: `SELECT * FROM (SELECT _id, tenantId, startDate, created, status  FROM ${impactAssessmentCollection} where ${impactAssessmentCollection}.archived=0) as impacts INNER JOIN 
+	(SELECT _id as Id , groups FROM ${impactAssessmentGroupsCollection}) as grpIds ON impacts._id = grpIds.Id`,
 
 	sqlAlias: `IAGrCube`,
 
@@ -25,7 +24,7 @@ cube(`ImpactsByGroupCube`, {
 		},
 		Groups: {
 			relationship: `belongsTo`,
-			sql: `TRIM(CONVERT(${CUBE.groups}, CHAR)) = TRIM(CONVERT(${Groups._id}, CHAR))`,
+			sql: `${CUBE.groups} = ${Groups._id}`,
 		},
 	},
 
@@ -42,12 +41,7 @@ cube(`ImpactsByGroupCube`, {
 				ImpactsByGroupCube.inProcess,
 				ImpactsByGroupCube.closed,
 			],
-			dimensions: [
-				Tenants.tenantId,
-				Groups.name,
-				Groups._id,
-				ImpactsByGroupCube.docStatus,
-			],
+			dimensions: [Tenants.tenantId, Groups.name, Groups._id],
 			timeDimension: ImpactsByGroupCube.created,
 			granularity: `day`,
 			buildRangeStart: {
@@ -130,11 +124,6 @@ cube(`ImpactsByGroupCube`, {
 		status: {
 			sql: `status`,
 			type: `string`,
-		},
-		docStatus: {
-			sql: `${CUBE}.\`docStatus\``,
-			type: `string`,
-			title: `Doc Status`,
 		},
 	},
 

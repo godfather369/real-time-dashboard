@@ -2,7 +2,7 @@ import { userCollection } from "./collections";
 import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`Users`, {
-	sql: `SELECT _id , fullName , tenantId FROM ${userCollection} where ${userCollection}.archived=0`,
+	sql: `SELECT _id , fullName , tenantId FROM ${userCollection} where ${userCollection}.archived=false `,
 	sqlAlias: `usrs`,
 
 	refreshKey: {
