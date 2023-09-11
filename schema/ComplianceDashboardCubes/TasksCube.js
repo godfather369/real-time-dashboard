@@ -49,7 +49,7 @@ cube(`TasksCube`, {
 			sqlAlias: "taDueRollUp",
 			external: true,
 			measures: [TasksCube.count],
-			dimensions: [Tenants.tenantId, TasksCube.dueDate],
+			dimensions: [Tenants.tenantId, TasksCube.dueDate, TasksCube.status],
 			scheduledRefresh: true,
 			refreshKey: {
 				every: PRE_AGG_REFRESH_KEY_TIME,

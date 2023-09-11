@@ -2,7 +2,7 @@ import { groupCollection } from "./collections";
 import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`Groups`, {
-	sql: `SELECT _id , name , tenantId FROM ${groupCollection} where ${groupCollection}.archived=false `,
+	sql: `SELECT _id , name , tenantId FROM ${groupCollection} where ${groupCollection}.archived=0`,
 	sqlAlias: `grps`,
 
 	refreshKey: {
