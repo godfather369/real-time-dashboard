@@ -1,19 +1,19 @@
+const {
+	securityContext: { userId },
+} = COMPILE_CONTEXT;
 import { tasksCollection, regMapStatusCollection } from "./collections";
-import {
-	CUBE_REFRESH_KEY_TIME,
-	PRE_AGG_REFRESH_KEY_TIME,
-} from "./cube-constants";
+import { MY_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`MyTasks`, {
-	sql: `SELECT _id, status, owner, tenantId, dueDate FROM 
-						(SELECT _id, tenantId, owner, dueDate from ${tasksCollection} where ${tasksCollection}.archived=0) AS tasks LEFT JOIN 
-						(SELECT  srcObject, status FROM ${regMapStatusCollection} WHERE ${regMapStatusCollection}.archived=0 AND ${regMapStatusCollection}.srcType="Task") AS status 
+	sql: `SELECT _id, status, tenantId, dueDate FROM 
+						(SELECT _id, tenantId, dueDate from ${tasksCollection} where ${tasksCollection}.archived=0 AND ${tasksCollection}.user="${userId}") AS tasks LEFT JOIN 
+						(SELECT  srcObject, status FROM ${regMapStatusCollection} WHERE ${regMapStatusCollection}.srcType="Task") AS status 
         ON status.srcObject=tasks._id`,
 
 	sqlAlias: `MyTaCube`,
 
 	refreshKey: {
-		every: CUBE_REFRESH_KEY_TIME,
+		every: MY_CUBE_REFRESH_KEY_TIME,
 	},
 
 	joins: {
@@ -24,24 +24,6 @@ cube(`MyTasks`, {
 		TaskStatus: {
 			relationship: `hasOne`,
 			sql: `${CUBE.status} = ${TaskStatus.statusId} AND ${CUBE.tenantId} = ${TaskStatus.tenantId}`,
-		},
-	},
-
-	preAggregations: {
-		tasksRollUp: {
-			sqlAlias: "taskRP",
-			external: true,
-			measures: [
-				MyTasks.overYear,
-				MyTasks.overMonth,
-				MyTasks.overWeek,
-				MyTasks.count,
-			],
-			dimensions: [MyTasks.tenantId, TaskStatus.statusName, MyTasks.user],
-			scheduledRefresh: true,
-			refreshKey: {
-				every: PRE_AGG_REFRESH_KEY_TIME,
-			},
 		},
 	},
 
@@ -88,10 +70,6 @@ cube(`MyTasks`, {
 		},
 		tenantId: {
 			sql: `${CUBE}.tenantId`,
-			type: `string`,
-		},
-		user: {
-			sql: `${CUBE}.owner`,
 			type: `string`,
 		},
 		dueDate: {

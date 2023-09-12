@@ -1,26 +1,16 @@
-import {
-	risksCollection,
-	regMapStatusCollection,
-	mapUserCollection,
-} from "./collections";
-import {
-	CUBE_REFRESH_KEY_TIME,
-	PRE_AGG_REFRESH_KEY_TIME,
-} from "./cube-constants";
+const {
+	securityContext: { userId },
+} = COMPILE_CONTEXT;
+import { regMapStatusCollection, mapUserCollection } from "./collections";
+import { MY_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`MyRisks`, {
-	sql: `SELECT _id, status, user, tenantId FROM 
-					(SELECT _id,status, tenantId FROM 
-							(SELECT _id, tenantId from ${risksCollection} where ${risksCollection}.archived=0) AS risks INNER JOIN 
-							(SELECT  srcObject, status FROM ${regMapStatusCollection} WHERE ${regMapStatusCollection}.archived=0 AND ${regMapStatusCollection}.srcType="Risk")
-					AS status ON status.srcObject=risks._id) as mapStatus INNER JOIN
-					(SELECT srcObject, user FROM ${mapUserCollection} where ${mapUserCollection}.archived=0 AND ${mapUserCollection}.srcType="Risk")
-				as userMap ON mapStatus._id=userMap.srcObject`,
+	sql: `SELECT _id, status, tenantId FROM (SELECT srcObject as _id, tenantId FROM ${mapUserCollection} where ${mapUserCollection}.srcType="Risk" AND ${mapUserCollection}.user="${userId}")as userMap INNER JOIN (SELECT status, srcObject FROM ${regMapStatusCollection} WHERE ${regMapStatusCollection}.srcType="Risk") as statusMap ON userMap._id=statusMap.srcObject`,
 
 	sqlAlias: `MyRiCube`,
 
 	refreshKey: {
-		every: CUBE_REFRESH_KEY_TIME,
+		every: MY_CUBE_REFRESH_KEY_TIME,
 	},
 
 	joins: {
@@ -31,19 +21,6 @@ cube(`MyRisks`, {
 		RiskStatus: {
 			relationship: `hasOne`,
 			sql: `${CUBE.status} = ${RiskStatus.statusId} AND ${CUBE.tenantId} = ${RiskStatus.tenantId}`,
-		},
-	},
-
-	preAggregations: {
-		risksRollUp: {
-			sqlAlias: "riskRP",
-			external: true,
-			measures: [MyRisks.count],
-			dimensions: [MyRisks.tenantId, RiskStatus.statusName, MyRisks.user],
-			scheduledRefresh: true,
-			refreshKey: {
-				every: PRE_AGG_REFRESH_KEY_TIME,
-			},
 		},
 	},
 
@@ -66,10 +43,6 @@ cube(`MyRisks`, {
 		},
 		tenantId: {
 			sql: `${CUBE}.tenantId`,
-			type: `string`,
-		},
-		user: {
-			sql: `${CUBE}.user`,
 			type: `string`,
 		},
 	},

@@ -1,23 +1,20 @@
+const {
+	securityContext: { userId },
+} = COMPILE_CONTEXT;
 import {
 	alertsCollection,
 	alertsUsersCollection,
 	alertsGroupsCollection,
 	groupsOfUserCollection,
 } from "./collections";
-import {
-	CUBE_REFRESH_KEY_TIME,
-	PRE_AGG_REFRESH_KEY_TIME,
-} from "./cube-constants";
+import { MY_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`MyAlerts`, {
-	sql: `SELECT DISTINCT(CONCAT(CONVERT(_id, char), CONVERT( user, char))),_id, alertCategory, publishedDate, tenantId,status, user FROM (SELECT _id, alertCategory, publishedDate, tenantId, status, IFNULL(owners,ugId)as user FROM(SELECT * FROM(SELECT * FROM (SELECT _id, alertCategory, publishedDate, tenantId, status FROM ${alertsCollection} where ${alertsCollection}.archived=0) as alerts LEFT JOIN 
-	(SELECT _id as UId , owners FROM ${alertsUsersCollection}) as users ON alerts._id = users.UId) as alertsUsers LEFT JOIN 
-	(SELECT _id as GId , groups FROM ${alertsGroupsCollection}) as groupIds ON alertsUsers._id = groupIds.GId) as alertsUsersGroups LEFT JOIN
-	(SELECT _id as ugId , functionalRole FROM ${groupsOfUserCollection}) as userGroups ON alertsUsersGroups.owners = userGroups.ugId ||alertsUsersGroups.groups = userGroups.functionalRole) as MyAlerts`,
+	sql: `SELECT * FROM ((SELECT _id as UId FROM ${alertsUsersCollection} WHERE ${alertsUsersCollection}.owners="${userId}") UNION SELECT GId as UId FROM (SELECT functionalRole FROM ${groupsOfUserCollection} WHERE users_functionalRole._id="${userId}") as userGroups INNER JOIN (SELECT _id as GId , groups FROM ${alertsGroupsCollection}) as groupIds ON groupIds.groups = userGroups.functionalRole) as Users INNER JOIN (SELECT _id, alertCategory, publishedDate, tenantId, status FROM ${alertsCollection} where ${alertsCollection}.archived=0) as alerts ON alerts._id=Users.UId`,
 	sqlAlias: `myAl`,
 
 	refreshKey: {
-		every: CUBE_REFRESH_KEY_TIME,
+		every: MY_CUBE_REFRESH_KEY_TIME,
 	},
 
 	joins: {
@@ -27,41 +24,14 @@ cube(`MyAlerts`, {
 		},
 	},
 
-	preAggregations: {
-		myAlertsRollUp: {
-			sqlAlias: "myAlRP",
-			type: `rollup`,
-			external: true,
-			scheduledRefresh: true,
-			measures: [
-				MyAlerts.bills,
-				MyAlerts.regulatoryChanges,
-				MyAlerts.agencyUpdates,
-				MyAlerts.count,
-			],
-			dimensions: [Tenants.tenantId, MyAlerts.user],
-			timeDimension: MyAlerts.publishedDate,
-			granularity: `day`,
-			buildRangeStart: {
-				sql: `SELECT NOW() - interval '365 day'`,
-			},
-			buildRangeEnd: {
-				sql: `SELECT NOW()`,
-			},
-			refreshKey: {
-				every: PRE_AGG_REFRESH_KEY_TIME,
-			},
-		},
-	},
-
 	measures: {
 		count: {
 			type: `count`,
-			drillMembers: [_id, user],
+			drillMembers: [_id],
 		},
 		bills: {
 			type: `count`,
-			drillMembers: [_id, user],
+			drillMembers: [_id],
 			filters: [
 				{
 					sql: `${CUBE}.alertCategory = 'Bills' AND ${CUBE}.status!= 'Excluded'`,
@@ -70,7 +40,7 @@ cube(`MyAlerts`, {
 		},
 		agencyUpdates: {
 			type: `count`,
-			drillMembers: [_id, user],
+			drillMembers: [_id],
 			filters: [
 				{
 					sql: `${CUBE}.alertCategory = 'News & Publications' AND ${CUBE}.status!= 'Excluded'`,
@@ -79,7 +49,7 @@ cube(`MyAlerts`, {
 		},
 		regulatoryChanges: {
 			type: `count`,
-			drillMembers: [_id, user],
+			drillMembers: [_id],
 			filters: [
 				{
 					sql: `${CUBE}.alertCategory = 'Laws & Regulations' AND ${CUBE}.status!= 'Excluded'`,
@@ -111,11 +81,6 @@ cube(`MyAlerts`, {
 			sql: `${CUBE}.\`status\``,
 			type: `string`,
 			title: `Status`,
-		},
-		user: {
-			sql: `${CUBE}.\`user\``,
-			type: `string`,
-			title: `user`,
 		},
 	},
 

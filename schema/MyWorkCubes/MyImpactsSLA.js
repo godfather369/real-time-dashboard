@@ -1,23 +1,20 @@
+const {
+	securityContext: { userId },
+} = COMPILE_CONTEXT;
 import {
 	impactAssessmentCollection,
 	impactAssessmentGroupsCollection,
 	impactAssessmentOwnersCollection,
 	groupsOfUserCollection,
 } from "./collections";
-import {
-	CUBE_REFRESH_KEY_TIME,
-	PRE_AGG_REFRESH_KEY_TIME,
-} from "./cube-constants";
+import { MY_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`MyImpactsSLA`, {
-	sql: `SELECT DISTINCT(CONCAT(CONVERT(_id, char), CONVERT( user, char))),_id, tenantId, status, created, user  FROM (SELECT _id, tenantId, status, created, IFNULL(owners,ugId)as user FROM(SELECT * FROM(SELECT * FROM (SELECT _id, tenantId, status, created FROM ${impactAssessmentCollection} where ${impactAssessmentCollection}.archived=0) as impacts LEFT JOIN 
-	(SELECT _id as UId , owners FROM ${impactAssessmentOwnersCollection}) as users ON impacts._id = users.UId) as impactUsers LEFT JOIN 
-	(SELECT _id as GId , groups FROM ${impactAssessmentGroupsCollection}) as groupIds ON impactUsers._id = groupIds.GId) as impactUsersGroups LEFT JOIN
-	(SELECT _id as ugId , functionalRole FROM ${groupsOfUserCollection}) as userGroups ON impactUsersGroups.owners = userGroups.ugId ||impactUsersGroups.groups = userGroups.functionalRole) AS MyImpactsSLA`,
+	sql: `SELECT * FROM ((SELECT _id as UId FROM ${impactAssessmentOwnersCollection} WHERE CONVERT(${impactAssessmentOwnersCollection}.owners, CHAR)="${userId}") UNION SELECT GId as UId FROM (SELECT functionalRole FROM ${groupsOfUserCollection} WHERE CONVERT(${groupsOfUserCollection}._id, CHAR)="${userId}") as userGroups INNER JOIN (SELECT _id as GId , groups FROM ${impactAssessmentGroupsCollection}) as groupIds ON CONVERT(groupIds.groups,CHAR) = userGroups.functionalRole) as Users INNER JOIN (SELECT _id, tenantId, status, created FROM ${impactAssessmentCollection} where ${impactAssessmentCollection}.archived=0) as impacts ON impacts._id=Users.UId`,
 	sqlAlias: `myIASLA`,
 
 	refreshKey: {
-		every: CUBE_REFRESH_KEY_TIME,
+		every: MY_CUBE_REFRESH_KEY_TIME,
 	},
 
 	joins: {
@@ -27,32 +24,10 @@ cube(`MyImpactsSLA`, {
 		},
 	},
 
-	preAggregations: {
-		myImpactsSLARollUp: {
-			sqlAlias: "myAlRP",
-			type: `rollup`,
-			external: true,
-			scheduledRefresh: true,
-			measures: [MyImpactsSLA.count],
-			dimensions: [Tenants.tenantId, MyImpactsSLA.user, MyImpactsSLA.status],
-			timeDimension: MyImpactsSLA.created,
-			granularity: `day`,
-			buildRangeStart: {
-				sql: `SELECT NOW() - interval '365 day'`,
-			},
-			buildRangeEnd: {
-				sql: `SELECT NOW()`,
-			},
-			refreshKey: {
-				every: PRE_AGG_REFRESH_KEY_TIME,
-			},
-		},
-	},
-
 	measures: {
 		count: {
 			type: `count`,
-			drillMembers: [_id, user],
+			drillMembers: [_id],
 		},
 	},
 
@@ -84,11 +59,6 @@ cube(`MyImpactsSLA`, {
 		created: {
 			sql: `${CUBE}.\`created\``,
 			type: `time`,
-		},
-		user: {
-			sql: `user`,
-			type: `string`,
-			title: `user`,
 		},
 	},
 

@@ -1,26 +1,16 @@
-import {
-	controlsCollection,
-	regMapStatusCollection,
-	mapUserCollection,
-} from "./collections";
-import {
-	CUBE_REFRESH_KEY_TIME,
-	PRE_AGG_REFRESH_KEY_TIME,
-} from "./cube-constants";
+const {
+	securityContext: { userId },
+} = COMPILE_CONTEXT;
+import { regMapStatusCollection, mapUserCollection } from "./collections";
+import { MY_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`MyControls`, {
-	sql: `SELECT _id, status, user, tenantId FROM 
-					(SELECT _id,status, tenantId FROM 
-							(SELECT _id, tenantId from ${controlsCollection} where ${controlsCollection}.archived=0) AS controls INNER JOIN 
-							(SELECT  srcObject, status, tenantId as tenant FROM ${regMapStatusCollection} WHERE ${regMapStatusCollection}.archived=0 AND ${regMapStatusCollection}.srcType="Control")
-					AS status ON status.srcObject=controls._id AND status.tenant=controls.tenantId) as mapStatus INNER JOIN
-					(SELECT srcObject, user, tenantId as tnt FROM ${mapUserCollection} where ${mapUserCollection}.archived=0 AND ${mapUserCollection}.srcType="Control")
-				as userMap ON mapStatus._id=userMap.srcObject AND mapStatus.tenantId=userMap.tnt`,
+	sql: `SELECT _id, status, tenantId FROM (SELECT srcObject as _id, tenantId FROM ${mapUserCollection} where ${mapUserCollection}.srcType="Control" AND ${mapUserCollection}.user="${userId}")as userMap INNER JOIN (SELECT status, srcObject FROM ${regMapStatusCollection} WHERE ${regMapStatusCollection}.srcType="Control") as statusMap ON userMap._id=statusMap.srcObject`,
 
 	sqlAlias: `MyConCube`,
 
 	refreshKey: {
-		every: CUBE_REFRESH_KEY_TIME,
+		every: MY_CUBE_REFRESH_KEY_TIME,
 	},
 
 	joins: {
@@ -31,23 +21,6 @@ cube(`MyControls`, {
 		ControlStatus: {
 			relationship: `hasOne`,
 			sql: `${CUBE.status} = ${ControlStatus.statusId} AND ${CUBE.tenantId} = ${ControlStatus.tenantId}`,
-		},
-	},
-
-	preAggregations: {
-		controlsRollUp: {
-			sqlAlias: "controlRP",
-			external: true,
-			measures: [MyControls.count],
-			dimensions: [
-				MyControls.tenantId,
-				ControlStatus.statusName,
-				MyControls.user,
-			],
-			scheduledRefresh: true,
-			refreshKey: {
-				every: PRE_AGG_REFRESH_KEY_TIME,
-			},
 		},
 	},
 
@@ -70,10 +43,6 @@ cube(`MyControls`, {
 		},
 		tenantId: {
 			sql: `${CUBE}.tenantId`,
-			type: `string`,
-		},
-		user: {
-			sql: `${CUBE}.user`,
 			type: `string`,
 		},
 	},
