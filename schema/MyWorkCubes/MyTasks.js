@@ -21,7 +21,7 @@ cube(`MyTasks`, {
 		},
 		TaskStatus: {
 			relationship: `hasOne`,
-			sql: `${CUBE.status} = ${TaskStatus.statusId}`,
+			sql: `${CUBE.status} = ${TaskStatus.statusId} AND ${CUBE.tenantId} = ${TaskStatus.tenantId}`,
 		},
 	},
 

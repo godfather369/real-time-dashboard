@@ -20,7 +20,7 @@ cube(`MyRisks`, {
 		},
 		RiskStatus: {
 			relationship: `hasOne`,
-			sql: `${CUBE.status} = ${RiskStatus.statusId}`,
+			sql: `${CUBE.status} = ${RiskStatus.statusId} AND ${CUBE.tenantId} = ${RiskStatus.tenantId}`,
 		},
 	},
 

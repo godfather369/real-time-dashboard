@@ -18,7 +18,7 @@ cube(`MyControls`, {
 		},
 		ControlStatus: {
 			relationship: `hasOne`,
-			sql: `${CUBE.status} = ${ControlStatus.statusId}`,
+			sql: `${CUBE.status} = ${ControlStatus.statusId} AND ${CUBE.tenantId} = ${ControlStatus.tenantId}`,
 		},
 	},
 
