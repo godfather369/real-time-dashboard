@@ -1,9 +1,8 @@
-const { securityContext } = COMPILE_CONTEXT;
 import { tasksByStatusCollection, regConfigCollection } from "./collections";
 import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`TaskStatus`, {
-	sql: `SELECT _id, tenantId, statusId, statusName FROM (SELECT _id, tenantId FROM ${regConfigCollection} WHERE ${regConfigCollection}.tenantId="${securityContext.tenantId}") as config INNER JOIN (SELECT _id as ID, \`status.task.id\` as statusId, \`status.task.name\` as statusName FROM ${tasksByStatusCollection}) as taskConfig ON taskConfig.ID=config._id;`,
+	sql: `SELECT _id, tenantId, statusId, statusName FROM (SELECT _id, tenantId FROM ${regConfigCollection}) as config INNER JOIN (SELECT _id as ID, \`status.task.id\` as statusId, \`status.task.name\` as statusName FROM ${tasksByStatusCollection}) as taskConfig ON taskConfig.ID=config._id;`,
 
 	sqlAlias: `TaSt`,
 
