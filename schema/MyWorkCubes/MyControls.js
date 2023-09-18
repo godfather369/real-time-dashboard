@@ -1,11 +1,9 @@
-const {
-	securityContext: { userId },
-} = COMPILE_CONTEXT;
+const { securityContext } = COMPILE_CONTEXT;
 import { regMapStatusCollection, mapUserCollection } from "./collections";
 import { MY_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`MyControls`, {
-	sql: `SELECT _id, status, tenantId FROM (SELECT srcObject as _id, tenantId FROM ${mapUserCollection} where ${mapUserCollection}.srcType="Control" AND ${mapUserCollection}.user="${userId}")as userMap INNER JOIN (SELECT status, srcObject FROM ${regMapStatusCollection} WHERE ${regMapStatusCollection}.srcType="Control") as statusMap ON userMap._id=statusMap.srcObject`,
+	sql: `SELECT _id, status, tenantId FROM (SELECT srcObject as _id, tenantId FROM ${mapUserCollection} where ${mapUserCollection}.srcType="Control" AND ${mapUserCollection}.user="${securityContext.userId}" AND ${mapUserCollection}.tenantId="${securityContext.tenantId}")as userMap INNER JOIN (SELECT status, srcObject FROM ${regMapStatusCollection} WHERE ${regMapStatusCollection}.srcType="Control" AND ${regMapStatusCollection}.tenantId="${securityContext.tenantId}") as statusMap ON userMap._id=statusMap.srcObject`,
 
 	sqlAlias: `MyConCube`,
 
