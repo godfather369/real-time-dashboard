@@ -5,7 +5,7 @@ import {
 } from "./cube-constants";
 
 cube(`ImpactAssessmentCube`, {
-	sql: `SELECT _id, tenantId, impactLevel, status, startDate FROM ${impactAssessmentCollection} where ${impactAssessmentCollection}.archived=0`,
+	sql: `SELECT _id, tenantId, \`customAttributes.IMPACT_LEVEL\` as impactLevel, status, startDate FROM ${impactAssessmentCollection} where ${impactAssessmentCollection}.archived=0`,
 
 	sqlAlias: `impAsCube`,
 
@@ -30,31 +30,6 @@ cube(`ImpactAssessmentCube`, {
 				ImpactAssessmentCube.inProcess,
 				ImpactAssessmentCube.new,
 				ImpactAssessmentCube.closed,
-			],
-			dimensions: [Tenants.tenantId],
-			timeDimension: ImpactAssessmentCube.startDate,
-			granularity: `day`,
-			buildRangeStart: {
-				sql: `SELECT NOW() - interval '365 day'`,
-			},
-			buildRangeEnd: {
-				sql: `SELECT NOW()`,
-			},
-			refreshKey: {
-				every: PRE_AGG_REFRESH_KEY_TIME,
-			},
-		},
-		impactAssessmentByImpactLevelRollUp: {
-			sqlAlias: "iaByIL",
-			type: `rollup`,
-			external: true,
-			scheduledRefresh: true,
-			measures: [
-				ImpactAssessmentCube.noImpact,
-				ImpactAssessmentCube.low,
-				ImpactAssessmentCube.medium,
-				ImpactAssessmentCube.high,
-				ImpactAssessmentCube.critical,
 			],
 			dimensions: [Tenants.tenantId],
 			timeDimension: ImpactAssessmentCube.startDate,

@@ -51,6 +51,7 @@ export const impactAssessmentCollection= getCollectionString("reg_assessments");
 export const impactAssessmentGroupsCollection= getCollectionString("reg_assessments_groups");
 export const impactAssessmentOwnersCollection = getCollectionString("reg_assessments_owners");
 export const impactAssessmentImpactedTeamCollection =  getCollectionString("reg_assessments_customAttributes_I_E_F_IMPACTED_TEAM");
+export const impactAssessmentImpactLevelCollection = getCollectionString("reg_config_impactAssessment_extensions_fields_IMPACT_LEVEL_allowed_values");
 export const groupCollection = getCollectionString("reg_groups");
 export const alertsGroupsCollection = getCollectionString(
 	"reg_alert_parents_groups"

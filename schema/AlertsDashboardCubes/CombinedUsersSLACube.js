@@ -12,20 +12,20 @@ import {
 
 cube(`combinedOwnersSLA`, {
 	sql: `SELECT * FROM 
-	(SELECT srcObject as _id, owners, status, created, tenantId, impactStatus FROM
+	(SELECT srcObject as _id, owners, status, docStatus, created, tenantId, impactStatus FROM
 		(SELECT _id, owners, impactStatus, tenantId, srcObject FROM
 			((SELECT _id, owners,impactStatus, tenantId FROM
 				(SELECT _id, owners FROM ${impactAssessmentOwnersCollection}) AS impactOwners INNER JOIN
 				(SELECT _id AS impactId, status AS impactStatus, tenantId FROM ${impactAssessmentCollection} WHERE ${impactAssessmentCollection}.archived=0) AS impacts ON impacts.impactId= impactOwners._id)) as ownerImpacts INNER JOIN
 			(SELECT srcObject, destObject, tenantId as tntId FROM ${regMapGenericCollection} WHERE ${regMapGenericCollection}.archived=0  AND ${regMapGenericCollection}.destType="ImpactAssessment" AND ${regMapGenericCollection}.srcType="Alert") as maps ON ownerImpacts._id=maps.destObject AND ownerImpacts.tenantId=maps.tntId) as mappedImpacts INNER JOIN
-		((SELECT alertId, status, created, tentId FROM 
+		((SELECT alertId, status, docStatus, created, tentId FROM 
 			(SELECT _id as alertOwnerId, owners as alertOwner FROM ${alertsUsersCollection}) as alertOwners INNER JOIN
-			(SELECT _id as alertId, status, created, tenantId as tentId FROM ${alertsCollection} WHERE ${alertsCollection}.archived=0) as alerts ON alerts.alertId=alertOwners.alertOwnerId)) as ownerAlerts ON mappedImpacts.srcObject=ownerAlerts.alertId AND  mappedImpacts.tenantId=ownerAlerts.tentId) AS impactedAlerts UNION
-	SELECT _id, owners, status, created, tenantId, "No" as impactStatus FROM
-	(SELECT _id, owners, status, created, tenantId, destObject FROM
-		((SELECT _id, owners, status, created, tenantId FROM 
+			(SELECT _id as alertId, status,\`info.docStatus\` as docStatus, created, tenantId as tentId FROM ${alertsCollection} WHERE ${alertsCollection}.archived=0) as alerts ON alerts.alertId=alertOwners.alertOwnerId)) as ownerAlerts ON mappedImpacts.srcObject=ownerAlerts.alertId AND  mappedImpacts.tenantId=ownerAlerts.tentId) AS impactedAlerts UNION
+	SELECT _id, owners, status, docStatus, created, tenantId, "No" as impactStatus FROM
+	(SELECT _id, owners, status, docStatus, created, tenantId, destObject FROM
+		((SELECT _id, owners, status, docStatus, created, tenantId FROM 
 			(SELECT _id, owners FROM ${alertsUsersCollection}) as owners INNER JOIN
-			(SELECT _id as alertId, status, created, tenantId FROM ${alertsCollection} WHERE ${alertsCollection}.archived=0) as alerts ON alerts.alertID=owners._id)) as ownerAlerts LEFT JOIN
+			(SELECT _id as alertId, status, \`info.docStatus\` as docStatus, created, tenantId FROM ${alertsCollection} WHERE ${alertsCollection}.archived=0) as alerts ON alerts.alertID=owners._id)) as ownerAlerts LEFT JOIN
 		(SELECT srcObject, destObject, tenantId as tntId FROM ${regMapGenericCollection} WHERE ${regMapGenericCollection}.archived=0  AND ${regMapGenericCollection}.destType="ImpactAssessment" AND ${regMapGenericCollection}.srcType="Alert") as maps ON maps.srcObject=ownerAlerts._id AND maps.tntId=ownerAlerts.tenantId) as mappedAlerts where ISNULL(mappedAlerts.destObject)=1`,
 
 	sqlAlias: `comSLA`,
@@ -61,7 +61,12 @@ cube(`combinedOwnersSLA`, {
 				combinedOwnersSLA.open,
 				combinedOwnersSLA.closed,
 			],
-			dimensions: [Users._id, Users.fullName, Tenants.tenantId],
+			dimensions: [
+				Users._id,
+				Users.fullName,
+				Tenants.tenantId,
+				combinedOwnersSLA.docStatus,
+			],
 			timeDimension: combinedOwnersSLA.created,
 			granularity: `day`,
 			buildRangeStart: {
@@ -151,6 +156,10 @@ cube(`combinedOwnersSLA`, {
 		},
 		status: {
 			sql: `${CUBE}.\`status\``,
+			type: `string`,
+		},
+		docStatus: {
+			sql: `${CUBE}.\`docStatus\``,
 			type: `string`,
 		},
 		impactStatus: {
