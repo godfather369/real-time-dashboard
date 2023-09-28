@@ -1,12 +1,14 @@
-const { securityContext } = COMPILE_CONTEXT;
+const {
+	securityContext: { userId },
+} = COMPILE_CONTEXT;
 import { tasksCollection, regMapStatusCollection } from "./collections";
 import { MY_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`MyTasks`, {
 	sql: `SELECT _id, status, tenantId, dueDate FROM 
-						(SELECT _id, tenantId, dueDate from ${tasksCollection} where ${tasksCollection}.archived=0 AND ${tasksCollection}.user="${securityContext.userId}" AND ${tasksCollection}.tenantId="${securityContext.tenantId}") AS tasks LEFT JOIN 
-						(SELECT  srcObject, status FROM ${regMapStatusCollection} WHERE ${regMapStatusCollection}.srcType="Task") AS status 
-        ON status.srcObject=tasks._id`,
+						(SELECT _id, tenantId, dueDate from ${tasksCollection} where ${tasksCollection}.archived=0 AND ${tasksCollection}.owner="${userId}") AS tasks LEFT JOIN 
+						(SELECT  srcObject, status, tenantId as tntId FROM ${regMapStatusCollection} WHERE ${regMapStatusCollection}.srcType="Task" AND ${regMapStatusCollection}.archived=0) AS status 
+        ON status.srcObject=tasks._id AND status.tntId=tasks.tenantId`,
 
 	sqlAlias: `MyTaCube`,
 

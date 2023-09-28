@@ -8,7 +8,7 @@ module.exports = {
   },
   //adding tenantId filters in query
   queryTransformer: (query, { securityContext }) => {
-    let tenantIds = [];
+    let tenantIds = [defaultTenantId];
 		if(query.measures.includes("AgencyCoverageCube.count")){
 			tenantIds = [];
 		}
@@ -30,7 +30,7 @@ module.exports = {
     return query;
   },
   contextToAppId: ({ securityContext }) =>
-	`CUBEJS_APP_${securityContext}`,
+	`CUBEJS_APP_${securityContext.userId}`,
 	preAggregationsSchema: ({ securityContext }) =>
 	`pr_ag_${securityContext.tenantId}`,
 };

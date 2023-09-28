@@ -1,11 +1,15 @@
 const {
-	securityContext
+	securityContext: { userId },
 } = COMPILE_CONTEXT;
-import { regMapStatusCollection, mapUserCollection } from "./collections";
+import {
+	regMapStatusCollection,
+	mapUserCollection,
+	risksCollection,
+} from "./collections";
 import { MY_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`MyRisks`, {
-	sql: `SELECT _id, status, tenantId FROM (SELECT srcObject as _id, tenantId FROM ${mapUserCollection} where ${mapUserCollection}.srcType="Risk" AND ${mapUserCollection}.user="${securityContext.userId}" AND ${mapUserCollection}.tenantId="${securityContext.tenantId}")as userMap INNER JOIN (SELECT status, srcObject FROM ${regMapStatusCollection} WHERE ${regMapStatusCollection}.srcType="Risk" AND ${regMapStatusCollection}.tenantId="${securityContext.tenantId}") as statusMap ON userMap._id=statusMap.srcObject`,
+	sql: `SELECT _id, status, tenantId FROM (SELECT _id as id, tenantId as tntId FROM ${risksCollection} WHERE ${risksCollection}.archived=0) as risk INNER JOIN (SELECT _id, status, tenantId FROM (SELECT srcObject as _id, tenantId FROM ${mapUserCollection} where ${mapUserCollection}.archived=0 AND ${mapUserCollection}.srcType="Risk" AND ${mapUserCollection}.user="${userId}")as userMap INNER JOIN (SELECT status, srcObject FROM ${regMapStatusCollection} WHERE ${regMapStatusCollection}.archived=0 AND ${regMapStatusCollection}.srcType="Risk") as statusMap ON userMap._id=statusMap.srcObject) as mappedRisk ON mappedRisk._id=risk.id AND mappedRisk.tenantId=risk.tntId`,
 
 	sqlAlias: `MyRiCube`,
 
