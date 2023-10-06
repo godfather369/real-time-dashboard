@@ -61,7 +61,12 @@ cube(`combinedGroupsSLA`, {
 				combinedGroupsSLA.open,
 				combinedGroupsSLA.closed,
 			],
-			dimensions: [Groups._id, Groups.name, Tenants.tenantId],
+			dimensions: [
+				Groups._id,
+				Groups.name,
+				Tenants.tenantId,
+				combinedGroupsSLA.docStatus,
+			],
 			timeDimension: combinedGroupsSLA.created,
 			granularity: `day`,
 			buildRangeStart: {
