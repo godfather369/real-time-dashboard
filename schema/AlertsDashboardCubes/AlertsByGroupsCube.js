@@ -36,6 +36,7 @@ cube(`AlertsByGroupsCube`, {
 				AlertsByGroupsCube.applicable,
 				AlertsByGroupsCube.following,
 				AlertsByGroupsCube.inProcess,
+				AlertsByGroupsCube.excluded,
 				AlertsByGroupsCube.totalCount,
 			],
 			dimensions: [

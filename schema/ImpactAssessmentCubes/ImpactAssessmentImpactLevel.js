@@ -1,5 +1,5 @@
 import {
-    regConfigCollection,
+	regConfigCollection,
 	impactAssessmentImpactLevelCollection,
 } from "./collections";
 import {
@@ -22,29 +22,24 @@ cube(`ImpactsByLevelCube`, {
 		Tenants: {
 			relationship: `hasOne`,
 			sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-        },
-        ImpactAssessmentCube: {
-            relationship: `hasMany`,
-            sql:`${CUBE.tenantId} = ${ImpactAssessmentCube.tenantId} AND ${CUBE.impactLevelId}=${ImpactAssessmentCube.impactLevel}`
-        }
+		},
+		ImpactAssessmentCube: {
+			relationship: `hasMany`,
+			sql: `${CUBE.tenantId} = ${ImpactAssessmentCube.tenantId} AND ${CUBE.impactLevelId}=${ImpactAssessmentCube.impactLevel}`,
+		},
 	},
 
 	preAggregations: {
-        impactAssessmentByLevelRollUp: {
-            sqlAlias: "iaByLevel",
+		impactAssessmentByLevelRollUp: {
+			sqlAlias: "iaByLevel",
 			type: `rollup`,
 			external: true,
 			scheduledRefresh: true,
-            measures: [
-                ImpactAssessmentCube.count
-              ],
-              dimensions: [
-                ImpactsByLevelCube.impactLevel,
-                Tenants.tenantId
-              ],
-              timeDimension: ImpactAssessmentCube.startDate,
-            granularity: `month`,
-            buildRangeStart: {
+			measures: [ImpactAssessmentCube.count],
+			dimensions: [ImpactsByLevelCube.impactLevel, Tenants.tenantId],
+			timeDimension: ImpactAssessmentCube.startDate,
+			granularity: `day`,
+			buildRangeStart: {
 				sql: `SELECT NOW() - interval '365 day'`,
 			},
 			buildRangeEnd: {
@@ -52,19 +47,19 @@ cube(`ImpactsByLevelCube`, {
 			},
 			refreshKey: {
 				every: PRE_AGG_REFRESH_KEY_TIME,
-			}
-          }
+			},
+		},
 	},
 
 	dimensions: {
 		tenantId: {
 			sql: `${CUBE}.\`tenantId\``,
 			type: `string`,
-        },
-        impactLevelId: {
-            sql: `impLevelId`,
+		},
+		impactLevelId: {
+			sql: `impLevelId`,
 			type: `string`,
-        },
+		},
 		impactLevel: {
 			sql: `impLevel`,
 			type: `string`,

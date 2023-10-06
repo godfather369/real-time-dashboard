@@ -31,6 +31,4 @@ module.exports = {
   },
   contextToAppId: ({ securityContext }) =>
 	`CUBEJS_APP_${securityContext.userId}`,
-	preAggregationsSchema: ({ securityContext }) =>
-	`pr_ag_${securityContext.tenantId}`,
 };
