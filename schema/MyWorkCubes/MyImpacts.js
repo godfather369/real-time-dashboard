@@ -11,7 +11,7 @@ import {
 import { MY_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`MyImpacts`, {
-	sql: `SELECT * FROM ((SELECT _id as UId FROM ${impactAssessmentOwnersCollection} WHERE CONVERT(${impactAssessmentOwnersCollection}.owners, CHAR)="${userId}") UNION SELECT GId as UId FROM (SELECT functionalRole FROM ${groupsOfUserCollection} WHERE CONVERT(${groupsOfUserCollection}._id, CHAR)="${userId}") as userGroups INNER JOIN (SELECT _id as GId , groups FROM ${impactAssessmentGroupsCollection}) as groupIds ON CONVERT(groupIds.groups,CHAR) = userGroups.functionalRole) as Users INNER JOIN (SELECT _id, tenantId, \`customAttributes.IMPACT_LEVEL\` as impactLevel, status, startDate FROM ${impactAssessmentCollection} where ${impactAssessmentCollection}.archived=0) as impacts ON impacts._id=Users.UId`,
+	sql: `SELECT * FROM ((SELECT _id as UId FROM ${impactAssessmentOwnersCollection} WHERE CONVERT(${impactAssessmentOwnersCollection}.owners, CHAR)="${userId}") UNION SELECT GId as UId FROM (SELECT functionalRole FROM ${groupsOfUserCollection} WHERE CONVERT(${groupsOfUserCollection}._id, CHAR)="${userId}") as userGroups INNER JOIN (SELECT _id as GId , groups FROM ${impactAssessmentGroupsCollection}) as groupIds ON CONVERT(groupIds.groups,CHAR) = userGroups.functionalRole) as Users INNER JOIN (SELECT _id, tenantId, \`customAttributes.IMPACT_LEVEL\` as impactLevelId, status, startDate FROM ${impactAssessmentCollection} where ${impactAssessmentCollection}.archived=0) as impacts ON impacts._id=Users.UId`,
 
 	sqlAlias: `myIA`,
 
@@ -23,6 +23,10 @@ cube(`MyImpacts`, {
 		Tenants: {
 			relationship: `belongsTo`,
 			sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
+		},
+		ImpactsByLevelCube: {
+			relationship: `hasMany`,
+			sql: `${CUBE.tenantId} = ${ImpactsByLevelCube.tenantId} AND ${CUBE.impactLevelId}=${ImpactsByLevelCube.impactLevelId}`,
 		},
 	},
 
@@ -74,8 +78,8 @@ cube(`MyImpacts`, {
 			type: `string`,
 			primaryKey: true,
 		},
-		impactLevel: {
-			sql: `impactLevel`,
+		impactLevelId: {
+			sql: `impactLevelId`,
 			type: `string`,
 		},
 		status: {
