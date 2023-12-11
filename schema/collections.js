@@ -14,9 +14,7 @@ export const agencyNamesCollection = getCollectionString(
 export const alertsUsersCollection = getCollectionString(
 	"reg_alert_parents_owners"
 );
-export const alertGroupIdsCollection = getCollectionString(
-	"reg_alert_parents_grpIds"
-);
+export const alertMDiDCollection = getCollectionString("reg_alert_parents_mdInfo");
 export const alertsMetaCollection = getCollectionString("alerts_meta");
 export const juridictionsCollection = getCollectionString("reg_jurisdictions");
 export const enforcementActionsCollection =
@@ -58,13 +56,13 @@ export const alertsGroupsCollection = getCollectionString(
 );
 
 export const mapGenericCollection = getCollectionString("reg_map_generic");
-export const masterDatumCollection = getCollectionString("masterdatum");
-export const masterDatumMetaCollection = getCollectionString("masterdatum_meta_masterdata");
 export const uniregCollection = getCollectionString("unireg");
 export const uniregLineageCollection = getCollectionString("unireg_lineage");
 export const regSiteConfigCollection = getCollectionString("reg_site_config");
 export const regSubscriptionCollection = getCollectionString("reg_subscriptions");
 export const regSubscriptionFeedCollection = getCollectionString("reg_subscriptions_feeds");
+export const regSubscriptionRepoCollection = getCollectionString("reg_subscriptions_repos");
+export const regSubscriptionJurisdictionCollection = getCollectionString("reg_subscriptions_jurisdictions");
 
 function getCollectionString(collectionName) {
 	return `\`${regHubDataBase}\`.\`${collectionName}\``;

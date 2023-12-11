@@ -1,4 +1,4 @@
-import { alertsCollection, alertGroupIdsCollection } from "./collections";
+import { alertsCollection, alertMDiDCollection } from "./collections";
 import {
 	CUBE_REFRESH_KEY_TIME,
 	PRE_AGG_REFRESH_KEY_TIME,
@@ -6,7 +6,7 @@ import {
 
 cube(`AlertsByTopic`, {
 	sql: `SELECT * FROM (SELECT _id, status, tenantId, publishedDate, alertCategory  FROM ${alertsCollection} where ${alertsCollection}.archived=0) as alerts INNER JOIN 
-	(SELECT _id as Id , grpIds FROM ${alertGroupIdsCollection}) as TopicIds ON alerts._id = TopicIds.Id`,
+	(SELECT _id as Id ,  \`mdInfo._id\` as MDiD, \`mdInfo.name\` as MDName FROM ${alertMDiDCollection}) as TopicIds ON alerts._id = TopicIds.Id`,
 
 	sqlAlias: `AlTopCube`,
 
@@ -19,10 +19,6 @@ cube(`AlertsByTopic`, {
 			relationship: `hasOne`,
 			sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
 		},
-		MasterDatum: {
-			relationship: `belongsTo`,
-			sql: `${CUBE.grpIds} = ${MasterDatum._id}`,
-		},
 	},
 
 	preAggregations: {
@@ -34,8 +30,8 @@ cube(`AlertsByTopic`, {
 			measures: [AlertsByTopic.totalCount],
 			dimensions: [
 				Tenants.tenantId,
-				MasterDatum.name,
-				MasterDatum._id,
+				AlertsByTopic.MDName,
+				AlertsByTopic.MDiD,
 				AlertsByTopic.alertCategory,
 			],
 			timeDimension: AlertsByTopic.publishedDate,
@@ -88,10 +84,15 @@ cube(`AlertsByTopic`, {
 			type: `string`,
 			title: `Alert Category`,
 		},
-		grpIds: {
-			sql: `CONVERT(${CUBE}.\`grpIds\`,CHAR)`,
+		MDName: {
+			sql: `${CUBE}.\`MDName\``,
 			type: `string`,
-			title: `Group Ids`,
+			title: `MDName`,
+		},
+		MDiD: {
+			sql: `CONVERT(${CUBE}.\`MDiD\`,CHAR)`,
+			type: `string`,
+			title: `MD Id`,
 		},
 	},
 

@@ -110,7 +110,7 @@ cube(`combinedOwnersSLA`, {
 			type: `count`,
 			filters: [
 				{
-					sql: `(${CUBE}.status = 'Excluded' OR ${CUBE}.status = 'Following' OR ${CUBE}.status = 'Applicable') AND (${CUBE}.impactStatus = 'New' OR ${CUBE}.impactStatus = 'In Process')`,
+					sql: `${CUBE}.status = 'Applicable' AND (${CUBE}.impactStatus = 'New' OR ${CUBE}.impactStatus = 'In Process')`,
 				},
 			],
 		},
@@ -118,7 +118,7 @@ cube(`combinedOwnersSLA`, {
 			type: `count`,
 			filters: [
 				{
-					sql: `(${CUBE}.status = 'Excluded' OR ${CUBE}.status = 'Following' OR ${CUBE}.status = 'Applicable') AND (${CUBE}.impactStatus = 'Closed')`,
+					sql: `${CUBE}.status = 'Applicable' AND (${CUBE}.impactStatus = 'Closed')`,
 				},
 			],
 		},
@@ -126,7 +126,7 @@ cube(`combinedOwnersSLA`, {
 			type: `count`,
 			filters: [
 				{
-					sql: `(${CUBE}.status = 'Excluded' OR ${CUBE}.status = 'Following' OR ${CUBE}.status = 'Applicable') AND (${CUBE}.impactStatus = 'No')`,
+					sql: `${CUBE}.status = 'Applicable' AND (${CUBE}.impactStatus = 'No')`,
 				},
 			],
 		},
@@ -142,7 +142,7 @@ cube(`combinedOwnersSLA`, {
 			type: `count`,
 			filters: [
 				{
-					sql: `${CUBE}.status = 'Excluded' OR ${CUBE}.status = 'Following' OR ${CUBE}.status = 'Applicable'`,
+					sql: `${CUBE}.status = 'Applicable'`,
 				},
 			],
 		},
