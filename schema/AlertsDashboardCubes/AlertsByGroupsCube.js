@@ -44,6 +44,7 @@ cube(`AlertsByGroupsCube`, {
 				Groups.name,
 				Groups._id,
 				AlertsByGroupsCube.alertCategory,
+				AlertsByGroupsCube.docStatus,
 			],
 			timeDimension: AlertsByGroupsCube.publishedDate,
 			granularity: `day`,
