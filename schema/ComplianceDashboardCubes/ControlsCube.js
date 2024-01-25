@@ -10,7 +10,7 @@ import {
 } from "./cube-constants";
 
 cube(`ControlsCube`, {
-	sql: `SELECT _id, statusName, tenantId FROM (SELECT _id, status, tenantId FROM 
+	sql: `SELECT _id, statusId, statusName, tenantId FROM (SELECT _id, status, tenantId FROM 
 	(SELECT _id, tenantId FROM ${controlsCollection} where ${controlsCollection}.archived = 0) AS controls INNER JOIN 
     (SELECT status, srcObject FROM ${regMapStatusCollection} WHERE ${regMapStatusCollection}.srcType="Control" AND ${regMapStatusCollection}.archived=0) as mapStatus ON controls._id=mapStatus.srcObject) AS controlStatus INNER JOIN (SELECT tenantId as tenant, statusId, statusName FROM (SELECT _id, tenantId FROM ${regConfigCollection}) as config INNER JOIN (SELECT _id as ID, \`status.control.id\` as statusId, \`status.control.name\` as statusName  FROM ${controlByStatusCollection}) AS configStatus ON config._id=configStatus.ID) as controlConfig ON controlConfig.tenant= controlStatus.tenantId AND controlConfig.statusId= controlStatus.status`,
 
@@ -39,7 +39,11 @@ cube(`ControlsCube`, {
 			sqlAlias: "conRollUp",
 			external: true,
 			measures: [ControlsCube.count],
-			dimensions: [Tenants.tenantId, ControlsCube.status],
+			dimensions: [
+				Tenants.tenantId,
+				ControlsCube.status,
+				ControlsCube.statusId,
+			],
 			scheduledRefresh: true,
 			refreshKey: {
 				every: PRE_AGG_REFRESH_KEY_TIME,
@@ -57,6 +61,11 @@ cube(`ControlsCube`, {
 			sql: `${CUBE}.\`statusName\``,
 			type: `string`,
 			title: `status`,
+		},
+		statusId: {
+			sql: `${CUBE}.\`statusId\``,
+			type: `string`,
+			title: `statusId`,
 		},
 		tenantId: {
 			sql: `${CUBE}.\`tenantId\``,

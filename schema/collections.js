@@ -1,7 +1,9 @@
 const regHubDataBase = "RegHub";
 
 export const userCollection = getCollectionString("users");
-export const groupsOfUserCollection = getCollectionString("users_functionalRole");
+export const groupsOfUserCollection = getCollectionString(
+	"users_functionalRole"
+);
 export const tenantCollection = getCollectionString("tenants");
 export const alertsCollection = getCollectionString("reg_alert_parents");
 export const agenciesCollection = getCollectionString("reg_agencies");
@@ -45,17 +47,33 @@ export const controlByStatusCollection = getCollectionString(
 	"reg_config_status_control"
 );
 export const mapUserCollection = getCollectionString("reg_map_user");
-export const impactAssessmentCollection= getCollectionString("reg_assessments");
-export const impactAssessmentGroupsCollection= getCollectionString("reg_assessments_groups");
-export const impactAssessmentOwnersCollection = getCollectionString("reg_assessments_owners");
-export const impactAssessmentImpactedTeamCollection =  getCollectionString("reg_assessments_customAttributes_I_E_F_IMPACTED_TEAM");
-export const impactAssessmentImpactLevelCollection = getCollectionString("reg_config_impactAssessment_extensions_fields_IMPACT_LEVEL_allowed_values");
+export const impactAssessmentCollection =
+	getCollectionString("reg_assessments");
+export const impactAssessmentGroupsCollection = getCollectionString(
+	"reg_assessments_groups"
+);
+export const impactAssessmentOwnersCollection = getCollectionString(
+	"reg_assessments_owners"
+);
+export const impactAssessmentImpactedTeamCollection = getCollectionString(
+	"reg_assessments_customAttributes_I_E_F_IMPACTED_TEAM"
+);
+export const impactAssessmentImpactLevelCollection = getCollectionString(
+	"reg_config_impactAssessment_extensions_fields_IMPACT_LEVEL_allowed_values"
+);
+export const impactAssessmentImpactedTeamAllowedValuesCollection = getCollectionString(
+	"reg_config_impactAssessment_extensions_fields_I_E_F_IMPACTED_TEAM_allowed_values"
+);
 export const groupCollection = getCollectionString("reg_groups");
 export const alertsGroupsCollection = getCollectionString(
 	"reg_alert_parents_groups"
 );
 
 export const mapGenericCollection = getCollectionString("reg_map_generic");
+export const masterDatumCollection = getCollectionString("masterdatum");
+export const masterDatumMetaCollection = getCollectionString(
+	"masterdatum_meta_masterdata"
+);
 export const uniregCollection = getCollectionString("unireg");
 export const uniregLineageCollection = getCollectionString("unireg_lineage");
 export const regSiteConfigCollection = getCollectionString("reg_site_config");
