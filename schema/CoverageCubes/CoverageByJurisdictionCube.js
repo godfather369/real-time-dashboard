@@ -1,29 +1,28 @@
 import {regMapStatusUniregJoin, regMapStatusUniregJoinCC , CorpusJurisdictionJoin ,RegSiteJurisdictionJoin} from "./sql-queries";
-import {COMPLIANCE_COVERAGE_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import {CUBE_REFRESH_KEY_TIME, PRE_AGG_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`CoverageByJurisdictionCube`, {
 	sql : `
-	SELECT _id,tenantId ,displayName ,status FROM
+	SELECT _id,tenantId ,displayName ,status, mdIds FROM
 	(
-			(SELECT _id,tenantId ,repo ,status FROM ${regMapStatusUniregJoin}) AS RegMapUniregJoin
+			(SELECT _id,tenantId ,repo ,status, mdIds FROM ${regMapStatusUniregJoin}) AS RegMapUniregJoin
 		LEFT JOIN 
-		(SELECT id,displayName FROM ${CorpusJurisdictionJoin})AS CorpusJurisdictionJoin
-		ON RegMapUniregJoin.repo = CorpusJurisdictionJoin.id
+			(SELECT id,displayName, tenantId as tenant FROM ${CorpusJurisdictionJoin})AS CorpusJurisdictionJoin
+		ON RegMapUniregJoin.repo = CorpusJurisdictionJoin.id AND RegMapUniregJoin.tenantId = CorpusJurisdictionJoin.tenant
 	) 
 	UNION ALL
-	SELECT _id,tenantId ,displayName ,status FROM
+	SELECT _id,tenantId ,displayName ,status, mdIds FROM
 	(
-			(SELECT _id,tenantId ,uid ,status FROM ${regMapStatusUniregJoinCC}) AS RegMapUniregJoin
+			(SELECT _id,tenantId ,uid ,status, mdIds FROM ${regMapStatusUniregJoinCC}) AS RegMapUniregJoin
 		LEFT JOIN 
-		(
-			SELECT regSiteUid ,displayName FROM ${RegSiteJurisdictionJoin} AS RegSiteJurisdictionJoin
-		ON RegMapUniregJoin.uid = RegSiteJurisdictionJoin.regSiteUid
+			(SELECT regSiteUid ,displayName, tenantId as tenant FROM ${RegSiteJurisdictionJoin}) AS RegSiteJurisdictionJoin
+		ON RegMapUniregJoin.uid = RegSiteJurisdictionJoin.regSiteUid AND RegMapUniregJoin.tenantId = RegSiteJurisdictionJoin.tenant
 	)` ,
 
 	sqlAlias: `CvrgByJurCube`,
 
 	refreshKey: {
-		every: COMPLIANCE_COVERAGE_CUBE_REFRESH_KEY_TIME,
+		every: CUBE_REFRESH_KEY_TIME,
 	},
 
 	joins: {
@@ -43,12 +42,13 @@ cube(`CoverageByJurisdictionCube`, {
         CoverageByJurisdictionCube.count
       ],
       dimensions: [
-				CoverageByJurisdictionCube.jurisdictionName,
-				CoverageByJurisdictionCube.status,
+		CoverageByJurisdictionCube.jurisdictionName,
+		CoverageByJurisdictionCube.status,
+		CoverageByJurisdictionCube.mdIds,
         Tenants.tenantId
       ],
       refreshKey: {
-        every: COMPLIANCE_COVERAGE_CUBE_REFRESH_KEY_TIME
+        every: PRE_AGG_REFRESH_KEY_TIME
       }
     }	
 	},
@@ -76,6 +76,10 @@ cube(`CoverageByJurisdictionCube`, {
 		},
 		status: {
 			sql: `status`,
+			type: `string`,
+		},
+		mdIds: {
+			sql: `mdIds`,
 			type: `string`,
 		},
 	},

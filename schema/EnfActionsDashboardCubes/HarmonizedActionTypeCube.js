@@ -1,5 +1,5 @@
 import { harmonizedActionCollection } from "./collections";
-import {HARMONIZED_ACTION_CUBE_REFRESH_KEY_TIME} from "./cube-constants"
+import {CUBE_REFRESH_KEY_TIME} from "./cube-constants"
 
 cube(`HarmonizedActionTypeCube`, {
   sql: `SELECT * FROM ${harmonizedActionCollection}`,
@@ -7,7 +7,7 @@ cube(`HarmonizedActionTypeCube`, {
   sqlAlias: `HaAcCube`,
 
   refreshKey: {
-    every: `${HARMONIZED_ACTION_CUBE_REFRESH_KEY_TIME}`
+    every: CUBE_REFRESH_KEY_TIME
   },
 
   measures: {

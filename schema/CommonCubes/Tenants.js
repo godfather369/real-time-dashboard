@@ -1,5 +1,5 @@
 import { tenantCollection } from "./collections";
-import { TENANTS_CUBE_REFRESH_KEY_TIME , defaultTenantId } from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME , defaultTenantId } from "./cube-constants";
 
 cube(`Tenants`, {
 	
@@ -10,7 +10,7 @@ cube(`Tenants`, {
   sqlAlias : `tnts`,
 
 	refreshKey: {
-    every: TENANTS_CUBE_REFRESH_KEY_TIME
+    every: CUBE_REFRESH_KEY_TIME
   },
 
   measures: {

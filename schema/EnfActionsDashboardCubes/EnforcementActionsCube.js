@@ -1,13 +1,15 @@
-import { ENFORCEMENT_CUBE_REFRESH_KEY_TIME , ENFORCEMENT_CUBE_PRE_AGG_REFRESH_KEY } from "./cube-constants";
-import { enforcementActionsCollection } from "./collections"
+import { CUBE_REFRESH_KEY_TIME , PRE_AGG_REFRESH_KEY_TIME } from "./cube-constants";
+import { enforcementActionsCollection, enforcementActionsAgencyMapCollection } from "./collections"
 
 cube(`EnforcementActionsCube`, {
-  sql: `SELECT *  FROM ${enforcementActionsCollection} where ${enforcementActionsCollection}.archived=0 `,
+  sql: `SELECT * FROM 
+	(SELECT * FROM (SELECT * FROM ${enforcementActionsCollection} where ${enforcementActionsCollection}.archived=0) as EAalerts LEFT JOIN 
+	(SELECT _id as Id , agencyMap FROM ${enforcementActionsAgencyMapCollection}) as EAagencyMapCube ON EAalerts._id = EAagencyMapCube.Id ) as EAalertsCubeJoin`,
   
   sqlAlias: `eARep`,
 
   refreshKey: {
-    every: `${ENFORCEMENT_CUBE_REFRESH_KEY_TIME}`
+    every: CUBE_REFRESH_KEY_TIME
   },
 
   joins: {
@@ -27,10 +29,10 @@ cube(`EnforcementActionsCube`, {
       relationship: `hasMany`,
       sql: `${CUBE._id} = ${RegulationsCube._id}`
     },
-		EnforcementActionsAgencyNamesCube: {
+    Agency: {
       relationship: `belongsTo`,
-      sql: `${CUBE._id} = ${EnforcementActionsAgencyNamesCube._id}`
-    }
+      sql: `${CUBE.agencyMap} = ${Agency._id}`
+    },
   },
 
   preAggregations: {
@@ -41,7 +43,13 @@ cube(`EnforcementActionsCube`, {
       external: true,
       scheduledRefresh: true,
       measures: [EnforcementActionsCube.count , EnforcementActionsCube.netAmount],
-      dimensions: [EnforcementActionsAgencyNamesCube.agencyNames , EnforcementActionsCube.currency , Tenants.tenantId],
+      dimensions: [
+        EnforcementActionsCube.agencyMap,
+        Agency.shortCode,
+        Agency.agencyNames,
+        EnforcementActionsCube.currency,
+        Tenants.tenantId
+      ],
       timeDimension: EnforcementActionsCube.effectiveDate,
       granularity: `day`,
       buildRangeStart: {
@@ -51,7 +59,7 @@ cube(`EnforcementActionsCube`, {
         sql: `SELECT NOW()`,
       },
       refreshKey: {
-        every: ENFORCEMENT_CUBE_PRE_AGG_REFRESH_KEY,
+        every: PRE_AGG_REFRESH_KEY_TIME,
       },
     },
     actionsByAgencyRollUpJoin: {
@@ -61,7 +69,9 @@ cube(`EnforcementActionsCube`, {
 			scheduledRefresh: true,
       measures: [EnforcementActionsCube.count],
       dimensions: [
-        EnforcementActionsAgencyNamesCube.agencyNames,
+        EnforcementActionsCube.agencyMap,
+        Agency.shortCode,
+        Agency.agencyNames,
         HarmonizedActionTypeCube.harmonizedActionType,
         Tenants.tenantId
       ],
@@ -74,7 +84,7 @@ cube(`EnforcementActionsCube`, {
         sql: `SELECT NOW()`
       },
       refreshKey: {
-        every: ENFORCEMENT_CUBE_PRE_AGG_REFRESH_KEY
+        every: PRE_AGG_REFRESH_KEY_TIME
       }
     },
 		authDocImpactedRollUp: {
@@ -86,12 +96,13 @@ cube(`EnforcementActionsCube`, {
       dimensions: [
         RegulationsCube.authoritativeDocuments,
         RegulationsCube.citations,
+        RegulationsCube.id,
         Tenants.tenantId
       ],
       timeDimension: EnforcementActionsCube.effectiveDate,
       granularity: `day`,
       refreshKey: {
-        every: ENFORCEMENT_CUBE_PRE_AGG_REFRESH_KEY,
+        every: PRE_AGG_REFRESH_KEY_TIME,
       },
       buildRangeStart: {
         sql: `SELECT NOW() - interval '365 day'`,
@@ -131,6 +142,11 @@ cube(`EnforcementActionsCube`, {
     tenantId: {
       sql: `${CUBE}.\`tenantId\``,
       type: `string`
+    },
+    agencyMap: {
+      sql: `${CUBE}.\`agencyMap\``,
+      type: `string`,
+      title: `agencyMap`
     }
   }
 });

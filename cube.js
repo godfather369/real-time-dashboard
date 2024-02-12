@@ -1,6 +1,5 @@
 // Cube.js configuration options: https://cube.dev/docs/config
-const defaultTenantId = "5cca09b667f18c546f102361";
-// Connection URL
+const defaultTenantId = "598b984f530bf20f645373d3";
 module.exports = {
 	http: {
 		cors: {
@@ -9,13 +8,14 @@ module.exports = {
 	},
 	//adding tenantId filters in query
 	queryTransformer: (query, { securityContext }) => {
-		const tenantIds = [];
-		// const sc = securityContext;
-		// console.log("tenantIds");
-		// console.log(sc);
-		tenantId = "5cca09b667f18c546f102361";
+		let tenantIds = [defaultTenantId];
+		if (query.measures.includes("AgencyCoverageCube.count")) {
+			tenantIds = [];
+		}
+		const sc = securityContext;
+		tenantId = sc.tenantId;
 		if (tenantId) {
-			console.log("Fetching stats for tenantId", tenantId);
+			console.log("Fetching stats for tenentId", tenantId);
 			tenantIds.push(tenantId);
 		} else {
 			console.error(
@@ -23,29 +23,12 @@ module.exports = {
 			);
 		}
 		// query.filters.push({
-		//   member: "Tenants.tenantId",
-		//   operator: "equals",
-		//   values: tenantIds,
+		// 	member: "Tenants.tenantId",
+		// 	operator: "equals",
+		// 	values: tenantIds,
 		// });
 		return query;
 	},
-	// contextToAppId: ({ securityContext }) => `C_APP_${securityContext.tenantId}`,
-	// preAggregationsSchema: ({ securityContext }) =>
-	//   `pr_ag_${securityContext.tenantId}`,
-	// scheduledRefreshContexts: async () => {
-	//   const tenantIds = await fetchTenants();
-	//   return tenantIds.map((id) => {
-	//     return { securityContext: { tenantId: id } };
-	//   });
-	// },
+	contextToAppId: ({ securityContext }) =>
+		`CUBEJS_APP_${securityContext.userId}`,
 };
-// async function fetchTenants() {
-//   // Use connect method to connect to the server
-//   await client.connect();
-//   console.log("Connected successfully to server");
-//   const db = client.db(dbName);
-//   const collection = db.collection("tenants");
-//   let tenantIds = await collection.distinct("_id");
-//   tenantIds = tenantIds.map((item) => item.toString());
-//   return tenantIds;
-// }

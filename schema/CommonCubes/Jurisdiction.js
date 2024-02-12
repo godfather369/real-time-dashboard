@@ -1,13 +1,13 @@
-import { JURISDICTIONS_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 import { juridictionsCollection } from "./collections";
 
-cube(`JurisdictionsCube`, {
-  sql: `SELECT jurisdictionId , displayName , tenantId FROM ${juridictionsCollection}`,
+cube(`Jurisdiction`, {
+  sql: `SELECT jurisdictionId , displayName , tenantId, shortName FROM ${juridictionsCollection}`,
 	
   sqlAlias: `JursCube`,
 
   refreshKey: {
-    every: JURISDICTIONS_CUBE_REFRESH_KEY_TIME,
+    every: CUBE_REFRESH_KEY_TIME,
   },
 
   joins: {
@@ -27,6 +27,11 @@ cube(`JurisdictionsCube`, {
     displayName: {
       sql: `${CUBE}.\`displayName\``,
       title: `Jurisdiction Name`,
+      type: `string`
+    },
+    shortName: {
+      sql: `${CUBE}.\`shortName\``,
+      title: `Short Name`,
       type: `string`
     },
 		tenantId: {

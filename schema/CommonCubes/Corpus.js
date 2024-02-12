@@ -1,13 +1,13 @@
-import { CORPUS_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 import { corpusCollection } from "./collections";
 
-cube(`CorpusCube`, {
-  sql: `SELECT * FROM ${corpusCollection}`,
+cube(`Corpus`, {
+  sql: `SELECT jurisdiction, _id, id, name, tenantId  FROM ${corpusCollection}`,
 
   sqlAlias : `CorpCube`,
 
 	refreshKey: {
-    every: CORPUS_CUBE_REFRESH_KEY_TIME,
+    every: CUBE_REFRESH_KEY_TIME,
   },
 
   joins: {
@@ -20,7 +20,7 @@ cube(`CorpusCube`, {
   measures: {
     count: {
       type: `count`,
-      drillMembers: [_id, corpusName, tenantId]
+      drillMembers: [_id, tenantId]
     }
   },
 
@@ -31,7 +31,7 @@ cube(`CorpusCube`, {
 			title: `Jurisdiction name`
     },
     _id: {
-      sql: `CONVERT(${CUBE}.\`_id\`,CHAR)`,
+      sql: `${CUBE}.\`_id\``,
       type: `string`,
       primaryKey: true
     },
@@ -39,7 +39,7 @@ cube(`CorpusCube`, {
       sql: `${CUBE}.id`,
       type: `string`,
     },
-    corpusName: {
+    name: {
       sql: `${CUBE}.\`name\``,
       type: `string`,
 			title: `Corpus name`
