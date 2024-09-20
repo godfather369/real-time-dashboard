@@ -46,7 +46,7 @@ cube(`AlertsByGroupsCube`, {
 				AlertsByGroupsCube.alertCategory,
 				AlertsByGroupsCube.docStatus,
 			],
-			timeDimension: AlertsByGroupsCube.publishedDate,
+			timeDimension: AlertsByGroupsCube.created,
 			granularity: `day`,
 			buildRangeStart: {
 				sql: `SELECT NOW() - interval '365 day'`,

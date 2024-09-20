@@ -44,7 +44,7 @@ cube(`AlertsByOwnersCube`, {
 				Users._id,
 				AlertsByOwnersCube.alertCategory,
 			],
-			timeDimension: AlertsByOwnersCube.publishedDate,
+			timeDimension: AlertsByOwnersCube.created,
 			granularity: `day`,
 			buildRangeStart: {
 				sql: `SELECT NOW() - interval '365 day'`,

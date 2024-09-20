@@ -1,4 +1,4 @@
-import { alertsCollection, alertMDiDCollection } from "./collections";
+import { alertsCollection, alertMDIDCollection } from "./collections";
 import {
 	CUBE_REFRESH_KEY_TIME,
 	PRE_AGG_REFRESH_KEY_TIME,
@@ -6,7 +6,7 @@ import {
 
 cube(`AlertsByTopic`, {
 	sql: `SELECT * FROM (SELECT _id, status, tenantId, publishedDate, alertCategory  FROM ${alertsCollection} where ${alertsCollection}.archived=0) as alerts INNER JOIN 
-	(SELECT _id as Id ,  \`mdInfo._id\` as MDiD, \`mdInfo.name\` as MDName FROM ${alertMDiDCollection}) as TopicIds ON alerts._id = TopicIds.Id`,
+	(SELECT _id as Id ,  \`mdInfo._id\` as MDiD, \`mdInfo.name\` as MDName FROM ${alertMDIDCollection}) as TopicIds ON alerts._id = TopicIds.Id`,
 
 	sqlAlias: `AlTopCube`,
 

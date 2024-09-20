@@ -1,9 +1,9 @@
-import { alertsCollection, alertMDiDCollection } from "./collections";
+import { alertsCollection, alertMDIDCollection } from "./collections";
 import { PRE_AGG_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`AlertsByGrpIds`, {
 	sql: ` SELECT _id, alertCategory, publishedDate, tenantId, status, jurisdiction, docStatus, GROUP_CONCAT(MDiD) as MDiD FROM (SELECT _id, publishedDate, tenantId, status, jurisdiction, \`info.docStatus\` as docStatus,alertCategory FROM ${alertsCollection} where ${alertsCollection}.archived=0) as alerts LEFT JOIN 
-        (SELECT _id as masterId , \`mdInfo._id\` as MDiD FROM ${alertMDiDCollection}) as masterData ON alerts._id= masterData.masterId  GROUP BY _id`,
+        (SELECT _id as masterId , \`mdInfo._id\` as MDiD FROM ${alertMDIDCollection}) as masterData ON alerts._id= masterData.masterId  GROUP BY _id`,
 
 	sqlAlias: `AlGrpIdCube`,
 

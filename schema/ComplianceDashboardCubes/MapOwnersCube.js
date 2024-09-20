@@ -2,6 +2,7 @@ import {
 	risksCollection,
 	tasksCollection,
 	controlsCollection,
+	requirementsCollection,
 	mapUserCollection,
 } from "./collections";
 import {
@@ -15,6 +16,7 @@ cube(`MapOwnersCube`, {
   (SELECT _id, owner AS user, tenantId, 'Task' AS type
   FROM ${tasksCollection} WHERE ${tasksCollection}.archived=0 union all
   SELECT _id, user, tenantId, type FROM (SELECT _id,tenantId,'Risk' AS type FROM ${risksCollection} WHERE ${risksCollection}.archived=0) AS Risks INNER JOIN (SELECT user, srcObject FROM ${mapUserCollection} WHERE ${mapUserCollection}.srcType="Risk" AND ${mapUserCollection}.archived=0) as mapUser ON Risks._id= mapUser.srcObject union all
+  SELECT _id, user, tenantId, type FROM (SELECT _id,tenantId,'Requirement' AS type FROM ${requirementsCollection} WHERE ${requirementsCollection}.archived=0) AS Requirements INNER JOIN (SELECT user, srcObject FROM ${mapUserCollection} WHERE ${mapUserCollection}.srcType="Requirement" AND ${mapUserCollection}.archived=0) as mapUser ON Requirements._id= mapUser.srcObject union all
   SELECT _id, user, tenantId, type FROM (SELECT _id,tenantId,'Control' AS type FROM ${controlsCollection} WHERE ${controlsCollection}.archived=0) AS Controls INNER JOIN (SELECT user, srcObject FROM ${mapUserCollection} WHERE ${mapUserCollection}.srcType="Control" AND ${mapUserCollection}.archived=0) as mapUser ON Controls._id= mapUser.srcObject
   ) as MapOwners
  `,
@@ -45,6 +47,7 @@ cube(`MapOwnersCube`, {
 				MapOwnersCube.controlCount,
 				MapOwnersCube.riskCount,
 				MapOwnersCube.taskCount,
+				MapOwnersCube.requirementCount,
 				MapOwnersCube.total,
 			],
 			dimensions: [Tenants.tenantId, Users.fullName, Users._id],
@@ -70,6 +73,10 @@ cube(`MapOwnersCube`, {
 		controlCount: {
 			type: `count`,
 			filters: [{ sql: `${CUBE}.type = 'Control'` }],
+		},
+		requirementCount: {
+			type: `count`,
+			filters: [{ sql: `${CUBE}.type = 'Requirement'` }],
 		},
 	},
 
