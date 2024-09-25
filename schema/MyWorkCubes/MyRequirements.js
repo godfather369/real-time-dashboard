@@ -1,15 +1,15 @@
 const {
-  securityContext: { userId },
+  securityContext: { userId, tenantId: tenant_id },
 } = COMPILE_CONTEXT;
-import {
-  regMapStatusCollection,
-  mapUserCollection,
-  requirementsCollection,
-} from "./collections";
+import { regMapStatusCollection, mapUserCollection } from "./collections";
 import { MY_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`MyRequirements`, {
-  sql: `SELECT _id, status, tenantId FROM (SELECT _id as id, tenantId as tntId FROM ${requirementsCollection} WHERE ${requirementsCollection}.archived=0) as requirement INNER JOIN (SELECT _id, status, tenantId FROM (SELECT srcObject as _id, tenantId FROM ${mapUserCollection} where ${mapUserCollection}.archived=0 AND ${mapUserCollection}.srcType="Requirement" AND ${mapUserCollection}.user="${userId}")as userMap INNER JOIN (SELECT status, srcObject FROM ${regMapStatusCollection} WHERE ${regMapStatusCollection}.archived=0 AND ${regMapStatusCollection}.srcType="Requirement") as statusMap ON userMap._id=statusMap.srcObject) as mappedRequirement ON mappedRequirement._id=requirement.id AND mappedRequirement.tenantId=requirement.tntId`,
+  sql: `SELECT _id, status, tenantId FROM
+            (SELECT srcObject as _id FROM ${mapUserCollection} where ${mapUserCollection}.srcType="Requirement" AND ${mapUserCollection}.user="${userId}" AND ${mapUserCollection}.archived=0) as userMap 
+            INNER JOIN
+            (SELECT status, srcObject, tenantId FROM ${regMapStatusCollection} WHERE ${regMapStatusCollection}.tenantId="${tenant_id}" AND ${regMapStatusCollection}.srcType="Requirement" AND ${regMapStatusCollection}.archived=0) as statusMap 
+          ON userMap._id=statusMap.srcObject`,
 
   sqlAlias: `MyReCube`,
 
