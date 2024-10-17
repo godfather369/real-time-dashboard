@@ -40,6 +40,7 @@ cube(`AlertsCube`, {
 				AlertsCube.inProcess,
 				AlertsCube.excluded,
 				AlertsCube.following,
+				AlertsCube.duplicate,
 				AlertsCube.totalCount,
 			],
 			dimensions: [Tenants.tenantId, AlertsCube.alertCategory],
@@ -65,6 +66,7 @@ cube(`AlertsCube`, {
 				AlertsCube.applicable,
 				AlertsCube.inProcess,
 				AlertsCube.following,
+				AlertsCube.duplicate,
 				AlertsCube.totalCount,
 			],
 			dimensions: [
@@ -134,6 +136,7 @@ cube(`AlertsCube`, {
 				AlertsCube.applicable,
 				AlertsCube.inProcess,
 				AlertsCube.following,
+				AlertsCube.duplicate,
 				AlertsCube.totalCount,
 			],
 			dimensions: [
@@ -259,8 +262,14 @@ cube(`AlertsCube`, {
 			title: `Following`,
 			filters: [{ sql: `${CUBE}.status = 'Following'` }],
 		},
+		duplicate:{
+			type: `count`,
+			sql: `status`,
+			title: `Duplicate`,
+			filters: [{ sql: `${CUBE}.status = 'Duplicate'` }],
+		},
 		totalCount: {
-			sql: `${unread} + ${applicable} + ${inProcess}+${following}`,
+			sql: `${unread} + ${applicable} + ${inProcess}+${following}+${duplicate}`,
 			type: `number`,
 			title: "totalCount",
 		},

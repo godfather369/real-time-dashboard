@@ -35,6 +35,7 @@ cube(`AlertsByAgencyCube`, {
 				AlertsByAgencyCube.unread,
 				AlertsByAgencyCube.applicable,
 				AlertsByAgencyCube.following,
+				AlertsByAgencyCube.duplicate,
 				AlertsByAgencyCube.inProcess,
 				AlertsByAgencyCube.totalCount,
 			],
@@ -94,8 +95,14 @@ cube(`AlertsByAgencyCube`, {
 			title: `Following`,
 			filters: [{ sql: `${CUBE}.status = 'Following'` }],
 		},
+		duplicate: {
+			type: `count`,
+			sql: `status`,
+			title: `Duplicate`,
+			filters: [{ sql: `${CUBE}.status = 'Duplicate'` }],
+		},
 		totalCount: {
-			sql: `${unread} + ${applicable} + ${inProcess} +${following}`,
+			sql: `${unread} + ${applicable} + ${inProcess} +${following} + ${duplicate}`,
 			type: `number`,
 			title: "totalCount",
 		},

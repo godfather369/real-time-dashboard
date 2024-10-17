@@ -47,7 +47,7 @@ cube(`MyAlertsSLA`, {
 						label: `Open`,
 					},
 					{
-						sql: `${CUBE}.status = 'Excluded' OR ${CUBE}.status = 'Following' OR ${CUBE}.status = 'Applicable'`,
+						sql: `${CUBE}.status = 'Excluded' OR ${CUBE}.status = 'Following' OR ${CUBE}.status = 'Applicable' OR ${CUBE}.status = 'Duplicate'`,
 						label: `Closed`,
 					},
 				],
