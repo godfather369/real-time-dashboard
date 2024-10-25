@@ -4,6 +4,7 @@ import {
 	controlsCollection,
 	requirementsCollection,
 	mapUserCollection,
+	tasksOwnersCollection
 } from "./collections";
 import {
 	CUBE_REFRESH_KEY_TIME,
@@ -13,8 +14,7 @@ import {
 cube(`MapOwnersCube`, {
 	sql: `
   SELECT * FROM 
-  (SELECT _id, owner AS user, tenantId, 'Task' AS type
-  FROM ${tasksCollection} WHERE ${tasksCollection}.archived=0 union all
+  (SELECT TaskOwner._id, TaskOwner.owners AS user, task.tenantId, task.type FROM ${tasksOwnersCollection} AS TaskOwner INNER JOIN (SELECT _id, tenantId, 'Task' AS type FROM ${tasksCollection} WHERE ${tasksCollection}.archived = 0) AS task ON task._id = TaskOwner._id union all
   SELECT _id, user, tenantId, type FROM (SELECT _id,tenantId,'Risk' AS type FROM ${risksCollection} WHERE ${risksCollection}.archived=0) AS Risks INNER JOIN (SELECT user, srcObject FROM ${mapUserCollection} WHERE ${mapUserCollection}.srcType="Risk" AND ${mapUserCollection}.archived=0) as mapUser ON Risks._id= mapUser.srcObject union all
   SELECT _id, user, tenantId, type FROM (SELECT _id,tenantId,'Requirement' AS type FROM ${requirementsCollection} WHERE ${requirementsCollection}.archived=0) AS Requirements INNER JOIN (SELECT user, srcObject FROM ${mapUserCollection} WHERE ${mapUserCollection}.srcType="Requirement" AND ${mapUserCollection}.archived=0) as mapUser ON Requirements._id= mapUser.srcObject union all
   SELECT _id, user, tenantId, type FROM (SELECT _id,tenantId,'Control' AS type FROM ${controlsCollection} WHERE ${controlsCollection}.archived=0) AS Controls INNER JOIN (SELECT user, srcObject FROM ${mapUserCollection} WHERE ${mapUserCollection}.srcType="Control" AND ${mapUserCollection}.archived=0) as mapUser ON Controls._id= mapUser.srcObject

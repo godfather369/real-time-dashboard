@@ -1,14 +1,47 @@
 const {
 	securityContext: { userId },
 } = COMPILE_CONTEXT;
-import { tasksCollection, regMapStatusCollection } from "./collections";
+import { tasksCollection, regMapStatusCollection, tasksOwnersCollection, tasksGroupsCollection, groupsOfUserCollection } from "./collections";
 import { MY_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`MyTasks`, {
-	sql: `SELECT _id, status, tenantId, dueDate FROM 
-						(SELECT _id, tenantId, dueDate from ${tasksCollection} where ${tasksCollection}.archived=0 AND ${tasksCollection}.owner="${userId}") AS tasks LEFT JOIN 
-						(SELECT  srcObject, status, tenantId as tntId FROM ${regMapStatusCollection} WHERE ${regMapStatusCollection}.srcType="Task" AND ${regMapStatusCollection}.archived=0) AS status 
-        ON status.srcObject=tasks._id AND status.tntId=tasks.tenantId`,
+	sql: `SELECT *
+		FROM (
+				(
+					SELECT _id AS uid
+					FROM ${tasksOwnersCollection}
+					WHERE ${tasksOwnersCollection}.owners = "${userId}"
+				)
+				UNION
+				SELECT gid AS uid
+				FROM (
+						SELECT functionalrole
+						FROM ${groupsOfUserCollection}
+						WHERE ${groupsOfUserCollection}._id = "${userId}"
+					) AS usergroups
+				INNER JOIN (
+						SELECT _id AS gid, groups
+						FROM ${tasksGroupsCollection}
+					) AS groupids
+				ON groupids.groups = usergroups.functionalrole
+			) AS users
+		INNER JOIN (
+				SELECT _id, status, tenantid, duedate
+				FROM (
+						SELECT _id, tenantid, duedate
+						FROM ${tasksCollection}
+						WHERE ${tasksCollection}.archived = 0
+					) AS tasks
+				LEFT JOIN (
+						SELECT srcobject, status, tenantid AS tntid
+						FROM ${regMapStatusCollection}
+						WHERE ${regMapStatusCollection}.srctype = "Task"
+						AND ${regMapStatusCollection}.archived = 0
+					) AS status
+				ON status.srcobject = tasks._id
+				AND status.tntid = tasks.tenantid
+			) AS tasks
+		ON tasks._id = users.uid`,
 
 	sqlAlias: `MyTaCube`,
 

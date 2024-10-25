@@ -39,6 +39,8 @@ export const regMapStatusCollection = getCollectionString("reg_map_status");
 export const risksCollection = getCollectionString("risks");
 export const requirementsCollection = getCollectionString("reqs");
 export const tasksCollection = getCollectionString("tasks");
+export const tasksOwnersCollection = getCollectionString("tasks_owners");
+export const tasksGroupsCollection = getCollectionString("tasks_groups");
 export const controlsCollection = getCollectionString("controls");
 export const risksByStatusCollection = getCollectionString(
 	"reg_config_status_risk"
