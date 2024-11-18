@@ -43,7 +43,7 @@ cube(`AlertsCube`, {
 				AlertsCube.duplicate,
 				AlertsCube.totalCount,
 			],
-			dimensions: [Tenants.tenantId, AlertsCube.alertCategory],
+			dimensions: [Tenants.tenantId, AlertsCube.alertCategory, AlertsCube.status],
 			timeDimension: AlertsCube.publishedDate,
 			granularity: `day`,
 			buildRangeStart: {
