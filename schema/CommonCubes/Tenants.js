@@ -1,23 +1,25 @@
 import { tenantCollection } from "./collections";
-import { CUBE_REFRESH_KEY_TIME , defaultTenantId } from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME, defaultTenantId } from "./cube-constants";
 
 cube(`Tenants`, {
-	
-  sql: `select '${defaultTenantId}' as tenantId
-        union all
-        SELECT _id as tenantId FROM ${tenantCollection}`,
+  sql: `
+    SELECT '${defaultTenantId}' AS tenantId
+    UNION ALL
+    SELECT _id AS tenantId 
+    FROM ${tenantCollection}
+  `,
 
-  sqlAlias : `tnts`,
+  sqlAlias: `tnts`,
 
-	refreshKey: {
-    every: CUBE_REFRESH_KEY_TIME
+  refreshKey: {
+    every: CUBE_REFRESH_KEY_TIME,
   },
 
   measures: {
     count: {
       type: `count`,
-      drillMembers: [tenantId]
-    }
+      drillMembers: [tenantId],
+    },
   },
 
   dimensions: {
@@ -25,9 +27,9 @@ cube(`Tenants`, {
       sql: `CONVERT(${CUBE}.\`tenantId\`,CHAR)`,
       type: `string`,
       primaryKey: true,
-      shown: true
-    }
+      shown: true,
+    },
   },
 
-  dataSource: `default`
+  dataSource: `default`,
 });

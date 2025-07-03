@@ -2,8 +2,15 @@ import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 import { juridictionsCollection } from "./collections";
 
 cube(`Jurisdiction`, {
-  sql: `SELECT jurisdictionId , displayName , tenantId, shortName FROM ${juridictionsCollection}`,
-	
+  sql: `
+    SELECT 
+      jurisdictionId,
+      displayName,
+      tenantId,
+      shortName 
+    FROM ${juridictionsCollection}
+  `,
+
   sqlAlias: `JursCube`,
 
   refreshKey: {
@@ -13,8 +20,8 @@ cube(`Jurisdiction`, {
   joins: {
     Tenants: {
       relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`
-    }
+      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
+    },
   },
 
   dimensions: {
@@ -22,24 +29,24 @@ cube(`Jurisdiction`, {
       sql: `${CUBE}.\`jurisdictionId\``,
       title: `Jurisdiction`,
       type: `string`,
-      primaryKey: true
+      primaryKey: true,
     },
     displayName: {
       sql: `${CUBE}.\`displayName\``,
       title: `Jurisdiction Name`,
-      type: `string`
+      type: `string`,
     },
     shortName: {
       sql: `${CUBE}.\`shortName\``,
       title: `Short Name`,
-      type: `string`
+      type: `string`,
     },
-		tenantId: {
+    tenantId: {
       sql: `${CUBE}.\`tenantId\``,
       type: `string`,
-			title: `Tenant Id`
-    }
+      title: `Tenant Id`,
+    },
   },
 
-  dataSource: `default`
+  dataSource: `default`,
 });

@@ -1,54 +1,73 @@
-import { CUBE_REFRESH_KEY_TIME , PRE_AGG_REFRESH_KEY_TIME } from "./cube-constants";
-import { enforcementActionsCollection, enforcementActionsAgencyMapCollection } from "./collections"
+import {
+  CUBE_REFRESH_KEY_TIME,
+  PRE_AGG_REFRESH_KEY_TIME,
+} from "./cube-constants";
+import {
+  enforcementActionsCollection,
+  enforcementActionsAgencyMapCollection,
+} from "./collections";
 
 cube(`EnforcementActionsCube`, {
-  sql: `SELECT * FROM 
-	(SELECT * FROM (SELECT * FROM ${enforcementActionsCollection} where ${enforcementActionsCollection}.archived=0) as EAalerts LEFT JOIN 
-	(SELECT _id as Id , agencyMap FROM ${enforcementActionsAgencyMapCollection}) as EAagencyMapCube ON EAalerts._id = EAagencyMapCube.Id ) as EAalertsCubeJoin`,
-  
+  sql: `
+    SELECT * FROM (
+      SELECT * FROM (
+        SELECT * FROM ${enforcementActionsCollection} 
+        WHERE ${enforcementActionsCollection}.archived = 0
+      ) AS EAalerts 
+      LEFT JOIN (
+        SELECT _id AS Id, agencyMap 
+        FROM ${enforcementActionsAgencyMapCollection}
+      ) AS EAagencyMapCube 
+      ON EAalerts._id = EAagencyMapCube.Id
+    ) AS EAalertsCubeJoin
+  `,
+
   sqlAlias: `eARep`,
 
   refreshKey: {
-    every: CUBE_REFRESH_KEY_TIME
+    every: CUBE_REFRESH_KEY_TIME,
   },
 
   joins: {
     Tenants: {
-			relationship: `hasOne`,
-			sql :`${CUBE.tenantId} = ${Tenants.tenantId}` 
-		},
-		Users: {
-      relationship: `belongsTo`,
-      sql: `TRIM(CONVERT(${CUBE.owner}, CHAR)) = TRIM(CONVERT(${Users._id}, CHAR))`
+      relationship: `hasOne`,
+      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
     },
-		HarmonizedActionTypeCube : {
-			relationship: `hasMany`,
-			sql: `${CUBE._id} = ${HarmonizedActionTypeCube._id}`
-		},
-		RegulationsCube: {
+    Users: {
+      relationship: `belongsTo`,
+      sql: `TRIM(CONVERT(${CUBE.owner}, CHAR)) = TRIM(CONVERT(${Users._id}, CHAR))`,
+    },
+    HarmonizedActionTypeCube: {
       relationship: `hasMany`,
-      sql: `${CUBE._id} = ${RegulationsCube._id}`
+      sql: `${CUBE._id} = ${HarmonizedActionTypeCube._id}`,
+    },
+    RegulationsCube: {
+      relationship: `hasMany`,
+      sql: `${CUBE._id} = ${RegulationsCube._id}`,
     },
     Agency: {
       relationship: `belongsTo`,
-      sql: `${CUBE.agencyMap} = ${Agency._id}`
+      sql: `${CUBE.agencyMap} = ${Agency._id}`,
     },
   },
 
   preAggregations: {
-    //roll up for # of enforcement actions and enforcement actions report 
-    enforcementActionsAndPenaltiesReportRollUp : {
+    //roll up for # of enforcement actions and enforcement actions report
+    enforcementActionsAndPenaltiesReportRollUp: {
       sqlAlias: `enfAcPenRepRP`,
       type: `rollup`,
       external: true,
       scheduledRefresh: true,
-      measures: [EnforcementActionsCube.count , EnforcementActionsCube.netAmount],
+      measures: [
+        EnforcementActionsCube.count,
+        EnforcementActionsCube.netAmount,
+      ],
       dimensions: [
         EnforcementActionsCube.agencyMap,
         Agency.shortCode,
         Agency.agencyNames,
         EnforcementActionsCube.currency,
-        Tenants.tenantId
+        Tenants.tenantId,
       ],
       timeDimension: EnforcementActionsCube.effectiveDate,
       granularity: `day`,
@@ -66,28 +85,28 @@ cube(`EnforcementActionsCube`, {
       sqlAlias: `HAGroll`,
       type: `rollup`,
       external: true,
-			scheduledRefresh: true,
+      scheduledRefresh: true,
       measures: [EnforcementActionsCube.count],
       dimensions: [
         EnforcementActionsCube.agencyMap,
         Agency.shortCode,
         Agency.agencyNames,
         HarmonizedActionTypeCube.harmonizedActionType,
-        Tenants.tenantId
+        Tenants.tenantId,
       ],
       timeDimension: EnforcementActionsCube.effectiveDate,
       granularity: `day`,
       buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`
+        sql: `SELECT NOW() - interval '365 day'`,
       },
       buildRangeEnd: {
-        sql: `SELECT NOW()`
+        sql: `SELECT NOW()`,
       },
       refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME
-      }
+        every: PRE_AGG_REFRESH_KEY_TIME,
+      },
     },
-		authDocImpactedRollUp: {
+    authDocImpactedRollUp: {
       sqlAlias: `auDocRoll`,
       type: `rollup`,
       external: true,
@@ -97,7 +116,7 @@ cube(`EnforcementActionsCube`, {
         RegulationsCube.authoritativeDocuments,
         RegulationsCube.citations,
         RegulationsCube.id,
-        Tenants.tenantId
+        Tenants.tenantId,
       ],
       timeDimension: EnforcementActionsCube.effectiveDate,
       granularity: `day`,
@@ -116,37 +135,37 @@ cube(`EnforcementActionsCube`, {
   measures: {
     count: {
       type: `count`,
-      drillMembers: [tenantId]
+      drillMembers: [tenantId],
     },
     netAmount: {
       sql: `COALESCE(${CUBE}.\`info.penaltyAmount.value\` + ${CUBE}.\`info.restitutionAmount.value\`, ${CUBE}.\`info.restitutionAmount.value\`, ${CUBE}.\`info.penaltyAmount.value\` , 0) `,
-      type: `sum`
-    }
+      type: `sum`,
+    },
   },
 
   dimensions: {
     _id: {
       sql: `${CUBE}.\`_id\``,
       type: `string`,
-      primaryKey: true
+      primaryKey: true,
     },
     effectiveDate: {
       sql: `${CUBE}.\`effectiveDate\``,
-      type: `time`
+      type: `time`,
     },
     currency: {
       sql: `${CUBE}.\`info.penaltyAmount.currency\``,
       type: `string`,
-			title : `currency`
+      title: `currency`,
     },
     tenantId: {
       sql: `${CUBE}.\`tenantId\``,
-      type: `string`
+      type: `string`,
     },
     agencyMap: {
       sql: `${CUBE}.\`agencyMap\``,
       type: `string`,
-      title: `agencyMap`
-    }
-  }
+      title: `agencyMap`,
+    },
+  },
 });

@@ -2,54 +2,62 @@ import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 import { corpusCollection } from "./collections";
 
 cube(`Corpus`, {
-  sql: `SELECT jurisdiction, _id, id, name, tenantId  FROM ${corpusCollection}`,
+  sql: `
+    SELECT 
+      jurisdiction,
+      _id,
+      id,
+      name,
+      tenantId
+    FROM ${corpusCollection}
+  `,
 
-  sqlAlias : `CorpCube`,
+  sqlAlias: `CorpCube`,
 
-	refreshKey: {
+  refreshKey: {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
   joins: {
     Tenants: {
       relationship: `hasOne`,
-      sql :`${CUBE.tenantId} = ${Tenants.tenantId}` 
+      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
     },
   },
-  
+
   measures: {
     count: {
       type: `count`,
-      drillMembers: [_id, tenantId]
-    }
+      drillMembers: [_id, tenantId],
+    },
   },
 
   dimensions: {
     jurisdiction: {
       sql: `${CUBE}.\`jurisdiction\``,
       type: `string`,
-			title: `Jurisdiction name`
+      title: `Jurisdiction name`,
     },
     _id: {
       sql: `${CUBE}.\`_id\``,
       type: `string`,
-      primaryKey: true
+      primaryKey: true,
     },
-		id: {
+    id: {
       sql: `${CUBE}.id`,
       type: `string`,
     },
     name: {
       sql: `${CUBE}.\`name\``,
       type: `string`,
-			title: `Corpus name`
+      title: `Corpus name`,
     },
     tenantId: {
       sql: `${CUBE}.\`tenantId\``,
       type: `string`,
-			title: `Tenant Id`
-    }
+      title: `Tenant Id`,
+    },
   },
 
-  dataSource: `default`
+  dataSource: `default`,
 });

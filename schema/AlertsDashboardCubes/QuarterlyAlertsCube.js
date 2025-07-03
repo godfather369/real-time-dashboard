@@ -6,12 +6,35 @@ import {
 } from "./cube-constants";
 
 cube("QuarterlyAlertsCube", {
-  sql: `SELECT _id, status, docStatus, created, tenantId, destObject FROM
-    (SELECT _id, status, \`info.docStatus\` as docStatus, created, tenantId FROM ${alertsCollection} WHERE ${alertsCollection}.archived=0)
-    as alerts LEFT JOIN
-    (SELECT srcObject, destObject, tenantId as tntId FROM ${regMapGenericCollection} 
-        WHERE ${regMapGenericCollection}.archived=0  AND ${regMapGenericCollection}.destType="ImpactAssessment" AND ${regMapGenericCollection}.srcType="Alert")
-    as Maps ON alerts._id = maps.srcObject`,
+  sql: `
+    SELECT 
+      _id, 
+      status, 
+      docStatus, 
+      created, 
+      tenantId, 
+      destObject 
+    FROM (
+      SELECT 
+        _id, 
+        status, 
+        \`info.docStatus\` as docStatus, 
+        created, 
+        tenantId 
+      FROM ${alertsCollection} 
+      WHERE ${alertsCollection}.archived = 0
+    ) as alerts 
+    LEFT JOIN (
+      SELECT 
+        srcObject, 
+        destObject, 
+        tenantId as tntId 
+      FROM ${regMapGenericCollection} 
+      WHERE ${regMapGenericCollection}.archived = 0 
+        AND ${regMapGenericCollection}.destType = "ImpactAssessment" 
+        AND ${regMapGenericCollection}.srcType = "Alert"
+    ) as Maps ON alerts._id = maps.srcObject
+  `,
 
   sqlAlias: "QrAl",
 

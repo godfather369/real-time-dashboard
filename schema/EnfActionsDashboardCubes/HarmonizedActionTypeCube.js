@@ -1,13 +1,16 @@
 import { harmonizedActionCollection } from "./collections";
-import {CUBE_REFRESH_KEY_TIME} from "./cube-constants"
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`HarmonizedActionTypeCube`, {
-  sql: `SELECT * FROM ${harmonizedActionCollection}`,
+  sql: `
+    SELECT * 
+    FROM ${harmonizedActionCollection}
+  `,
 
   sqlAlias: `HaAcCube`,
 
   refreshKey: {
-    every: CUBE_REFRESH_KEY_TIME
+    every: CUBE_REFRESH_KEY_TIME,
   },
 
   measures: {
@@ -21,14 +24,14 @@ cube(`HarmonizedActionTypeCube`, {
     harmonizedActionType: {
       sql: `${CUBE}.\`info.harmonizedActionType\``,
       type: `string`,
-      title: `harmonizedActionType`
+      title: `harmonizedActionType`,
     },
     _id: {
       sql: `${CUBE}.\`_id\``,
       type: `string`,
-      primaryKey: true
-    }
+      primaryKey: true,
+    },
   },
 
-  dataSource: `default`
+  dataSource: `default`,
 });
