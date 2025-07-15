@@ -42,6 +42,9 @@ export const tasksCollection = getCollectionString("tasks");
 export const tasksOwnersCollection = getCollectionString("tasks_owners");
 export const tasksGroupsCollection = getCollectionString("tasks_groups");
 export const controlsCollection = getCollectionString("controls");
+export const alertsByStatusCollection = getCollectionString(
+	"reg_config_status_regChange"
+);
 export const risksByStatusCollection = getCollectionString(
 	"reg_config_status_risk"
 );

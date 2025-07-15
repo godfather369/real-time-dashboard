@@ -83,6 +83,10 @@ cube(`combinedOwnersSLA`, {
       relationship: `belongsTo`,
       sql: `TRIM(CONVERT(${CUBE.owners}, CHAR)) = TRIM(CONVERT(${Users._id}, CHAR))`,
     },
+    AlertStatusCube: {
+      relationship: `belongsTo`,
+      sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1`,
+    },
   },
 
   preAggregations: {
@@ -126,7 +130,7 @@ cube(`combinedOwnersSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `(${CUBE}.status = 'Unread' OR ${CUBE}.status = 'In Process') AND (${CUBE}.impactStatus = 'New' OR ${CUBE}.impactStatus = 'In Process')`,
+          sql: `(NOT ${AlertStatusCube}.isTerminal AND NOT ${AlertStatusCube}.isExcluded) AND (${CUBE}.impactStatus = 'New' OR ${CUBE}.impactStatus = 'In Process')`,
         },
       ],
     },
@@ -134,7 +138,7 @@ cube(`combinedOwnersSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `(${CUBE}.status = 'Unread' OR ${CUBE}.status = 'In Process') AND (${CUBE}.impactStatus = 'Closed')`,
+          sql: `(NOT ${AlertStatusCube}.isTerminal AND NOT ${AlertStatusCube}.isExcluded) AND (${CUBE}.impactStatus = 'Closed')`,
         },
       ],
     },
@@ -142,7 +146,7 @@ cube(`combinedOwnersSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `(${CUBE}.status = 'Unread' OR ${CUBE}.status = 'In Process') AND (${CUBE}.impactStatus = 'No')`,
+          sql: `(NOT ${AlertStatusCube}.isTerminal AND NOT ${AlertStatusCube}.isExcluded) AND (${CUBE}.impactStatus = 'No')`,
         },
       ],
     },
@@ -150,7 +154,7 @@ cube(`combinedOwnersSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `${CUBE}.status = 'Applicable' AND (${CUBE}.impactStatus = 'New' OR ${CUBE}.impactStatus = 'In Process')`,
+          sql: `(${AlertStatusCube}.isTerminal OR ${AlertStatusCube}.isExcluded) AND (${CUBE}.impactStatus = 'New' OR ${CUBE}.impactStatus = 'In Process')`,
         },
       ],
     },
@@ -158,7 +162,7 @@ cube(`combinedOwnersSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `${CUBE}.status = 'Applicable' AND (${CUBE}.impactStatus = 'Closed')`,
+          sql: `(${AlertStatusCube}.isTerminal OR ${AlertStatusCube}.isExcluded) AND (${CUBE}.impactStatus = 'Closed')`,
         },
       ],
     },
@@ -166,7 +170,7 @@ cube(`combinedOwnersSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `${CUBE}.status = 'Applicable' AND (${CUBE}.impactStatus = 'No')`,
+          sql: `(${AlertStatusCube}.isTerminal OR ${AlertStatusCube}.isExcluded) AND (${CUBE}.impactStatus = 'No')`,
         },
       ],
     },
@@ -174,7 +178,7 @@ cube(`combinedOwnersSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `${CUBE}.status = 'Unread' OR ${CUBE}.status = 'In Process'`,
+          sql: `(NOT ${AlertStatusCube}.isTerminal AND NOT ${AlertStatusCube}.isExcluded)`,
         },
       ],
     },
@@ -182,7 +186,7 @@ cube(`combinedOwnersSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `${CUBE}.status = 'Applicable'`,
+          sql: `(${AlertStatusCube}.isTerminal OR ${AlertStatusCube}.isExcluded)`,
         },
       ],
     },

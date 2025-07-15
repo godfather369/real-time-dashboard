@@ -41,6 +41,10 @@ cube(`AlertsByAgencyCube`, {
       relationship: `belongsTo`,
       sql: `${CUBE.agencyMap} = ${Agency._id}`,
     },
+    AlertStatusCube: {
+      relationship: `belongsTo`,
+      sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1 AND ${AlertStatusCube.isExcluded} = 0`,
+    },
   },
 
   preAggregations: {
@@ -49,17 +53,11 @@ cube(`AlertsByAgencyCube`, {
       type: `rollup`,
       external: true,
       scheduledRefresh: true,
-      measures: [
-        AlertsByAgencyCube.unread,
-        AlertsByAgencyCube.applicable,
-        AlertsByAgencyCube.following,
-        AlertsByAgencyCube.duplicate,
-        AlertsByAgencyCube.inProcess,
-        AlertsByAgencyCube.totalCount,
-      ],
+      measures: [AlertsByAgencyCube.count],
       dimensions: [
         Tenants.tenantId,
         AlertsByAgencyCube.alertCategory,
+        AlertStatusCube.statusId,
         AlertsByAgencyCube.agencyMap,
         Agency.agencyNames,
         Agency.shortCode,
@@ -82,47 +80,6 @@ cube(`AlertsByAgencyCube`, {
     count: {
       type: `count`,
       drillMembers: [_id],
-    },
-    unread: {
-      type: `count`,
-      sql: `status`,
-      title: `unread`,
-      filters: [{ sql: `${CUBE}.status = 'Unread'` }],
-    },
-    excluded: {
-      type: `count`,
-      sql: `status`,
-      title: `excluded`,
-      filters: [{ sql: `${CUBE}.status = 'Excluded'` }],
-    },
-    applicable: {
-      type: `count`,
-      sql: `status`,
-      title: `Applicable`,
-      filters: [{ sql: `${CUBE}.status = 'Applicable'` }],
-    },
-    inProcess: {
-      type: `count`,
-      sql: `status`,
-      title: `inProcess`,
-      filters: [{ sql: `${CUBE}.status = 'In Process'` }],
-    },
-    following: {
-      type: `count`,
-      sql: `status`,
-      title: `Following`,
-      filters: [{ sql: `${CUBE}.status = 'Following'` }],
-    },
-    duplicate: {
-      type: `count`,
-      sql: `status`,
-      title: `Duplicate`,
-      filters: [{ sql: `${CUBE}.status = 'Duplicate'` }],
-    },
-    totalCount: {
-      sql: `${unread} + ${applicable} + ${inProcess} +${following} + ${duplicate}`,
-      type: `number`,
-      title: "totalCount",
     },
   },
 

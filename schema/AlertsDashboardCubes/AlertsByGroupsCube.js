@@ -42,6 +42,10 @@ cube(`AlertsByGroupsCube`, {
       relationship: `belongsTo`,
       sql: `${CUBE.groups} = ${Groups._id}`,
     },
+    AlertStatusCube: {
+      relationship: `belongsTo`,
+      sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1`,
+    },
   },
 
   preAggregations: {
@@ -50,15 +54,7 @@ cube(`AlertsByGroupsCube`, {
       type: `rollup`,
       external: true,
       scheduledRefresh: true,
-      measures: [
-        AlertsByGroupsCube.unread,
-        AlertsByGroupsCube.applicable,
-        AlertsByGroupsCube.following,
-        AlertsByGroupsCube.duplicate,
-        AlertsByGroupsCube.inProcess,
-        AlertsByGroupsCube.excluded,
-        AlertsByGroupsCube.totalCount,
-      ],
+      measures: [AlertsByGroupsCube.count],
       dimensions: [
         Tenants.tenantId,
         Groups.name,
@@ -83,17 +79,7 @@ cube(`AlertsByGroupsCube`, {
       type: `rollup`,
       external: true,
       scheduledRefresh: true,
-      measures: [
-        AlertsByGroupsCube.unread,
-        AlertsByGroupsCube.applicable,
-        AlertsByGroupsCube.following,
-        AlertsByGroupsCube.duplicate,
-        AlertsByGroupsCube.inProcess,
-        AlertsByGroupsCube.totalCount,
-        AlertsByGroupsCube.open,
-        AlertsByGroupsCube.closed,
-        AlertsByGroupsCube.excluded,
-      ],
+      measures: [AlertsByGroupsCube.open, AlertsByGroupsCube.closed],
       dimensions: [
         Tenants.tenantId,
         Groups.name,
@@ -119,56 +105,16 @@ cube(`AlertsByGroupsCube`, {
       type: `count`,
       drillMembers: [_id],
     },
-    unread: {
-      type: `count`,
-      sql: `status`,
-      title: `unread`,
-      filters: [{ sql: `${CUBE}.status = 'Unread'` }],
-    },
-    excluded: {
-      type: `count`,
-      sql: `status`,
-      title: `excluded`,
-      filters: [{ sql: `${CUBE}.status = 'Excluded'` }],
-    },
-    applicable: {
-      type: `count`,
-      sql: `status`,
-      title: `Applicable`,
-      filters: [{ sql: `${CUBE}.status = 'Applicable'` }],
-    },
-    inProcess: {
-      type: `count`,
-      sql: `status`,
-      title: `inProcess`,
-      filters: [{ sql: `${CUBE}.status = 'In Process'` }],
-    },
-    following: {
-      type: `count`,
-      sql: `status`,
-      title: `Following`,
-      filters: [{ sql: `${CUBE}.status = 'Following'` }],
-    },
-    duplicate: {
-      type: `count`,
-      sql: `status`,
-      title: `Duplicate`,
-      filters: [{ sql: `${CUBE}.status = 'Duplicate'` }],
-    },
     open: {
-      sql: `${unread} +${inProcess}`,
-      type: `number`,
+      sql: `(NOT ${AlertStatusCube}.isTerminal AND NOT ${AlertStatusCube}.isExcluded)`,
+      type: `sum`,
       title: "open",
     },
+
     closed: {
-      sql: `${following} +${applicable} + ${excluded} + ${duplicate}`,
-      type: `number`,
+      sql: `(${AlertStatusCube}.isTerminal OR ${AlertStatusCube}.isExcluded)`,
+      type: `sum`,
       title: "closed",
-    },
-    totalCount: {
-      sql: `${unread} + ${applicable} + ${inProcess} +${following} + ${excluded} + ${duplicate}`,
-      type: `number`,
-      title: "totalCount",
     },
   },
 

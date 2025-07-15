@@ -162,6 +162,10 @@ cube(`combinedGroupsSLA`, {
       relationship: `belongsTo`,
       sql: `TRIM(CONVERT(${CUBE.groups}, CHAR)) = TRIM(CONVERT(${Groups._id}, CHAR))`,
     },
+    AlertStatusCube: {
+      relationship: `belongsTo`,
+      sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1`,
+    },
   },
 
   preAggregations: {
@@ -205,7 +209,7 @@ cube(`combinedGroupsSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `(${CUBE}.status = 'Unread' OR ${CUBE}.status = 'In Process') AND (${CUBE}.impactStatus = 'New' OR ${CUBE}.impactStatus = 'In Process')`,
+          sql: `(NOT ${AlertStatusCube}.isTerminal AND NOT ${AlertStatusCube}.isExcluded) AND (${CUBE}.impactStatus = 'New' OR ${CUBE}.impactStatus = 'In Process')`,
         },
       ],
     },
@@ -213,7 +217,7 @@ cube(`combinedGroupsSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `(${CUBE}.status = 'Unread' OR ${CUBE}.status = 'In Process') AND (${CUBE}.impactStatus = 'Closed')`,
+          sql: `(NOT ${AlertStatusCube}.isTerminal AND NOT ${AlertStatusCube}.isExcluded) AND (${CUBE}.impactStatus = 'Closed')`,
         },
       ],
     },
@@ -221,7 +225,7 @@ cube(`combinedGroupsSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `(${CUBE}.status = 'Unread' OR ${CUBE}.status = 'In Process') AND (${CUBE}.impactStatus = 'No')`,
+          sql: `(NOT ${AlertStatusCube}.isTerminal AND NOT ${AlertStatusCube}.isExcluded) AND (${CUBE}.impactStatus = 'No')`,
         },
       ],
     },
@@ -229,7 +233,7 @@ cube(`combinedGroupsSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `${CUBE}.status = 'Applicable' AND (${CUBE}.impactStatus = 'New' OR ${CUBE}.impactStatus = 'In Process')`,
+          sql: `(${AlertStatusCube}.isTerminal OR ${AlertStatusCube}.isExcluded) AND (${CUBE}.impactStatus = 'New' OR ${CUBE}.impactStatus = 'In Process')`,
         },
       ],
     },
@@ -237,7 +241,7 @@ cube(`combinedGroupsSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `${CUBE}.status = 'Applicable' AND (${CUBE}.impactStatus = 'Closed')`,
+          sql: `(${AlertStatusCube}.isTerminal OR ${AlertStatusCube}.isExcluded) AND (${CUBE}.impactStatus = 'Closed')`,
         },
       ],
     },
@@ -245,7 +249,7 @@ cube(`combinedGroupsSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `${CUBE}.status = 'Applicable' AND (${CUBE}.impactStatus = 'No')`,
+          sql: `(${AlertStatusCube}.isTerminal OR ${AlertStatusCube}.isExcluded) AND (${CUBE}.impactStatus = 'No')`,
         },
       ],
     },
@@ -253,7 +257,7 @@ cube(`combinedGroupsSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `${CUBE}.status = 'Unread' OR ${CUBE}.status = 'In Process'`,
+          sql: `(NOT ${AlertStatusCube}.isTerminal AND NOT ${AlertStatusCube}.isExcluded)`,
         },
       ],
     },
@@ -261,7 +265,7 @@ cube(`combinedGroupsSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `${CUBE}.status = 'Applicable'`,
+          sql: `(${AlertStatusCube}.isTerminal OR ${AlertStatusCube}.isExcluded)`,
         },
       ],
     },
