@@ -1,89 +1,93 @@
 const {
-	securityContext: { userId },
-} = COMPILE_CONTEXT; 
+  securityContext: { userId },
+} = COMPILE_CONTEXT;
 
 import {
-	alertsCollection,
-	alertsUsersCollection,
-	alertsGroupsCollection,
-	groupsOfUserCollection,
+  alertsCollection,
+  alertsUsersCollection,
+  alertsGroupsCollection,
+  groupsOfUserCollection,
 } from "./collections";
 import { MY_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`MyAlerts`, {
-	sql: `SELECT * FROM ((SELECT _id as UId FROM ${alertsUsersCollection} WHERE ${alertsUsersCollection}.owners="${userId}") UNION SELECT GId as UId FROM (SELECT functionalRole FROM ${groupsOfUserCollection} WHERE ${groupsOfUserCollection}._id="${userId}") as userGroups INNER JOIN (SELECT _id as GId , groups FROM ${alertsGroupsCollection}) as groupIds ON groupIds.groups = userGroups.functionalRole) as Users INNER JOIN (SELECT _id, alertCategory, publishedDate, tenantId, status FROM ${alertsCollection} where ${alertsCollection}.archived=0) as alerts ON alerts._id=Users.UId`,
-	sqlAlias: `myAl`,
+  sql: `SELECT * FROM ((SELECT _id as UId FROM ${alertsUsersCollection} WHERE ${alertsUsersCollection}.owners="${userId}") UNION SELECT GId as UId FROM (SELECT functionalRole FROM ${groupsOfUserCollection} WHERE ${groupsOfUserCollection}._id="${userId}") as userGroups INNER JOIN (SELECT _id as GId , groups FROM ${alertsGroupsCollection}) as groupIds ON groupIds.groups = userGroups.functionalRole) as Users INNER JOIN (SELECT _id, alertCategory, publishedDate, tenantId, status FROM ${alertsCollection} where ${alertsCollection}.archived=0) as alerts ON alerts._id=Users.UId`,
+  sqlAlias: `myAl`,
 
-	refreshKey: {
-		every: MY_CUBE_REFRESH_KEY_TIME,
-	},
+  refreshKey: {
+    every: MY_CUBE_REFRESH_KEY_TIME,
+  },
 
-	joins: {
-		Tenants: {
-			relationship: `belongsTo`,
-			sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-		},
-	},
+  joins: {
+    Tenants: {
+      relationship: `belongsTo`,
+      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
+    },
+    AlertStatusCube: {
+      relationship: `belongsTo`,
+      sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1 AND ${AlertStatusCube.isExcluded} = 0`,
+    },
+  },
 
-	measures: {
-		count: {
-			type: `count`,
-			drillMembers: [_id],
-		},
-		bills: {
-			type: `count`,
-			drillMembers: [_id],
-			filters: [
-				{
-					sql: `${CUBE}.alertCategory = 'Bills' AND ${CUBE}.status!= 'Excluded'`,
-				},
-			],
-		},
-		agencyUpdates: {
-			type: `count`,
-			drillMembers: [_id],
-			filters: [
-				{
-					sql: `${CUBE}.alertCategory = 'News & Publications' AND ${CUBE}.status!= 'Excluded'`,
-				},
-			],
-		},
-		regulatoryChanges: {
-			type: `count`,
-			drillMembers: [_id],
-			filters: [
-				{
-					sql: `${CUBE}.alertCategory = 'Laws & Regulations' AND ${CUBE}.status!= 'Excluded'`,
-				},
-			],
-		},
-	},
+  measures: {
+    count: {
+      type: `count`,
+      drillMembers: [_id],
+    },
+    bills: {
+      type: `count`,
+      drillMembers: [_id],
+      filters: [
+        {
+          sql: `${CUBE}.alertCategory = 'Bills' AND ${CUBE}.status!= 'Excluded'`,
+        },
+      ],
+    },
+    agencyUpdates: {
+      type: `count`,
+      drillMembers: [_id],
+      filters: [
+        {
+          sql: `${CUBE}.alertCategory = 'News & Publications' AND ${CUBE}.status!= 'Excluded'`,
+        },
+      ],
+    },
+    regulatoryChanges: {
+      type: `count`,
+      drillMembers: [_id],
+      filters: [
+        {
+          sql: `${CUBE}.alertCategory = 'Laws & Regulations' AND ${CUBE}.status!= 'Excluded'`,
+        },
+      ],
+    },
+  },
 
-	dimensions: {
-		_id: {
-			sql: `${CUBE}.\`_id\``,
-			type: `string`,
-			primaryKey: true,
-		},
-		tenantId: {
-			sql: `${CUBE}.\`tenantId\``,
-			type: `string`,
-		},
-		publishedDate: {
-			sql: `${CUBE}.\`publishedDate\``,
-			type: `time`,
-		},
-		alertCategory: {
-			sql: `${CUBE}.\`alertCategory\``,
-			type: `string`,
-			title: `Alert Category`,
-		},
-		status: {
-			sql: `${CUBE}.\`status\``,
-			type: `string`,
-			title: `Status`,
-		},
-	},
+  dimensions: {
+    _id: {
+      sql: `${CUBE}.\`_id\``,
+      type: `string`,
+      primaryKey: true,
+    },
+    tenantId: {
+      sql: `${CUBE}.\`tenantId\``,
+      type: `string`,
+    },
+    publishedDate: {
+      sql: `${CUBE}.\`publishedDate\``,
+      type: `time`,
+    },
+    alertCategory: {
+      sql: `${CUBE}.\`alertCategory\``,
+      type: `string`,
+      title: `Alert Category`,
+    },
+    status: {
+      sql: `${CUBE}.\`status\``,
+      type: `string`,
+      title: `Status`,
+    },
+  },
 
-	dataSource: `default`,
+  dataSource: `default`,
 });

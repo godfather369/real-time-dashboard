@@ -55,6 +55,8 @@ cube(`AlertsByTopic`, {
         AlertsByTopic.MDName,
         AlertsByTopic.MDiD,
         AlertsByTopic.alertCategory,
+        AlertStatusCube.statusId,
+        AlertStatusCube.statusName,
       ],
       timeDimension: AlertsByTopic.publishedDate,
       granularity: `day`,

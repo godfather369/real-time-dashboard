@@ -44,18 +44,13 @@ cube(`MyAlertsSLA`, {
     },
     status: {
       type: `string`,
-      case: {
-        when: [
-          {
-            sql: `(NOT ${AlertStatusCube}.isTerminal AND NOT ${AlertStatusCube}.isExcluded)`,
-            label: `Open`,
-          },
-          {
-            sql: `(${AlertStatusCube}.isTerminal OR ${AlertStatusCube}.isExcluded)`,
-            label: `Closed`,
-          },
-        ],
-      },
+      sql: `
+    CASE
+      WHEN ${AlertStatusCube}.isTerminal = FALSE THEN 'Open'
+      WHEN ${AlertStatusCube}.isTerminal = TRUE THEN 'Closed'
+      ELSE 'Unknown'
+    END
+  `,
     },
     tenantId: {
       sql: `${CUBE}.\`tenantId\``,

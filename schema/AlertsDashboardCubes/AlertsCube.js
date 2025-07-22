@@ -47,29 +47,6 @@ cube(`AlertsCube`, {
   },
 
   preAggregations: {
-    alertsRollUp: {
-      sqlAlias: "alRP",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [AlertsCube.count],
-      dimensions: [
-        Tenants.tenantId,
-        AlertsCube.alertCategory,
-        AlertsCube.status,
-      ],
-      timeDimension: AlertsCube.publishedDate,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`,
-      },
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
-    },
     alertsByCorpusRollUp: {
       sqlAlias: "alByCorpRP",
       type: `rollup`,
@@ -81,6 +58,8 @@ cube(`AlertsCube`, {
         AlertsCube.alertCategory,
         Corpus.name,
         Corpus.id,
+        AlertStatusCube.statusId,
+        AlertStatusCube.statusName,
       ],
       timeDimension: AlertsCube.publishedDate,
       granularity: `day`,
@@ -118,7 +97,8 @@ cube(`AlertsCube`, {
         Jurisdiction.shortName,
         Jurisdiction.jurisdictionId,
         AlertsCube.alertCategory,
-        AlertsCube.status,
+        AlertStatusCube.statusId,
+        AlertStatusCube.statusName,
         AlertsCube.docStatus,
       ],
       timeDimension: AlertsCube.publishedDate,
@@ -145,6 +125,8 @@ cube(`AlertsCube`, {
         Jurisdiction.shortName,
         Jurisdiction.jurisdictionId,
         AlertsCube.alertCategory,
+        AlertStatusCube.statusId,
+        AlertStatusCube.statusName,
       ],
       timeDimension: AlertsCube.publishedDate,
       granularity: `day`,
@@ -187,7 +169,8 @@ cube(`AlertsCube`, {
         Jurisdiction.displayName,
         AlertsCube.alertCategory,
         AlertsCube.docStatus,
-        AlertsCube.status,
+        AlertStatusCube.statusId,
+        AlertStatusCube.statusName,
       ],
       timeDimension: AlertsCube.publishedDate,
       granularity: `day`,

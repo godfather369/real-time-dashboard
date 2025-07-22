@@ -160,7 +160,7 @@ cube(`OpenAlertsOrIAsOwnersSLA`, {
     },
     AlertStatusCube: {
       relationship: `belongsTo`,
-      sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1`,
+      sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1 AND ${AlertStatusCube.isExcluded} = 0`,
     },
   },
 
@@ -194,7 +194,7 @@ cube(`OpenAlertsOrIAsOwnersSLA`, {
   measures: {
     openAlertsOrIAsCount: {
       type: `sum`,
-      sql: `(NOT ${AlertStatusCube}.isTerminal AND NOT ${AlertStatusCube}.isExcluded) OR ${CUBE}.impactStatus IN ('New', 'In Process'))`,
+      sql: `NOT ${AlertStatusCube}.isTerminal OR ${CUBE}.impactStatus IN ('New', 'In Process')`,
     },
   },
 

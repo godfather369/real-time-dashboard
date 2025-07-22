@@ -44,7 +44,7 @@ cube(`AlertsByOwnersCube`, {
     },
     AlertStatusCube: {
       relationship: `belongsTo`,
-      sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1`,
+      sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1 AND ${AlertStatusCube.isExcluded} = 0`,
     },
   },
 
@@ -60,6 +60,8 @@ cube(`AlertsByOwnersCube`, {
         Users.fullName,
         Users._id,
         AlertsByOwnersCube.alertCategory,
+        AlertStatusCube.statusId,
+        AlertStatusCube.statusName,
       ],
       timeDimension: AlertsByOwnersCube.created,
       granularity: `day`,
@@ -109,12 +111,12 @@ cube(`AlertsByOwnersCube`, {
       drillMembers: [_id],
     },
     open: {
-      sql: `(NOT ${AlertStatusCube}.isTerminal AND NOT ${AlertStatusCube}.isExcluded)`,
+      sql: `NOT ${AlertStatusCube}.isTerminal`,
       type: `sum`,
       title: "open",
     },
     closed: {
-      sql: `(${AlertStatusCube}.isTerminal OR ${AlertStatusCube}.isExcluded)`,
+      sql: `${AlertStatusCube}.isTerminal `,
       type: `sum`,
       title: "closed",
     },

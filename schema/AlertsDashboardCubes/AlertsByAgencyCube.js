@@ -58,6 +58,7 @@ cube(`AlertsByAgencyCube`, {
         Tenants.tenantId,
         AlertsByAgencyCube.alertCategory,
         AlertStatusCube.statusId,
+        AlertStatusCube.statusName,
         AlertsByAgencyCube.agencyMap,
         Agency.agencyNames,
         Agency.shortCode,

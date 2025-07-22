@@ -59,6 +59,8 @@ cube(`AlertsByGroupsCube`, {
         Tenants.tenantId,
         Groups.name,
         Groups._id,
+        AlertStatusCube.statusId,
+        AlertStatusCube.statusName,
         AlertsByGroupsCube.alertCategory,
         AlertsByGroupsCube.docStatus,
       ],
