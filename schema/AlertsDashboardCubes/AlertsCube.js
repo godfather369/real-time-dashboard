@@ -90,6 +90,7 @@ cube(`AlertsCube`, {
         AlertsCube.ruleStatus,
         AlertsCube.proposedRuleStatus,
         AlertsCube.agencyUpdateStatus,
+        AlertsCube.totalBillsDocStatusCount,
       ],
       dimensions: [
         Tenants.tenantId,
@@ -169,8 +170,6 @@ cube(`AlertsCube`, {
         Jurisdiction.displayName,
         AlertsCube.alertCategory,
         AlertsCube.docStatus,
-        AlertStatusCube.statusId,
-        AlertStatusCube.statusName,
       ],
       timeDimension: AlertsCube.publishedDate,
       granularity: `day`,
@@ -314,7 +313,7 @@ cube(`AlertsCube`, {
         },
       ],
     },
-    totalBillsDocStatus: {
+    totalBillsDocStatusCount: {
       sql: `${introducedDocStatus} + ${originDocStatus} + ${secondBodyStatus} + ${sentForSignatureStatus} + ${becameLawStatus} + ${diedStatus}`,
       type: `number`,
     },

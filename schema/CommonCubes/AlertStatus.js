@@ -11,6 +11,7 @@ cube(`AlertStatusCube`, {
             active,
             isTerminal,
             isExcluded,
+            isFollowing,
             class 
 		FROM (
 			SELECT 
@@ -26,6 +27,7 @@ cube(`AlertStatusCube`, {
 				\`status.regChange.active\` as active, 
 				\`status.regChange.isTerminal\` as isTerminal, 
 				\`status.regChange.isExcluded\` as isExcluded,
+				\`status.regChange.meta.isFollowing\` as isFollowing,
 				\`status.regChange.class\` as class
 			FROM ${alertsByStatusCollection}
 		) as regChangeConfig 
@@ -70,6 +72,10 @@ cube(`AlertStatusCube`, {
     },
     isExcluded: {
       sql: `${CUBE}.\`isExcluded\``,
+      type: `boolean`,
+    },
+    isFollowing: {
+      sql: `${CUBE}.\`isFollowing\``,
       type: `boolean`,
     },
   },

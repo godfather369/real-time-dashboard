@@ -51,6 +51,10 @@ cube("QuarterlyAlertsCube", {
       relationship: `hasOne`,
       sql: `${CUBE.impId}=${ImpactAssessmentCube._id}`,
     },
+    AlertStatusCube: {
+      relationship: `belongsTo`,
+      sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1`,
+    },
   },
 
   preAggregations: {
@@ -60,7 +64,6 @@ cube("QuarterlyAlertsCube", {
       external: true,
       scheduledRefresh: true,
       measures: [
-        QuarterlyAlertsCube.applicable,
         QuarterlyAlertsCube.following,
         QuarterlyAlertsCube.open,
         QuarterlyAlertsCube.excluded,
@@ -87,19 +90,11 @@ cube("QuarterlyAlertsCube", {
       type: `count`,
       title: "Total Count",
     },
-    applicable: {
-      type: `count`,
-      filters: [
-        {
-          sql: `${CUBE}.status = 'Applicable'`,
-        },
-      ],
-    },
     following: {
       type: `count`,
       filters: [
         {
-          sql: `${CUBE}.status= 'Following'`,
+          sql: `${AlertStatusCube}.isFollowing= 1`,
         },
       ],
       title: "Following",
@@ -108,16 +103,15 @@ cube("QuarterlyAlertsCube", {
       type: `count`,
       filters: [
         {
-          sql: `${CUBE}.status= 'Unread' OR ${CUBE}.status= 'In Process'`,
+          sql: `${AlertStatusCube}.isTerminal= 0`,
         },
       ],
-      title: "Following",
     },
     excluded: {
       type: `count`,
       filters: [
         {
-          sql: `${CUBE}.status= 'Excluded'`,
+          sql: `${AlertStatusCube}.isExcluded= 1`,
         },
       ],
       title: "Excluded",
@@ -126,7 +120,7 @@ cube("QuarterlyAlertsCube", {
       type: `count`,
       filters: [
         {
-          sql: `${ImpactAssessmentCube}.impactLevel ='CB - N/A' AND (${CUBE}.status='Applicable' OR ${CUBE}.status='Following')`,
+          sql: `${ImpactAssessmentCube}.impactLevel ='CB - N/A'`,
         },
       ],
     },

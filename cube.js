@@ -9,9 +9,9 @@ module.exports = {
   //adding tenantId filters in query
   queryTransformer: (query, { securityContext }) => {
     let tenantIds = [defaultTenantId];
-    // if (query.measures.includes("AgencyCoverageCube.count")) {
-    // 	tenantIds = [];
-    // }
+    if (query.measures.includes("AgencyCoverageCube.count")) {
+      tenantIds = [];
+    }
     const sc = securityContext;
     tenantId = sc.tenantId;
     if (tenantId) {
@@ -22,11 +22,11 @@ module.exports = {
         "TenantId is not provided, fetching stats for default tenantId"
       );
     }
-    // query.filters.push({
-    // 	member: "Tenants.tenantId",
-    // 	operator: "equals",
-    // 	values: tenantIds,
-    // });
+    query.filters.push({
+      member: "Tenants.tenantId",
+      operator: "equals",
+      values: tenantIds,
+    });
     return query;
   },
   contextToAppId: ({ securityContext }) =>

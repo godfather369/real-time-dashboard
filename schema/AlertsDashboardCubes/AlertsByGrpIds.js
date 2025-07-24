@@ -198,8 +198,18 @@ cube(`AlertsByGrpIds`, {
         },
       ],
     },
-    totalBillsDocStatus: {
-      sql: `${introducedDocStatus} + ${originDocStatus} + ${secondBodyStatus} + ${sentForSignatureStatus} + ${becameLawStatus} + ${diedStatus}`,
+    totalCount: {
+      sql: `${introducedDocStatus}+
+        ${originDocStatus}+
+        ${secondBodyStatus}+
+        ${sentForSignatureStatus}+
+        ${diedStatus}+
+        ${becameLawStatus}+
+        ${statuteStatus}+
+        ${regulationStatus}+
+        ${ruleStatus}+
+        ${proposedRuleStatus}+
+        ${agencyUpdateStatus}`,
       type: `number`,
     },
   },

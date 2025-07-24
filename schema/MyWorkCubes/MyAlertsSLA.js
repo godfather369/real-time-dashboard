@@ -42,15 +42,18 @@ cube(`MyAlertsSLA`, {
       type: `string`,
       primaryKey: true,
     },
-    status: {
+    statusName: {
       type: `string`,
       sql: `
-    CASE
-      WHEN ${AlertStatusCube}.isTerminal = FALSE THEN 'Open'
-      WHEN ${AlertStatusCube}.isTerminal = TRUE THEN 'Closed'
-      ELSE 'Unknown'
-    END
-  `,
+        CASE
+          WHEN ${AlertStatusCube.isTerminal} = TRUE THEN 'Closed'
+          WHEN ${AlertStatusCube.isTerminal} = FALSE THEN 'Open'
+        END
+      `,
+    },
+    status: {
+      sql: `${CUBE}.\`status\``,
+      type: `string`,
     },
     tenantId: {
       sql: `${CUBE}.\`tenantId\``,
