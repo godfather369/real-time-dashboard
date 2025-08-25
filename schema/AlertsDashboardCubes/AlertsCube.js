@@ -194,6 +194,7 @@ cube(`AlertsCube`, {
         Jurisdiction.displayName,
         AlertsCube.feedName,
         AlertsCube.alertCategory,
+        AlertStatusCube.statusId,
       ],
       timeDimension: AlertsCube.publishedDate,
       granularity: `month`,
