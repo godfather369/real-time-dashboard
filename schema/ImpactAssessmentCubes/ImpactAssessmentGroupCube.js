@@ -11,66 +11,27 @@ import {
 
 cube(`ImpactsByGroupCube`, {
   sql: `
-		SELECT 
-			_id, 
-			tenantId, 
-			status, 
-			startDate, 
-			docStatus, 
-			created, 
-			groups 
-		FROM (
-			SELECT 
-				_id, 
-				tenantId, 
-				status, 
-				startDate, 
-				srcObject, 
-				created, 
-				groups 
-			FROM (
-				SELECT 
-					_id, 
-					tenantId, 
-					startDate, 
-					created, 
-					status, 
-					groups 
-				FROM (
-					SELECT 
-						_id, 
-						tenantId, 
-						startDate, 
-						created, 
-						status  
-					FROM ${impactAssessmentCollection} 
-					WHERE ${impactAssessmentCollection}.archived = 0
-				) AS impacts 
-				INNER JOIN (
-					SELECT 
-						_id AS Id, 
-						groups 
-					FROM ${impactAssessmentGroupsCollection}
-				) AS groupIds ON impacts._id = groupIds.Id
-			) AS UserImpacts 
-			INNER JOIN (
-				SELECT 
-					srcObject, 
-					destObject 
-				FROM ${regMapGenericCollection} 
-				WHERE ${regMapGenericCollection}.archived = 0 
-					AND ${regMapGenericCollection}.srcType = "Alert" 
-					AND ${regMapGenericCollection}.destType = "ImpactAssessment"
-			) AS Maps ON UserImpacts._id = Maps.destObject
-		) AS mappedImpacts 
-		INNER JOIN (
-			SELECT 
-				_id AS Id, 
-				\`info.docStatus\` AS docStatus 
-			FROM ${alertsCollection} 
-			WHERE ${alertsCollection}.archived = 0
-		) AS alerts ON mappedImpacts.srcObject = alerts.Id
-	`,
+    SELECT DISTINCT
+      impact_assessments._id AS _id, 
+      impact_assessments.tenantId AS tenantId, 
+      impact_assessments.status AS status, 
+      impact_assessments.startDate AS startDate, 
+      impact_assessments.created AS created,
+      impact_assessment_groups.groups AS groups,
+      alerts.\`info.docStatus\` AS docStatus
+    FROM ${impactAssessmentCollection} impact_assessments
+    INNER JOIN ${impactAssessmentGroupsCollection} impact_assessment_groups 
+      ON impact_assessments._id = impact_assessment_groups._id
+    INNER JOIN ${regMapGenericCollection} generic_mappings 
+      ON impact_assessments._id = generic_mappings.destObject 
+      AND generic_mappings.archived = 0 
+      AND generic_mappings.srcType = 'Alert' 
+      AND generic_mappings.destType = 'ImpactAssessment'
+    INNER JOIN ${alertsCollection} alerts 
+      ON generic_mappings.srcObject = alerts._id 
+      AND alerts.archived = 0
+    WHERE impact_assessments.archived = 0
+  `,
 
   sqlAlias: `IAGrCube`,
 
@@ -171,15 +132,15 @@ cube(`ImpactsByGroupCube`, {
       primaryKey: true,
     },
     tenantId: {
-      sql: `${CUBE}.\`tenantId\``,
+      sql: `tenantId`,
       type: `string`,
     },
     startDate: {
-      sql: `${CUBE}.\`startDate\``,
+      sql: `startDate`,
       type: `time`,
     },
     created: {
-      sql: `${CUBE}.\`created\``,
+      sql: `created`,
       type: `time`,
     },
     groups: {
