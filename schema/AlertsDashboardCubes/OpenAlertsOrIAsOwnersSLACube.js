@@ -11,31 +11,136 @@ import {
 
 cube(`OpenAlertsOrIAsOwnersSLA`, {
   sql: `
-    SELECT
-      alert._id              AS _id,
-      alertOwners.owners     AS owners,
-      alert.status           AS status,
-      alert.\`info.docStatus\` AS docStatus,
-      alert.created          AS created,
-      alert.tenantId         AS tenantId,
-      CASE
-        WHEN mapping.srcObject IS NULL THEN 'No'      
-        ELSE assessment.status                        
-      END AS impactStatus
-    FROM ${alertsCollection} alert
-    JOIN ${alertsUsersCollection} alertOwners
-      ON alertOwners._id = alert._id
-    LEFT JOIN ${regMapGenericCollection} mapping
-      ON mapping.archived = 0
-       AND mapping.destType = 'ImpactAssessment'
-       AND mapping.srcType  = 'Alert'
-       AND mapping.srcObject = alert._id
-       AND mapping.tenantId  = alert.tenantId
-    LEFT JOIN ${impactAssessmentCollection} assessment
-      ON assessment._id     = mapping.destObject
-       AND assessment.tenantId = mapping.tenantId
-    WHERE alert.archived = 0
-      AND (mapping.srcObject IS NULL OR assessment._id IS NOT NULL)
+    SELECT 
+      mappedImpacts.srcObject AS _id, 
+      ownerAlerts.owners AS owners, 
+      ownerAlerts.status, 
+      ownerAlerts.docStatus,       
+      ownerAlerts.created, 
+      ownerAlerts.tenantId, 
+      mappedImpacts.impactStatus
+    FROM 
+      (
+        SELECT 
+          ownerImpacts._id AS impactId, 
+          ownerImpacts.impactStatus, 
+          ownerImpacts.tenantId, 
+          maps.srcObject
+        FROM 
+          (
+            SELECT 
+              impacts._id, 
+              impacts.status AS impactStatus, 
+              impacts.tenantId
+            FROM 
+              ${impactAssessmentCollection} AS impacts
+          ) AS ownerImpacts
+        INNER JOIN 
+          (
+            SELECT 
+              srcObject, 
+              destObject, 
+              tenantId AS tntId 
+            FROM 
+              ${regMapGenericCollection} 
+            WHERE 
+              archived = 0 
+              AND destType = "ImpactAssessment" 
+              AND srcType = "Alert"
+          ) AS maps
+        ON 
+          CONVERT(ownerImpacts._id, CHAR) = CONVERT(maps.destObject, CHAR) 
+          AND ownerImpacts.tenantId = maps.tntId
+      ) AS mappedImpacts
+    INNER JOIN 
+      (
+        SELECT 
+          alerts._id, 
+          owners.owners, 
+          alerts.status, 
+          alerts.docStatus,       
+          alerts.created, 
+          alerts.tenantId
+        FROM 
+          (
+            SELECT 
+              _id, 
+              owners 
+            FROM 
+              ${alertsUsersCollection}
+          ) AS owners
+        INNER JOIN 
+          (
+            SELECT 
+              _id, 
+              status, 
+              \`info.docStatus\` AS docStatus, 
+              created, 
+              tenantId 
+            FROM 
+              ${alertsCollection} 
+            WHERE 
+              archived = 0
+          ) AS alerts
+        ON 
+          alerts._id = owners._id
+      ) AS ownerAlerts
+    ON 
+      CONVERT(mappedImpacts.srcObject, CHAR) = CONVERT(ownerAlerts._id, CHAR) 
+      AND mappedImpacts.tenantId = ownerAlerts.tenantId
+
+    UNION
+
+    -- Non-Impacted Alerts
+    SELECT 
+      owners._id, 
+      owners.owners, 
+      alerts.status, 
+      alerts.docStatus,       
+      alerts.created, 
+      alerts.tenantId, 
+      "No" AS impactStatus
+    FROM 
+      (
+        SELECT 
+          _id, 
+          owners 
+        FROM 
+          ${alertsUsersCollection}
+      ) AS owners
+    INNER JOIN 
+      (
+        SELECT 
+          _id, 
+          status, 
+          \`info.docStatus\` AS docStatus, 
+          created, 
+          tenantId 
+        FROM 
+          ${alertsCollection} 
+        WHERE 
+          archived = 0
+      ) AS alerts
+    ON 
+      alerts._id = owners._id
+    LEFT JOIN 
+      (
+        SELECT 
+          srcObject, 
+          destObject, 
+          tenantId AS tntId 
+        FROM 
+          ${regMapGenericCollection} 
+        WHERE 
+          archived = 0 
+          AND destType = "ImpactAssessment" 
+          AND srcType = "Alert"
+      ) AS maps
+    ON 
+      maps.srcObject = owners._id 
+      AND maps.tntId = alerts.tenantId
+    WHERE 
+      ISNULL(maps.destObject) = 1
   `,
 
   sqlAlias: `opnAlrtIASLA`,

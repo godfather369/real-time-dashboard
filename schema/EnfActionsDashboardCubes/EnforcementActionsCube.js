@@ -138,9 +138,15 @@ cube(`EnforcementActionsCube`, {
       drillMembers: [tenantId],
     },
     netAmount: {
-      sql: `COALESCE(${CUBE}.\`info.penaltyAmount.value\` + ${CUBE}.\`info.restitutionAmount.value\`, ${CUBE}.\`info.restitutionAmount.value\`, ${CUBE}.\`info.penaltyAmount.value\` , 0) `,
+      sql: `
+        COALESCE(
+          CAST(${CUBE}.\`info.penaltyAmount.value\` AS DECIMAL(18,2)) +
+          CAST(${CUBE}.\`info.restitutionAmount.value\` AS DECIMAL(18,2)),
+        0
+       )`,
       type: `sum`,
-    },
+    }
+
   },
 
   dimensions: {
