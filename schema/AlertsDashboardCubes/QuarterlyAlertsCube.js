@@ -66,11 +66,15 @@ cube("QuarterlyAlertsCube", {
       measures: [
         QuarterlyAlertsCube.following,
         QuarterlyAlertsCube.open,
+        QuarterlyAlertsCube.closed,
         QuarterlyAlertsCube.excluded,
         QuarterlyAlertsCube.potentialImp,
         QuarterlyAlertsCube.totalCount,
       ],
-      dimensions: [Tenants.tenantId, QuarterlyAlertsCube.docStatus],
+      dimensions: [
+        Tenants.tenantId,
+        QuarterlyAlertsCube.docStatus
+      ],
       timeDimension: QuarterlyAlertsCube.created,
       granularity: `day`,
       buildRangeStart: {
@@ -86,15 +90,11 @@ cube("QuarterlyAlertsCube", {
   },
 
   measures: {
-    totalCount: {
-      type: `count`,
-      title: "Total Count",
-    },
     following: {
       type: `count`,
       filters: [
         {
-          sql: `${AlertStatusCube}.isFollowing= 1`,
+          sql: `${AlertStatusCube}.isFollowing = 1 AND ${AlertStatusCube}.isExcluded = 0`,
         },
       ],
       title: "Following",
@@ -103,7 +103,15 @@ cube("QuarterlyAlertsCube", {
       type: `count`,
       filters: [
         {
-          sql: `${AlertStatusCube}.isTerminal= 0`,
+          sql: `${AlertStatusCube}.isTerminal = 0 AND ${AlertStatusCube}.isExcluded = 0`,
+        },
+      ],
+    },
+    closed: {
+      type: `count`,
+      filters: [
+        {
+          sql: `${AlertStatusCube}.isTerminal = 1 AND ${AlertStatusCube}.isExcluded = 0`,
         },
       ],
     },
@@ -120,9 +128,15 @@ cube("QuarterlyAlertsCube", {
       type: `count`,
       filters: [
         {
-          sql: `${ImpactAssessmentCube}.impactLevel ='CB - N/A'`,
+          sql: `${ImpactAssessmentCube}.impactLevel = 'CB - N/A' 
+            AND ${AlertStatusCube}.isExcluded = 0 
+            AND (${AlertStatusCube}.isTerminal = 1 OR ${AlertStatusCube}.isFollowing = 0)`,
         },
       ],
+    },
+    totalCount: {
+      sql: `${open} + ${closed}`,
+      type: `number`,
     },
   },
 
