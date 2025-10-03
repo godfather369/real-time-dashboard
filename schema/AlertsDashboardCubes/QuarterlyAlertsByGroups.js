@@ -92,6 +92,7 @@ cube("QuarterlyAlertsByGroups", {
       measures: [
         QuarterlyAlertsByGroups.following,
         QuarterlyAlertsByGroups.open,
+        QuarterlyAlertsByGroups.applicable,
         QuarterlyAlertsByGroups.excluded,
         QuarterlyAlertsByGroups.potentialImp,
         QuarterlyAlertsByGroups.totalCount,
@@ -139,6 +140,14 @@ cube("QuarterlyAlertsByGroups", {
       filters: [
         {
           sql: `${AlertStatusCube}.isTerminal= 0 AND ${AlertStatusCube}.isExcluded != 1`,
+        },
+      ],
+    },
+    applicable: {
+      type: `count`,
+      filters: [
+        {
+          sql: `${AlertStatusCube}.actionRequired = 1 AND ${AlertStatusCube}.isTerminal = 1 AND ${AlertStatusCube}.isExcluded != 1`,
         },
       ],
     },

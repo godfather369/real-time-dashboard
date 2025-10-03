@@ -15,7 +15,7 @@ module.exports = {
     const sc = securityContext;
     tenantId = sc.tenantId;
     if (tenantId) {
-      console.log("Fetching stats for tenentId", tenantId);
+      console.log("Fetching stats for tenantId", tenantId);
       tenantIds.push(tenantId);
     } else {
       console.error(

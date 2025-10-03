@@ -66,6 +66,7 @@ cube("QuarterlyAlertsCube", {
       measures: [
         QuarterlyAlertsCube.following,
         QuarterlyAlertsCube.open,
+        QuarterlyAlertsCube.applicable,
         QuarterlyAlertsCube.excluded,
         QuarterlyAlertsCube.potentialImp,
         QuarterlyAlertsCube.totalCount,
@@ -111,6 +112,14 @@ cube("QuarterlyAlertsCube", {
         },
       ],
     },
+    applicable: {
+      type: `count`,
+      filters: [
+        {
+          sql: `${AlertStatusCube}.actionRequired = 1 AND ${AlertStatusCube}.isTerminal = 1 AND ${AlertStatusCube}.isExcluded != 1`,
+        },
+      ],
+    },
     excluded: {
       type: `count`,
       filters: [
@@ -126,7 +135,7 @@ cube("QuarterlyAlertsCube", {
         {
           sql: `${ImpactAssessmentCube}.impactLevel = 'CB - N/A' 
             AND ${AlertStatusCube}.isExcluded != 1 
-            AND (${AlertStatusCube}.isTerminal = 1 OR ${AlertStatusCube}.isFollowing = 0)`,
+            AND (${AlertStatusCube}.isTerminal = 1 OR ${AlertStatusCube}.isFollowing = 1)`,
         },
       ],
     },
