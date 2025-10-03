@@ -55,7 +55,7 @@ cube("QuarterlyAlertsByGroups", {
           AND ${regMapGenericCollection}.destType = "ImpactAssessment" 
           AND ${regMapGenericCollection}.srcType = "Alert"
       ) as Maps 
-      ON alertsbygrps._id = maps.srcObject
+      ON CONVERT(alertsbygrps._id,CHAR) = CONVERT(Maps.srcObject,CHAR)
     `,
 
   sqlAlias: "QAlByGrps",
@@ -92,7 +92,6 @@ cube("QuarterlyAlertsByGroups", {
       measures: [
         QuarterlyAlertsByGroups.following,
         QuarterlyAlertsByGroups.open,
-        QuarterlyAlertsByGroups.closed,
         QuarterlyAlertsByGroups.excluded,
         QuarterlyAlertsByGroups.potentialImp,
         QuarterlyAlertsByGroups.totalCount,
@@ -118,11 +117,19 @@ cube("QuarterlyAlertsByGroups", {
   },
 
   measures: {
+    totalCount: {
+      type: `count`,
+      filters: [
+        {
+          sql: `${AlertStatusCube}.isExcluded!=1`,
+        },
+      ],
+    },
     following: {
       type: `count`,
       filters: [
         {
-          sql: `${AlertStatusCube}.isFollowing= 1 AND ${AlertStatusCube}.isExcluded = 0`,
+          sql: `${AlertStatusCube}.isFollowing= 1 AND ${AlertStatusCube}.isExcluded != 1`,
         },
       ],
       title: "Following",
@@ -131,15 +138,7 @@ cube("QuarterlyAlertsByGroups", {
       type: `count`,
       filters: [
         {
-          sql: `${AlertStatusCube}.isTerminal= 0 AND ${AlertStatusCube}.isExcluded = 0`,
-        },
-      ],
-    },
-    closed: {
-      type: `count`,
-      filters: [
-        {
-          sql: `${AlertStatusCube}.isTerminal= 1 AND ${AlertStatusCube}.isExcluded = 0`,
+          sql: `${AlertStatusCube}.isTerminal= 0 AND ${AlertStatusCube}.isExcluded != 1`,
         },
       ],
     },
@@ -153,18 +152,14 @@ cube("QuarterlyAlertsByGroups", {
       title: "Excluded",
     },
     potentialImp: {
-      type: `number`,
+      type: `count`,
       filters: [
         {
           sql: `${ImpactAssessmentCube}.impactLevel = 'CB - N/A' 
-            AND ${AlertStatusCube}.isExcluded = 0 
+            AND ${AlertStatusCube}.isExcluded != 1  
             AND (${AlertStatusCube}.isTerminal = 1 OR ${AlertStatusCube}.isFollowing = 1)`,
         },
       ],
-    },
-    totalCount: {
-      sql: `${open} + ${closed}`,
-      type: `number`,
     },
   },
 
@@ -183,7 +178,7 @@ cube("QuarterlyAlertsByGroups", {
       type: `string`,
     },
     impId: {
-      sql: `${CUBE}.\`destObject\``,
+      sql: `CONVERT(${CUBE}.\`destObject\`,CHAR)`,
       type: `string`,
     },
     groupId: {

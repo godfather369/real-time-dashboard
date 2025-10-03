@@ -33,7 +33,7 @@ cube("QuarterlyAlertsCube", {
       WHERE ${regMapGenericCollection}.archived = 0 
         AND ${regMapGenericCollection}.destType = "ImpactAssessment" 
         AND ${regMapGenericCollection}.srcType = "Alert"
-    ) as Maps ON alerts._id = maps.srcObject
+    ) as Maps ON CONVERT(alerts._id,CHAR) = CONVERT(Maps.srcObject,CHAR)
   `,
 
   sqlAlias: "QrAl",
@@ -66,15 +66,11 @@ cube("QuarterlyAlertsCube", {
       measures: [
         QuarterlyAlertsCube.following,
         QuarterlyAlertsCube.open,
-        QuarterlyAlertsCube.closed,
         QuarterlyAlertsCube.excluded,
         QuarterlyAlertsCube.potentialImp,
         QuarterlyAlertsCube.totalCount,
       ],
-      dimensions: [
-        Tenants.tenantId,
-        QuarterlyAlertsCube.docStatus
-      ],
+      dimensions: [Tenants.tenantId, QuarterlyAlertsCube.docStatus],
       timeDimension: QuarterlyAlertsCube.created,
       granularity: `day`,
       buildRangeStart: {
@@ -90,11 +86,19 @@ cube("QuarterlyAlertsCube", {
   },
 
   measures: {
+    totalCount: {
+      type: `count`,
+      filters: [
+        {
+          sql: `${AlertStatusCube}.isExcluded!=1`,
+        },
+      ],
+    },
     following: {
       type: `count`,
       filters: [
         {
-          sql: `${AlertStatusCube}.isFollowing = 1 AND ${AlertStatusCube}.isExcluded = 0`,
+          sql: `${AlertStatusCube}.isFollowing = 1 AND ${AlertStatusCube}.isExcluded != 1`,
         },
       ],
       title: "Following",
@@ -103,15 +107,7 @@ cube("QuarterlyAlertsCube", {
       type: `count`,
       filters: [
         {
-          sql: `${AlertStatusCube}.isTerminal = 0 AND ${AlertStatusCube}.isExcluded = 0`,
-        },
-      ],
-    },
-    closed: {
-      type: `count`,
-      filters: [
-        {
-          sql: `${AlertStatusCube}.isTerminal = 1 AND ${AlertStatusCube}.isExcluded = 0`,
+          sql: `${AlertStatusCube}.isTerminal = 0 AND ${AlertStatusCube}.isExcluded != 1`,
         },
       ],
     },
@@ -129,14 +125,10 @@ cube("QuarterlyAlertsCube", {
       filters: [
         {
           sql: `${ImpactAssessmentCube}.impactLevel = 'CB - N/A' 
-            AND ${AlertStatusCube}.isExcluded = 0 
+            AND ${AlertStatusCube}.isExcluded != 1 
             AND (${AlertStatusCube}.isTerminal = 1 OR ${AlertStatusCube}.isFollowing = 0)`,
         },
       ],
-    },
-    totalCount: {
-      sql: `${open} + ${closed}`,
-      type: `number`,
     },
   },
 
