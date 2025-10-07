@@ -30,7 +30,7 @@ cube(`combinedOwnersSLA`, {
 					WHERE ${regMapGenericCollection}.archived = 0 
 						AND ${regMapGenericCollection}.destType = "ImpactAssessment" 
 						AND ${regMapGenericCollection}.srcType = "Alert"
-				) as maps ON ownerImpacts._id = maps.destObject AND ownerImpacts.tenantId = maps.tntId
+				) as maps ON CONVERT(ownerImpacts._id,CHAR) = CONVERT(maps.destObject,CHAR) AND ownerImpacts.tenantId = maps.tntId
 			) as mappedImpacts 
 			INNER JOIN (
 				SELECT alertId, status, docStatus, created, tentId FROM (
@@ -41,7 +41,7 @@ cube(`combinedOwnersSLA`, {
 					FROM ${alertsCollection} 
 					WHERE ${alertsCollection}.archived = 0
 				) as alerts ON alerts.alertId = alertOwners.alertOwnerId
-			) as ownerAlerts ON mappedImpacts.srcObject = ownerAlerts.alertId AND mappedImpacts.tenantId = ownerAlerts.tentId
+			) as ownerAlerts ON CONVERT(mappedImpacts.srcObject,CHAR) = CONVERT(ownerAlerts.alertId,CHAR) AND mappedImpacts.tenantId = ownerAlerts.tentId
 		) AS impactedAlerts 
 		
 		UNION
@@ -63,7 +63,7 @@ cube(`combinedOwnersSLA`, {
 				WHERE ${regMapGenericCollection}.archived = 0 
 					AND ${regMapGenericCollection}.destType = "ImpactAssessment" 
 					AND ${regMapGenericCollection}.srcType = "Alert"
-			) as maps ON maps.srcObject = ownerAlerts._id AND maps.tntId = ownerAlerts.tenantId
+			) as maps ON CONVERT(maps.srcObject,CHAR) = CONVERT(ownerAlerts._id,CHAR) AND maps.tntId = ownerAlerts.tenantId
 		) as mappedAlerts 
 		WHERE ISNULL(mappedAlerts.destObject) = 1
 	`,

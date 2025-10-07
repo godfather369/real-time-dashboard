@@ -61,7 +61,7 @@ cube(`ImpactsByGroupCube`, {
 				WHERE ${regMapGenericCollection}.archived = 0 
 					AND ${regMapGenericCollection}.srcType = "Alert" 
 					AND ${regMapGenericCollection}.destType = "ImpactAssessment"
-			) AS Maps ON UserImpacts._id = Maps.destObject
+			) AS Maps ON CONVERT(UserImpacts._id,CHAR) = CONVERT(Maps.destObject,CHAR)
 		) AS mappedImpacts 
 		INNER JOIN (
 			SELECT 
@@ -69,7 +69,7 @@ cube(`ImpactsByGroupCube`, {
 				\`info.docStatus\` AS docStatus 
 			FROM ${alertsCollection} 
 			WHERE ${alertsCollection}.archived = 0
-		) AS alerts ON mappedImpacts.srcObject = alerts.Id
+		) AS alerts ON CONVERT(mappedImpacts.srcObject,CHAR) = CONVERT(alerts.Id,CHAR)
 	`,
 
   sqlAlias: `IAGrCube`,

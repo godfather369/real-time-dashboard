@@ -137,7 +137,7 @@ cube(`OpenAlertsOrIAsOwnersSLA`, {
           AND srcType = "Alert"
       ) AS maps
     ON 
-      maps.srcObject = owners._id 
+      CONVERT(maps.srcObject,CHAR) = CONVERT(owners._id,CHAR)
       AND maps.tntId = alerts.tenantId
     WHERE 
       ISNULL(maps.destObject) = 1
