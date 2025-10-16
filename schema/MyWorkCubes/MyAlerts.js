@@ -25,7 +25,7 @@ cube(`MyAlerts`, {
     },
     AlertStatusCube: {
       relationship: `belongsTo`,
-      sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1 AND ${AlertStatusCube.isExcluded} = 0`,
+      sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1 AND ${AlertStatusCube.isExcluded} != 1`,
     },
   },
 
@@ -39,7 +39,7 @@ cube(`MyAlerts`, {
       drillMembers: [_id],
       filters: [
         {
-          sql: `${CUBE}.alertCategory = 'Bills' AND ${CUBE}.status!= 'Excluded'`,
+          sql: `${CUBE}.alertCategory = 'Bills'`,
         },
       ],
     },
@@ -48,7 +48,7 @@ cube(`MyAlerts`, {
       drillMembers: [_id],
       filters: [
         {
-          sql: `${CUBE}.alertCategory = 'News & Publications' AND ${CUBE}.status!= 'Excluded'`,
+          sql: `${CUBE}.alertCategory = 'News & Publications'`,
         },
       ],
     },
@@ -57,7 +57,7 @@ cube(`MyAlerts`, {
       drillMembers: [_id],
       filters: [
         {
-          sql: `${CUBE}.alertCategory = 'Laws & Regulations' AND ${CUBE}.status!= 'Excluded'`,
+          sql: `${CUBE}.alertCategory = 'Laws & Regulations'`,
         },
       ],
     },

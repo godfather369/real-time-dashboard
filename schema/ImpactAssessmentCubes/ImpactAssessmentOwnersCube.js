@@ -69,7 +69,7 @@ cube(`ImpactsByOwnersCube`, {
 				\`info.docStatus\` AS docStatus 
 			FROM ${alertsCollection} 
 			WHERE ${alertsCollection}.archived = 0
-		) AS alerts ON CONVERT(mappedImpacts.srcObject) = CONVERT(alerts.Id,CHAR)
+		) AS alerts ON CONVERT(mappedImpacts.srcObject, CHAR) = CONVERT(alerts.Id,CHAR)
 	`,
 
   sqlAlias: `IAOwCube`,
