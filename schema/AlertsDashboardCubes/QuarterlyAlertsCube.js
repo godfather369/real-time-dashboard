@@ -33,7 +33,7 @@ cube("QuarterlyAlertsCube", {
       WHERE ${regMapGenericCollection}.archived = 0 
         AND ${regMapGenericCollection}.destType = "ImpactAssessment" 
         AND ${regMapGenericCollection}.srcType = "Alert"
-    ) as Maps ON CONVERT(alerts._id,CHAR) = CONVERT(Maps.srcObject,CHAR)
+    ) as Maps ON alerts._id = Maps.srcObject
   `,
 
   sqlAlias: "QrAl",

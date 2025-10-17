@@ -55,7 +55,7 @@ cube("QuarterlyAlertsByGroups", {
           AND ${regMapGenericCollection}.destType = "ImpactAssessment" 
           AND ${regMapGenericCollection}.srcType = "Alert"
       ) as Maps 
-      ON CONVERT(alertsbygrps._id,CHAR) = CONVERT(Maps.srcObject,CHAR)
+      ON alertsbygrps._id = Maps.srcObject
     `,
 
   sqlAlias: "QAlByGrps",
@@ -187,7 +187,7 @@ cube("QuarterlyAlertsByGroups", {
       type: `string`,
     },
     impId: {
-      sql: `CONVERT(${CUBE}.\`destObject\`,CHAR)`,
+      sql: `${CUBE}.\`destObject\``,
       type: `string`,
     },
     groupId: {

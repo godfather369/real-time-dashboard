@@ -49,7 +49,7 @@ cube(`OpenAlertsOrIAsGroupsSLA`, {
               AND srcType = "Alert"
           ) AS maps
         ON 
-          CONVERT(groupImpacts._id, CHAR) = CONVERT(maps.destObject, CHAR) 
+          groupImpacts._id = maps.destObject
           AND groupImpacts.tenantId = maps.tntId
       ) AS mappedImpacts
     INNER JOIN 
@@ -86,7 +86,7 @@ cube(`OpenAlertsOrIAsGroupsSLA`, {
           alerts._id = groups._id
       ) AS groupAlerts
     ON 
-      CONVERT(mappedImpacts.srcObject, CHAR) = CONVERT(groupAlerts._id, CHAR) 
+      mappedImpacts.srcObject = groupAlerts._id
       AND mappedImpacts.tenantId = groupAlerts.tenantId
 
     UNION
@@ -137,7 +137,7 @@ cube(`OpenAlertsOrIAsGroupsSLA`, {
           AND srcType = "Alert"
       ) AS maps
     ON 
-      CONVERT(maps.srcObject,CHAR) = CONVERT(groups._id,CHAR) 
+      maps.srcObject = groups._id
       AND maps.tntId = alerts.tenantId
     WHERE 
       ISNULL(maps.destObject) = 1
@@ -156,7 +156,7 @@ cube(`OpenAlertsOrIAsGroupsSLA`, {
     },
     Groups: {
       relationship: `belongsTo`,
-      sql: `TRIM(CONVERT(${CUBE.groups}, CHAR)) = TRIM(CONVERT(${Groups._id}, CHAR))`,
+      sql: `${CUBE.groups} = ${Groups._id}`,
     },
     AlertStatusCube: {
       relationship: `belongsTo`,

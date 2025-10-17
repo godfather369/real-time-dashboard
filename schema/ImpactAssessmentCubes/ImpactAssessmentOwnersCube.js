@@ -61,7 +61,7 @@ cube(`ImpactsByOwnersCube`, {
 				WHERE ${regMapGenericCollection}.archived = 0 
 					AND ${regMapGenericCollection}.srcType = "Alert" 
 					AND ${regMapGenericCollection}.destType = "ImpactAssessment"
-			) AS Maps ON CONVERT(UserImpacts._id,CHAR) = CONVERT(Maps.destObject,CHAR)
+			) AS Maps ON UserImpacts._id = Maps.destObject
 		) AS mappedImpacts 
 		INNER JOIN (
 			SELECT 
@@ -69,7 +69,7 @@ cube(`ImpactsByOwnersCube`, {
 				\`info.docStatus\` AS docStatus 
 			FROM ${alertsCollection} 
 			WHERE ${alertsCollection}.archived = 0
-		) AS alerts ON CONVERT(mappedImpacts.srcObject, CHAR) = CONVERT(alerts.Id,CHAR)
+		) AS alerts ON mappedImpacts.srcObject = alerts.Id
 	`,
 
   sqlAlias: `IAOwCube`,
@@ -85,7 +85,7 @@ cube(`ImpactsByOwnersCube`, {
     },
     Users: {
       relationship: `belongsTo`,
-      sql: `TRIM(CONVERT(${CUBE.owners}, CHAR)) = TRIM(CONVERT(${Users._id}, CHAR))`,
+      sql: `${CUBE.owners} = ${Users._id}`,
     },
   },
 

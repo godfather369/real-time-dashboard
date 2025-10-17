@@ -58,7 +58,7 @@ cube(`combinedGroupsSLA`, {
 					WHERE ${regMapGenericCollection}.archived = 0 
 						AND ${regMapGenericCollection}.destType = "ImpactAssessment" 
 						AND ${regMapGenericCollection}.srcType = "Alert"
-				) as maps ON CONVERT(groupImpacts._id,CHAR) = CONVERT(maps.destObject,CHAR)
+				) as maps ON groupImpacts._id = maps.destObject
 					AND (groupImpacts.tenantId) = maps.tntId
 			) as mappedImpacts 
 			INNER JOIN (
@@ -84,7 +84,7 @@ cube(`combinedGroupsSLA`, {
 					FROM ${alertsCollection} 
 					WHERE ${alertsCollection}.archived = 0
 				) as alerts ON alerts.alertId = alertGroups.alertGroupId
-			) as groupAlerts ON CONVERT(mappedImpacts.srcObject, CHAR) = CONVERT(groupAlerts.alertId,CHAR) 
+			) as groupAlerts ON mappedImpacts.srcObject = groupAlerts.alertId
 				AND mappedImpacts.tenantId = groupAlerts.tentId
 		) AS impactedAlerts 
 		
@@ -141,7 +141,7 @@ cube(`combinedGroupsSLA`, {
 				WHERE ${regMapGenericCollection}.archived = 0 
 					AND ${regMapGenericCollection}.destType = "ImpactAssessment" 
 					AND ${regMapGenericCollection}.srcType = "Alert"
-			) as maps ON CONVERT(maps.srcObject,CHAR) = CONVERT(groupAlerts._id,CHAR)
+			) as maps ON maps.srcObject = groupAlerts._id
 				AND maps.tntId = groupAlerts.tenantId
 		) as mappedAlerts 
 		WHERE ISNULL(mappedAlerts.destObject) = 1
@@ -160,7 +160,7 @@ cube(`combinedGroupsSLA`, {
     },
     Groups: {
       relationship: `belongsTo`,
-      sql: `TRIM(CONVERT(${CUBE.groups}, CHAR)) = TRIM(CONVERT(${Groups._id}, CHAR))`,
+      sql: `${CUBE.groups} = ${Groups._id}`,
     },
     AlertStatusCube: {
       relationship: `belongsTo`,
