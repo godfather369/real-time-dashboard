@@ -209,7 +209,7 @@ cube(`combinedGroupsSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `(NOT ${AlertStatusCube}.isTerminal AND NOT ${AlertStatusCube}.isExcluded) AND (${CUBE}.impactStatus = 'New' OR ${CUBE}.impactStatus = 'In Process')`,
+          sql: `NOT ${AlertStatusCube}.isTerminal AND (${CUBE}.impactStatus = 'New' OR ${CUBE}.impactStatus = 'In Process')`,
         },
       ],
     },
@@ -217,7 +217,7 @@ cube(`combinedGroupsSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `(NOT ${AlertStatusCube}.isTerminal AND NOT ${AlertStatusCube}.isExcluded) AND (${CUBE}.impactStatus = 'Closed')`,
+          sql: `NOT ${AlertStatusCube}.isTerminal AND (${CUBE}.impactStatus = 'Closed')`,
         },
       ],
     },
@@ -225,7 +225,7 @@ cube(`combinedGroupsSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `(NOT ${AlertStatusCube}.isTerminal AND NOT ${AlertStatusCube}.isExcluded) AND (${CUBE}.impactStatus = 'No')`,
+          sql: `NOT ${AlertStatusCube}.isTerminal AND (${CUBE}.impactStatus = 'No')`,
         },
       ],
     },
@@ -233,7 +233,7 @@ cube(`combinedGroupsSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `(${AlertStatusCube}.isTerminal OR ${AlertStatusCube}.isExcluded) AND (${CUBE}.impactStatus = 'New' OR ${CUBE}.impactStatus = 'In Process')`,
+          sql: `${AlertStatusCube}.isTerminal AND (${CUBE}.impactStatus = 'New' OR ${CUBE}.impactStatus = 'In Process')`,
         },
       ],
     },
@@ -241,7 +241,7 @@ cube(`combinedGroupsSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `(${AlertStatusCube}.isTerminal OR ${AlertStatusCube}.isExcluded) AND (${CUBE}.impactStatus = 'Closed')`,
+          sql: `${AlertStatusCube}.isTerminal AND (${CUBE}.impactStatus = 'Closed')`,
         },
       ],
     },
@@ -249,7 +249,7 @@ cube(`combinedGroupsSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `(${AlertStatusCube}.isTerminal OR ${AlertStatusCube}.isExcluded) AND (${CUBE}.impactStatus = 'No')`,
+          sql: `${AlertStatusCube}.isTerminal AND (${CUBE}.impactStatus = 'No')`,
         },
       ],
     },
@@ -257,7 +257,7 @@ cube(`combinedGroupsSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `(NOT ${AlertStatusCube}.isTerminal AND NOT ${AlertStatusCube}.isExcluded)`,
+          sql: `NOT ${AlertStatusCube}.isTerminal`,
         },
       ],
     },
@@ -265,7 +265,7 @@ cube(`combinedGroupsSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `(${AlertStatusCube}.isTerminal OR ${AlertStatusCube}.isExcluded)`,
+          sql: `${AlertStatusCube}.isTerminal`,
         },
       ],
     },
