@@ -9,17 +9,30 @@ import {
 
 cube(`EnforcementActionsCube`, {
   sql: `
-    SELECT * FROM (
-      SELECT * FROM (
-        SELECT * FROM ${enforcementActionsCollection} 
-        WHERE ${enforcementActionsCollection}.archived = 0
-      ) AS EAalerts 
-      LEFT JOIN (
-        SELECT _id AS Id, agencyMap 
-        FROM ${enforcementActionsAgencyMapCollection}
-      ) AS EAagencyMapCube 
-      ON EAalerts._id = EAagencyMapCube.Id
-    ) AS EAalertsCubeJoin
+    SELECT 
+      EAalerts._id,
+      EAalerts.effectiveDate,
+      EAalerts.tenantId,
+      EAalerts.\`info.penaltyAmount.currency\`,
+      EAalerts.\`info.penaltyAmount.value\`,
+      EAalerts.\`info.restitutionAmount.value\`,
+      EAagencyMapCube.agencyMap
+    FROM (
+      SELECT 
+        _id,
+        effectiveDate,
+        tenantId,
+        \`info.penaltyAmount.currency\`,
+        \`info.penaltyAmount.value\`,
+        \`info.restitutionAmount.value\`
+      FROM ${enforcementActionsCollection} 
+      WHERE ${enforcementActionsCollection}.archived = 0
+    ) AS EAalerts 
+    LEFT JOIN (
+      SELECT _id AS Id, agencyMap 
+      FROM ${enforcementActionsAgencyMapCollection}
+    ) AS EAagencyMapCube 
+    ON EAalerts._id = EAagencyMapCube.Id
   `,
 
   sqlAlias: `eARep`,
@@ -32,10 +45,6 @@ cube(`EnforcementActionsCube`, {
     Tenants: {
       relationship: `hasOne`,
       sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
-    Users: {
-      relationship: `belongsTo`,
-      sql: `TRIM(CONVERT(${CUBE.owner}, CHAR)) = TRIM(CONVERT(${Users._id}, CHAR))`,
     },
     HarmonizedActionTypeCube: {
       relationship: `hasMany`,
@@ -139,14 +148,11 @@ cube(`EnforcementActionsCube`, {
     },
     netAmount: {
       sql: `
-        COALESCE(
-          CAST(${CUBE}.\`info.penaltyAmount.value\` AS DECIMAL(18,2)) +
-          CAST(${CUBE}.\`info.restitutionAmount.value\` AS DECIMAL(18,2)),
-        0
-       )`,
+        COALESCE(CAST(${CUBE}.\`info.penaltyAmount.value\` AS DECIMAL(18,2)), 0) +
+        COALESCE(CAST(${CUBE}.\`info.restitutionAmount.value\` AS DECIMAL(18,2)), 0)
+      `,
       type: `sum`,
-    }
-
+    },
   },
 
   dimensions: {

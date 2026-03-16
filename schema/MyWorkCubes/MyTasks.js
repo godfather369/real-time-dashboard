@@ -6,42 +6,39 @@ import { MY_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`MyTasks`, {
 	sql: `SELECT *
-		FROM (
-				(
-					SELECT _id AS uid
-					FROM ${tasksOwnersCollection}
-					WHERE ${tasksOwnersCollection}.owners = "${userId}"
-				)
-				UNION
-				SELECT gid AS uid
-				FROM (
-						SELECT functionalrole
-						FROM ${groupsOfUserCollection}
-						WHERE ${groupsOfUserCollection}._id = "${userId}"
-					) AS usergroups
-				INNER JOIN (
-						SELECT _id AS gid, groups
-						FROM ${tasksGroupsCollection}
-					) AS groupids
-				ON groupids.groups = usergroups.functionalrole
-			) AS users
-		INNER JOIN (
-				SELECT _id, status, tenantid, duedate
-				FROM (
-						SELECT _id, tenantid, duedate
-						FROM ${tasksCollection}
-						WHERE ${tasksCollection}.archived = 0
-					) AS tasks
-				LEFT JOIN (
-						SELECT srcobject, status, tenantid AS tntid
-						FROM ${regMapStatusCollection}
-						WHERE ${regMapStatusCollection}.srctype = "Task"
-						AND ${regMapStatusCollection}.archived = 0
-					) AS status
-				ON status.srcobject = tasks._id
-				AND status.tntid = tasks.tenantid
-			) AS tasks
-		ON tasks._id = users.uid`,
+			FROM (
+					(
+						SELECT _id AS uid
+						FROM ${tasksOwnersCollection}
+						WHERE ${tasksOwnersCollection}.owners = "${userId}"
+					)
+					UNION
+					SELECT gid AS uid
+					FROM (
+							SELECT functionalrole
+							FROM ${groupsOfUserCollection}
+							WHERE ${groupsOfUserCollection}._id = "${userId}"
+						) AS usergroups
+					INNER JOIN (
+							SELECT _id AS gid, groups
+							FROM ${tasksGroupsCollection}
+						) AS groupids
+					ON groupids.groups = usergroups.functionalrole
+				) AS users
+			LEFT JOIN (
+					SELECT _id, tenantid, duedate
+					FROM ${tasksCollection}
+					WHERE ${tasksCollection}.archived = 0
+				) AS tasks
+			ON tasks._id = users.uid
+			LEFT JOIN (
+					SELECT srcobject, status, tenantid AS tntid
+					FROM ${regMapStatusCollection}
+					WHERE ${regMapStatusCollection}.srctype = "Task"
+					AND ${regMapStatusCollection}.archived = 0
+				) AS status
+			ON status.srcobject = tasks._id
+			AND status.tntid = tasks.tenantid;`,
 
 	sqlAlias: `MyTaCube`,
 
