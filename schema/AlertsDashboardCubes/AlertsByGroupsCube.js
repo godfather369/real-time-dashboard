@@ -17,7 +17,7 @@ cube(`AlertsByGroupsCube`, {
 				alertCategory, 
 				\`info.docStatus\` as docStatus  
 			FROM ${alertsCollection} 
-			WHERE ${alertsCollection}.archived = 0
+			WHERE ${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)
 		) as alerts 
 		INNER JOIN (
 			SELECT 

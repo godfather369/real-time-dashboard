@@ -35,7 +35,7 @@ cube("QuarterlyAlertsByGroups", {
             created, 
             tenantId 
           FROM ${alertsCollection} 
-          WHERE ${alertsCollection}.archived = 0
+          WHERE ${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)
         ) as alerts
         INNER JOIN (
           SELECT 

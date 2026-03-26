@@ -80,7 +80,7 @@ cube(`OpenAlertsOrIAsOwnersSLA`, {
             FROM 
               ${alertsCollection} 
             WHERE 
-              archived = 0
+              archived = 0 AND (\`reggi.validity\` != 0 OR \`reggi.validity\` IS NULL)
           ) AS alerts
         ON 
           alerts._id = owners._id
@@ -119,7 +119,7 @@ cube(`OpenAlertsOrIAsOwnersSLA`, {
         FROM 
           ${alertsCollection} 
         WHERE 
-          archived = 0
+          archived = 0 AND (\`reggi.validity\` != 0 OR \`reggi.validity\` IS NULL)
       ) AS alerts
     ON 
       alerts._id = owners._id

@@ -82,7 +82,7 @@ cube(`combinedGroupsSLA`, {
 						created, 
 						tenantId as tentId 
 					FROM ${alertsCollection} 
-					WHERE ${alertsCollection}.archived = 0
+					WHERE ${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)
 				) as alerts ON alerts.alertId = alertGroups.alertGroupId
 			) as groupAlerts ON mappedImpacts.srcObject = groupAlerts.alertId
 				AND mappedImpacts.tenantId = groupAlerts.tentId
@@ -129,7 +129,7 @@ cube(`combinedGroupsSLA`, {
 						created, 
 						tenantId 
 					FROM ${alertsCollection} 
-					WHERE ${alertsCollection}.archived = 0
+					WHERE ${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)
 				) as alerts ON alerts.alertID = groups._id
 			) as groupAlerts 
 			LEFT JOIN (

@@ -39,7 +39,7 @@ cube(`combinedOwnersSLA`, {
 				INNER JOIN (
 					SELECT _id as alertId, status, \`info.docStatus\` as docStatus, created, tenantId as tentId 
 					FROM ${alertsCollection} 
-					WHERE ${alertsCollection}.archived = 0
+					WHERE ${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)
 				) as alerts ON alerts.alertId = alertOwners.alertOwnerId
 			) as ownerAlerts ON mappedImpacts.srcObject = ownerAlerts.alertId AND mappedImpacts.tenantId = ownerAlerts.tentId
 		) AS impactedAlerts 
@@ -54,7 +54,7 @@ cube(`combinedOwnersSLA`, {
 				INNER JOIN (
 					SELECT _id as alertId, status, \`info.docStatus\` as docStatus, created, tenantId 
 					FROM ${alertsCollection} 
-					WHERE ${alertsCollection}.archived = 0
+					WHERE ${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)
 				) as alerts ON alerts.alertID = owners._id
 			) as ownerAlerts 
 			LEFT JOIN (

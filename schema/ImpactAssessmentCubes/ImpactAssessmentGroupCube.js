@@ -68,7 +68,7 @@ cube(`ImpactsByGroupCube`, {
 				_id AS Id, 
 				\`info.docStatus\` AS docStatus 
 			FROM ${alertsCollection} 
-			WHERE ${alertsCollection}.archived = 0
+			WHERE ${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)
 		) AS alerts ON mappedImpacts.srcObject = alerts.Id
 	`,
 

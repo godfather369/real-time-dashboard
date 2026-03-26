@@ -15,7 +15,7 @@ cube(`AlertsByTopic`, {
 				publishedDate, 
 				alertCategory  
 			FROM ${alertsCollection} 
-			WHERE ${alertsCollection}.archived = 0
+			WHERE ${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)
 		) AS alerts 
 		INNER JOIN (
 			SELECT 
