@@ -4,10 +4,7 @@ import {
   requirementsByStatusCollection,
   regConfigCollection,
 } from "./collections";
-import {
-  CUBE_REFRESH_KEY_TIME,
-  PRE_AGG_REFRESH_KEY_TIME,
-} from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`RequirementsCube`, {
   sql: `
@@ -68,34 +65,12 @@ cube(`RequirementsCube`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
-  },
+  joins: {},
 
   measures: {
     count: {
       type: `count`,
       drillMembers: [_id],
-    },
-  },
-
-  preAggregations: {
-    requirementsRollUp: {
-      sqlAlias: "reqRollUp",
-      external: true,
-      measures: [RequirementsCube.count],
-      dimensions: [
-        Tenants.tenantId,
-        RequirementsCube.status,
-        RequirementsCube.statusId,
-      ],
-      scheduledRefresh: true,
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
     },
   },
 

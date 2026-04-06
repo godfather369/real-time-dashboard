@@ -17,12 +17,7 @@ cube(`Jurisdiction`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
-  },
+  joins: {},
 
   dimensions: {
     jurisdictionId: {

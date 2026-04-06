@@ -1,8 +1,6 @@
 import { alertsCollection } from "./collections";
-import {
-  CUBE_REFRESH_KEY_TIME,
-  PRE_AGG_REFRESH_KEY_TIME,
-} from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import { alertsActiveFilterSql } from "./sql-queries";
 
 cube(`AlertsCube`, {
   sql: `
@@ -18,7 +16,7 @@ cube(`AlertsCube`, {
 			\`meta.feedName\` as feed, 
 			jurisdiction 
 		FROM ${alertsCollection} 
-		WHERE ${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)
+		WHERE ${alertsActiveFilterSql}
 	`,
 
   sqlAlias: `AlCube`,
@@ -28,10 +26,6 @@ cube(`AlertsCube`, {
   },
 
   joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
     Corpus: {
       relationship: `belongsTo`,
       sql: `${CUBE.infoRepo} = ${Corpus.id}`,
@@ -43,170 +37,6 @@ cube(`AlertsCube`, {
     AlertStatusCube: {
       relationship: `belongsTo`,
       sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1 AND ${AlertStatusCube.isExcluded} = 0`,
-    },
-  },
-
-  preAggregations: {
-    alertsByCorpusRollUp: {
-      sqlAlias: "alByCorpRP",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [AlertsCube.count],
-      dimensions: [
-        Tenants.tenantId,
-        AlertsCube.alertCategory,
-        Corpus.name,
-        Corpus.id,
-        AlertStatusCube.statusId,
-        AlertStatusCube.statusName,
-      ],
-      timeDimension: AlertsCube.publishedDate,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`,
-      },
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
-    },
-    alertsByJurisdictionRollUp: {
-      sqlAlias: "alByJuDoc",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [
-        AlertsCube.introducedDocStatus,
-        AlertsCube.originDocStatus,
-        AlertsCube.secondBodyStatus,
-        AlertsCube.sentForSignatureStatus,
-        AlertsCube.diedStatus,
-        AlertsCube.becameLawStatus,
-        AlertsCube.statuteStatus,
-        AlertsCube.regulationStatus,
-        AlertsCube.ruleStatus,
-        AlertsCube.proposedRuleStatus,
-        AlertsCube.agencyUpdateStatus,
-        AlertsCube.totalBillsDocStatusCount,
-      ],
-      dimensions: [
-        Tenants.tenantId,
-        Jurisdiction.displayName,
-        Jurisdiction.shortName,
-        Jurisdiction.jurisdictionId,
-        AlertsCube.alertCategory,
-        AlertStatusCube.statusId,
-        AlertStatusCube.statusName,
-        AlertsCube.docStatus,
-      ],
-      timeDimension: AlertsCube.publishedDate,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`,
-      },
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
-    },
-    billsByJurisdictionRollUp: {
-      sqlAlias: "actBillsRP",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [AlertsCube.count],
-      dimensions: [
-        Tenants.tenantId,
-        Jurisdiction.displayName,
-        Jurisdiction.shortName,
-        Jurisdiction.jurisdictionId,
-        AlertsCube.alertCategory,
-        AlertStatusCube.statusId,
-        AlertStatusCube.statusName,
-      ],
-      timeDimension: AlertsCube.publishedDate,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`,
-      },
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
-    },
-    agencyUpdatesDocStatus: {
-      sqlAlias: "agencyUpDocRP",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [
-        AlertsCube.bulletinsReportCount,
-        AlertsCube.calendarCount,
-        AlertsCube.enfActionsCount,
-        AlertsCube.feedDocStatus,
-        AlertsCube.infoGuidanceCount,
-        AlertsCube.newsPressCount,
-        AlertsCube.noticeCount,
-        AlertsCube.proposedRuleCount,
-        AlertsCube.publicNoticesCount,
-        AlertsCube.publicationCommCount,
-        AlertsCube.ruleCount,
-        AlertsCube.ruleMakingCount,
-        AlertsCube.settlementsCount,
-        AlertsCube.presidentialDocument,
-        AlertsCube.totalAUDocStatusCount,
-      ],
-      dimensions: [
-        Tenants.tenantId,
-        Jurisdiction.shortName,
-        Jurisdiction.jurisdictionId,
-        Jurisdiction.displayName,
-        AlertsCube.alertCategory,
-        AlertsCube.docStatus,
-      ],
-      timeDimension: AlertsCube.publishedDate,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`,
-      },
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
-    },
-    feedPerJurisdictionRollUp: {
-      sqlAlias: "feedRP",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [AlertsCube.feedCount],
-      dimensions: [
-        Tenants.tenantId,
-        Jurisdiction.displayName,
-        AlertsCube.feedName,
-        AlertsCube.alertCategory,
-        AlertStatusCube.statusId,
-      ],
-      timeDimension: AlertsCube.publishedDate,
-      granularity: `month`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`,
-      },
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
     },
   },
 

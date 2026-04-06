@@ -1,8 +1,6 @@
 import { alertsCollection, alertsUsersCollection } from "./collections";
-import {
-  CUBE_REFRESH_KEY_TIME,
-  PRE_AGG_REFRESH_KEY_TIME,
-} from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import { alertsActiveFilterSql } from "./sql-queries";
 
 cube(`AlertsByOwnersCube`, {
   sql: `
@@ -17,7 +15,7 @@ cube(`AlertsByOwnersCube`, {
 				alertCategory, 
 				\`info.docStatus\` as docStatus  
 			FROM ${alertsCollection} 
-			WHERE ${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)
+			WHERE ${alertsActiveFilterSql}
 		) as alerts 
 		INNER JOIN (
 			SELECT 
@@ -34,10 +32,6 @@ cube(`AlertsByOwnersCube`, {
   },
 
   joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
     Users: {
       relationship: `belongsTo`,
       sql: `${CUBE.owners} = ${Users._id}`,
@@ -45,64 +39,6 @@ cube(`AlertsByOwnersCube`, {
     AlertStatusCube: {
       relationship: `belongsTo`,
       sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1`,
-    },
-  },
-
-  preAggregations: {
-    alertsByUsersRollUp: {
-      sqlAlias: "alByUsrsRP",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [AlertsByOwnersCube.count],
-      dimensions: [
-        Tenants.tenantId,
-        Users.fullName,
-        Users._id,
-        AlertsByOwnersCube.alertCategory,
-        AlertStatusCube.statusId,
-        AlertStatusCube.statusName,
-      ],
-      timeDimension: AlertsByOwnersCube.created,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`,
-      },
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
-    },
-    alertsOwnersRollUp: {
-      sqlAlias: "alByAppRP",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [
-        AlertsByOwnersCube.count,
-        AlertsByOwnersCube.open,
-        AlertsByOwnersCube.closed,
-        AlertsByOwnersCube.total,
-      ],
-      dimensions: [
-        Tenants.tenantId,
-        Users.fullName,
-        Users._id,
-        AlertsByOwnersCube.docStatus,
-      ],
-      timeDimension: AlertsByOwnersCube.created,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`,
-      },
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
     },
   },
 

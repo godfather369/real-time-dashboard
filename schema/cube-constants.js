@@ -1,6 +1,5 @@
 //Refresh keys
 export const CUBE_REFRESH_KEY_TIME =  `30 minute`;
-export const PRE_AGG_REFRESH_KEY_TIME = `30 minute`;
 export const MY_CUBE_REFRESH_KEY_TIME = `1 second`;
 
 //constants

@@ -16,12 +16,7 @@ cube(`Groups`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {
-    Tenants: {
-      relationship: `belongsTo`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
-  },
+  joins: {},
 
   measures: {
     count: {

@@ -2,10 +2,7 @@ import {
   impactAssessmentCollection,
   impactAssessmentImpactedTeamCollection,
 } from "./collections";
-import {
-  CUBE_REFRESH_KEY_TIME,
-  PRE_AGG_REFRESH_KEY_TIME,
-} from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`ImpactsByTeamCube`, {
   sql: `
@@ -33,34 +30,7 @@ cube(`ImpactsByTeamCube`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
-  },
-
-  preAggregations: {
-    impactTeamRollUp: {
-      sqlAlias: "IAByTeRP",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [ImpactsByTeamCube.count],
-      dimensions: [Tenants.tenantId, ImpactsByTeamCube.team],
-      timeDimension: ImpactsByTeamCube.startDate,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '90 day'`,
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`,
-      },
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
-    },
-  },
+  joins: {},
 
   measures: {
     count: {

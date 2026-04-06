@@ -10,19 +10,14 @@ import {
 import { MY_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`MyImpactsSLA`, {
-	sql: `SELECT * FROM ((SELECT _id as UId FROM ${impactAssessmentOwnersCollection} WHERE CONVERT(${impactAssessmentOwnersCollection}.owners, CHAR)="${userId}") UNION SELECT GId as UId FROM (SELECT functionalRole FROM ${groupsOfUserCollection} WHERE CONVERT(${groupsOfUserCollection}._id, CHAR)="${userId}") as userGroups INNER JOIN (SELECT _id as GId , groups FROM ${impactAssessmentGroupsCollection}) as groupIds ON CONVERT(groupIds.groups,CHAR) = userGroups.functionalRole) as Users INNER JOIN (SELECT _id, tenantId, status, created FROM ${impactAssessmentCollection} where ${impactAssessmentCollection}.archived=0) as impacts ON impacts._id=Users.UId`,
+	sql: `SELECT * FROM ((SELECT _id as UId FROM ${impactAssessmentOwnersCollection} WHERE ${impactAssessmentOwnersCollection}.owners="${userId}") UNION SELECT GId as UId FROM (SELECT functionalRole FROM ${groupsOfUserCollection} WHERE ${groupsOfUserCollection}._id="${userId}") as userGroups INNER JOIN (SELECT _id as GId , groups FROM ${impactAssessmentGroupsCollection}) as groupIds ON groupIds.groups = userGroups.functionalRole) as Users INNER JOIN (SELECT _id, tenantId, status, created FROM ${impactAssessmentCollection} where ${impactAssessmentCollection}.archived=0) as impacts ON impacts._id=Users.UId`,
 	sqlAlias: `myIASLA`,
 
 	refreshKey: {
 		every: MY_CUBE_REFRESH_KEY_TIME,
 	},
 
-	joins: {
-		Tenants: {
-			relationship: `belongsTo`,
-			sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-		},
-	},
+	joins: {},
 
 	measures: {
 		count: {

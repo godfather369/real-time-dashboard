@@ -2,162 +2,47 @@ import {
   alertsCollection,
   regMapGenericCollection,
   impactAssessmentCollection,
-  impactAssessmentGroupsCollection,
   alertsGroupsCollection,
 } from "./collections";
-import {
-  CUBE_REFRESH_KEY_TIME,
-  PRE_AGG_REFRESH_KEY_TIME,
-} from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import { alertsActiveFilterSqlUnqualified } from "./sql-queries";
 
 cube(`combinedGroupsSLA`, {
   sql: `
-		SELECT * FROM (
-			SELECT 
-				srcObject as _id, 
-				groups, 
-				status, 
-				docStatus, 
-				created, 
-				tenantId, 
-				impactStatus 
-			FROM (
-				SELECT 
-					_id, 
-					groups, 
-					impactStatus, 
-					tenantId, 
-					srcObject 
-				FROM (
-					SELECT 
-						_id, 
-						groups,
-						impactStatus, 
-						tenantId 
-					FROM (
-						SELECT 
-							_id, 
-							groups 
-						FROM ${impactAssessmentGroupsCollection}
-					) AS impactGroups 
-					INNER JOIN (
-						SELECT 
-							_id AS impactId, 
-							status AS impactStatus, 
-							tenantId 
-						FROM ${impactAssessmentCollection} 
-						WHERE ${impactAssessmentCollection}.archived = 0
-					) AS impacts ON impacts.impactId = impactGroups._id
-				) as groupImpacts 
-				INNER JOIN (
-					SELECT 
-						srcObject, 
-						destObject, 
-						tenantId as tntId 
-					FROM ${regMapGenericCollection} 
-					WHERE ${regMapGenericCollection}.archived = 0 
-						AND ${regMapGenericCollection}.destType = "ImpactAssessment" 
-						AND ${regMapGenericCollection}.srcType = "Alert"
-				) as maps ON groupImpacts._id = maps.destObject
-					AND (groupImpacts.tenantId) = maps.tntId
-			) as mappedImpacts 
-			INNER JOIN (
-				SELECT 
-					alertId, 
-					status, 
-					docStatus, 
-					created, 
-					tentId 
-				FROM (
-					SELECT 
-						_id as alertGroupId, 
-						groups as alertGroup 
-					FROM ${alertsGroupsCollection}
-				) as alertGroups 
-				INNER JOIN (
-					SELECT 
-						_id as alertId, 
-						status, 
-						\`info.docStatus\` as docStatus, 
-						created, 
-						tenantId as tentId 
-					FROM ${alertsCollection} 
-					WHERE ${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)
-				) as alerts ON alerts.alertId = alertGroups.alertGroupId
-			) as groupAlerts ON mappedImpacts.srcObject = groupAlerts.alertId
-				AND mappedImpacts.tenantId = groupAlerts.tentId
-		) AS impactedAlerts 
-		
-		UNION
-		
-		SELECT 
-			_id, 
-			groups, 
-			status, 
-			docStatus, 
-			created, 
-			tenantId, 
-			"No" as impactStatus 
-		FROM (
-			SELECT 
-				_id, 
-				groups, 
-				status, 
-				docStatus, 
-				created, 
-				tenantId, 
-				destObject 
-			FROM (
-				SELECT 
-					_id, 
-					groups, 
-					status, 
-					docStatus, 
-					created, 
-					tenantId 
-				FROM (
-					SELECT 
-						_id, 
-						groups 
-					FROM ${alertsGroupsCollection}
-				) as groups 
-				INNER JOIN (
-					SELECT 
-						_id as alertId, 
-						status, 
-						\`info.docStatus\` as docStatus, 
-						created, 
-						tenantId 
-					FROM ${alertsCollection} 
-					WHERE ${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)
-				) as alerts ON alerts.alertID = groups._id
-			) as groupAlerts 
-			LEFT JOIN (
-				SELECT 
-					srcObject, 
-					destObject, 
-					tenantId as tntId 
-				FROM ${regMapGenericCollection} 
-				WHERE ${regMapGenericCollection}.archived = 0 
-					AND ${regMapGenericCollection}.destType = "ImpactAssessment" 
-					AND ${regMapGenericCollection}.srcType = "Alert"
-			) as maps ON maps.srcObject = groupAlerts._id
-				AND maps.tntId = groupAlerts.tenantId
-		) as mappedAlerts 
-		WHERE ISNULL(mappedAlerts.destObject) = 1
-	`,
+    SELECT
+      alerts._id,
+      grp.groups,
+      alerts.status,
+      alerts.docStatus,
+      alerts.created,
+      alerts.tenantId,
+      CASE WHEN maps.srcObject IS NOT NULL THEN impacts.status ELSE 'No' END AS impactStatus
+    FROM (
+      SELECT _id, status, \`info.docStatus\` AS docStatus, created, tenantId
+      FROM ${alertsCollection}
+      WHERE ${alertsActiveFilterSqlUnqualified}
+    ) AS alerts
+    INNER JOIN ${alertsGroupsCollection} grp
+      ON alerts._id = grp._id
+    LEFT JOIN ${regMapGenericCollection} maps
+      ON maps.srcObject = alerts._id
+      AND maps.tenantId = alerts.tenantId
+      AND maps.archived = 0
+      AND maps.destType = "ImpactAssessment"
+      AND maps.srcType = "Alert"
+    LEFT JOIN ${impactAssessmentCollection} impacts
+      ON impacts._id = maps.destObject
+      AND impacts.tenantId = maps.tenantId
+    WHERE maps.destObject IS NULL OR impacts._id IS NOT NULL
+  `,
 
-  sqlAlias: `comSLA`,
+  sqlAlias: `comGrpSLACube`,
 
   refreshKey: {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
   joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
     Groups: {
       relationship: `belongsTo`,
       sql: `${CUBE.groups} = ${Groups._id}`,
@@ -165,42 +50,6 @@ cube(`combinedGroupsSLA`, {
     AlertStatusCube: {
       relationship: `belongsTo`,
       sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1`,
-    },
-  },
-
-  preAggregations: {
-    comGrSLARollUp: {
-      sqlAlias: "comGrRP",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [
-        combinedGroupsSLA.openOpen,
-        combinedGroupsSLA.openClosed,
-        combinedGroupsSLA.openMissing,
-        combinedGroupsSLA.closedOpen,
-        combinedGroupsSLA.closedClosed,
-        combinedGroupsSLA.closedMissing,
-        combinedGroupsSLA.open,
-        combinedGroupsSLA.closed,
-      ],
-      dimensions: [
-        Groups._id,
-        Groups.name,
-        Tenants.tenantId,
-        combinedGroupsSLA.docStatus,
-      ],
-      timeDimension: combinedGroupsSLA.created,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`,
-      },
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
     },
   },
 

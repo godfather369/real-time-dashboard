@@ -4,10 +4,8 @@ import {
   alertsGroupsCollection,
 } from "./collections";
 
-import {
-  CUBE_REFRESH_KEY_TIME,
-  PRE_AGG_REFRESH_KEY_TIME,
-} from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import { alertsActiveFilterSql } from "./sql-queries";
 
 cube("QuarterlyAlertsByGroups", {
   sql: `
@@ -35,7 +33,7 @@ cube("QuarterlyAlertsByGroups", {
             created, 
             tenantId 
           FROM ${alertsCollection} 
-          WHERE ${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)
+          WHERE ${alertsActiveFilterSql}
         ) as alerts
         INNER JOIN (
           SELECT 
@@ -65,10 +63,6 @@ cube("QuarterlyAlertsByGroups", {
   },
 
   joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
     ImpactAssessmentCube: {
       relationship: `hasOne`,
       sql: `${CUBE.impId}=${ImpactAssessmentCube._id}`,
@@ -80,40 +74,6 @@ cube("QuarterlyAlertsByGroups", {
     AlertStatusCube: {
       relationship: `belongsTo`,
       sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1`,
-    },
-  },
-
-  preAggregations: {
-    quarterlyAlertsByGroupRollUp: {
-      sqlAlias: "qrAlByGrp",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [
-        QuarterlyAlertsByGroups.following,
-        QuarterlyAlertsByGroups.open,
-        QuarterlyAlertsByGroups.applicable,
-        QuarterlyAlertsByGroups.excluded,
-        QuarterlyAlertsByGroups.potentialImp,
-        QuarterlyAlertsByGroups.totalCount,
-      ],
-      dimensions: [
-        QuarterlyAlertsByGroups.groupId,
-        Groups.name,
-        QuarterlyAlertsByGroups.docStatus,
-        Tenants.tenantId,
-      ],
-      timeDimension: QuarterlyAlertsByGroups.created,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`,
-      },
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
     },
   },
 

@@ -4,10 +4,8 @@ import {
   regMapGenericCollection,
   alertsCollection,
 } from "./collections";
-import {
-  CUBE_REFRESH_KEY_TIME,
-  PRE_AGG_REFRESH_KEY_TIME,
-} from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import { alertsActiveFilterSql } from "./sql-queries";
 
 cube(`ImpactsByOwnersCube`, {
   sql: `
@@ -68,7 +66,7 @@ cube(`ImpactsByOwnersCube`, {
 				_id AS Id, 
 				\`info.docStatus\` AS docStatus 
 			FROM ${alertsCollection} 
-			WHERE ${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)
+			WHERE ${alertsActiveFilterSql}
 		) AS alerts ON mappedImpacts.srcObject = alerts.Id
 	`,
 
@@ -79,65 +77,9 @@ cube(`ImpactsByOwnersCube`, {
   },
 
   joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
     Users: {
       relationship: `belongsTo`,
       sql: `${CUBE.owners} = ${Users._id}`,
-    },
-  },
-
-  preAggregations: {
-    impactsByUsersRollUp: {
-      sqlAlias: "IAByUsrsRP",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [ImpactsByOwnersCube.count],
-      dimensions: [Tenants.tenantId, Users.fullName, Users._id],
-      timeDimension: ImpactsByOwnersCube.startDate,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`,
-      },
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
-    },
-    impactsOwnersRollUp: {
-      sqlAlias: "IAByAppRP",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [
-        ImpactsByOwnersCube.count,
-        ImpactsByOwnersCube.open,
-        ImpactsByOwnersCube.New,
-        ImpactsByOwnersCube.inProcess,
-        ImpactsByOwnersCube.closed,
-      ],
-      dimensions: [
-        Tenants.tenantId,
-        Users.fullName,
-        Users._id,
-        ImpactsByOwnersCube.docStatus,
-      ],
-      timeDimension: ImpactsByOwnersCube.created,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`,
-      },
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
     },
   },
 

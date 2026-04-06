@@ -1,8 +1,5 @@
 import { impactAssessmentCollection } from "./collections";
-import {
-  CUBE_REFRESH_KEY_TIME,
-  PRE_AGG_REFRESH_KEY_TIME,
-} from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`ImpactAssessmentCube`, {
   sql: `
@@ -22,38 +19,7 @@ cube(`ImpactAssessmentCube`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
-  },
-
-  preAggregations: {
-    impactAssessmentByStatusRollUp: {
-      sqlAlias: "iaByStatus",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [
-        ImpactAssessmentCube.inProcess,
-        ImpactAssessmentCube.new,
-        ImpactAssessmentCube.closed,
-      ],
-      dimensions: [Tenants.tenantId],
-      timeDimension: ImpactAssessmentCube.startDate,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`,
-      },
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
-    },
-  },
+  joins: {},
 
   measures: {
     count: {

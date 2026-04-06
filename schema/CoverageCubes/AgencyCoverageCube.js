@@ -1,36 +1,30 @@
 import { AggregateUserFeeds } from "./sql-queries";
 import { juridictionsCollection } from "./collections";
-import {
-  CUBE_REFRESH_KEY_TIME,
-  PRE_AGG_REFRESH_KEY_TIME,
-} from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`AgencyCoverageCube`, {
   sql: `
-    SELECT 
-      _id,
-      displayName,
-      tenantId,
-      corpusType 
-    FROM (
-      (
-        SELECT 
-          _id,
-          jurisdiction,
-          tenantId, 
-          corpusType 
-        FROM ${AggregateUserFeeds}
-      ) AS AggregateFeedCube
-      LEFT JOIN 
-      (
-        SELECT 
-          _id as jurisId, 
-          displayName 
-        FROM ${juridictionsCollection}
-      ) AS JurisdictionCollectionCube
-        ON AggregateFeedCube.jurisdiction = JurisdictionCollectionCube.jurisId 
-    )
-  `,
+		SELECT 
+			AggregateFeedCube._id,
+			JurisCube.displayName,
+			AggregateFeedCube.tenantId,
+			AggregateFeedCube.corpusType 
+		FROM (
+			SELECT 
+				_id,
+				jurisdiction,
+				tenantId,
+				corpusType 
+			FROM ${AggregateUserFeeds}
+		) AS AggregateFeedCube
+		LEFT JOIN (
+			SELECT 
+				_id as jurisId,
+				displayName 
+			FROM ${juridictionsCollection}
+		) AS JurisCube
+		ON AggregateFeedCube.jurisdiction = JurisCube.jurisId 
+	`,
 
   sqlAlias: `AgenCov`,
 
@@ -38,30 +32,7 @@ cube(`AgencyCoverageCube`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  preAggregations: {
-    AgencyCoverageRollUp: {
-      sqlAlias: "AgCovRP",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [AgencyCoverageCube.count],
-      dimensions: [
-        AgencyCoverageCube.jurisdictionName,
-        AgencyCoverageCube.corpusType,
-        Tenants.tenantId,
-      ],
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
-    },
-  },
-
-  joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
-  },
+  joins: {},
 
   measures: {
     count: {

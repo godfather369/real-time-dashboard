@@ -1,5 +1,6 @@
 import { alertsCollection, alertMDIDCollection } from "./collections";
-import { PRE_AGG_REFRESH_KEY_TIME } from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import { alertsActiveFilterSql } from "./sql-queries";
 
 cube(`AlertsByGrpIds`, {
   sql: `
@@ -22,7 +23,7 @@ cube(`AlertsByGrpIds`, {
 				\`info.docStatus\` as docStatus,
 				alertCategory 
 			FROM ${alertsCollection} 
-			WHERE ${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)
+			WHERE ${alertsActiveFilterSql}
 		) as alerts 
 		LEFT JOIN (
 			SELECT 
@@ -35,61 +36,18 @@ cube(`AlertsByGrpIds`, {
 
   sqlAlias: `AlGrpIdCube`,
 
+  refreshKey: {
+    every: CUBE_REFRESH_KEY_TIME,
+  },
+
   joins: {
     Jurisdiction: {
       relationship: `hasOne`,
       sql: `${CUBE.jurisdiction} = ${Jurisdiction.jurisdictionId}`,
     },
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
     AlertStatusCube: {
       relationship: `belongsTo`,
       sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1 AND ${AlertStatusCube.isExcluded} = 0`,
-    },
-  },
-
-  preAggregations: {
-    alertsByJurisdictionMdRollUp: {
-      sqlAlias: "alByJuDocMd",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [
-        AlertsByGrpIds.introducedDocStatus,
-        AlertsByGrpIds.originDocStatus,
-        AlertsByGrpIds.secondBodyStatus,
-        AlertsByGrpIds.sentForSignatureStatus,
-        AlertsByGrpIds.diedStatus,
-        AlertsByGrpIds.becameLawStatus,
-        AlertsByGrpIds.statuteStatus,
-        AlertsByGrpIds.regulationStatus,
-        AlertsByGrpIds.ruleStatus,
-        AlertsByGrpIds.proposedRuleStatus,
-        AlertsByGrpIds.agencyUpdateStatus,
-      ],
-      dimensions: [
-        Tenants.tenantId,
-        Jurisdiction.displayName,
-        Jurisdiction.shortName,
-        Jurisdiction.jurisdictionId,
-        AlertsByGrpIds.alertCategory,
-        AlertStatusCube.statusId,
-        AlertStatusCube.statusName,
-        AlertsByGrpIds.MDiD,
-      ],
-      timeDimension: AlertsByGrpIds.publishedDate,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`,
-      },
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
     },
   },
 

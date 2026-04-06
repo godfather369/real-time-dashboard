@@ -1,16 +1,21 @@
 import {
-  regMapStatusCollection,
-  uniregCollection,
-  corpusCollection,
-  regSiteConfigCollection,
-  juridictionsCollection,
-  regSubscriptionCollection,
-  regSubscriptionFeedCollection,
-  mapGenericCollection,
-  regSubscriptionRepoCollection,
-  regSubscriptionJurisdictionCollection,
+	alertsCollection,
+	regMapStatusCollection,
+	uniregCollection,
+	corpusCollection,
+	regSiteConfigCollection,
+	juridictionsCollection,
+	regSubscriptionCollection,
+	regSubscriptionFeedCollection,
+	mapGenericCollection,
+	regSubscriptionRepoCollection,
+	regSubscriptionJurisdictionCollection,
 } from "./collections";
 import { defaultTenantId } from "./cube-constants";
+
+export const alertsActiveFilterSql = `${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)`;
+
+export const alertsActiveFilterSqlUnqualified = `archived = 0 AND (\`reggi.validity\` != 0 OR \`reggi.validity\` IS NULL)`;
 
 const feedId = "`feeds.feedId`";
 const archivedFeed = "`feeds.archived`";
@@ -55,36 +60,8 @@ const RegSubscrptionJurisdictions = `
 	ON SubJurys._id = RegSub._id
 `;
 
-export const regMapStatusUniregJoin = `
-	(
-		SELECT _id, srcObject, status, tenantId, GROUP_CONCAT(destObject) AS mdIds 
-		FROM (
-			SELECT _id, tenantId, srcObject, status 
-			FROM ${regMapStatusCollection} 
-			WHERE ${regMapStatusCollection}.srcType = 'Regulation' 
-				AND ${regMapStatusCollection}.archived = 0
-		) AS RegMapCube 
-		LEFT JOIN
-		(
-			SELECT destObject, srcObject AS mdMapSrc 
-			FROM ${mapGenericCollection} 
-			WHERE ${mapGenericCollection}.srcType = "Regulation"  
-				AND ${mapGenericCollection}.destType = "MD" 
-				AND ${mapGenericCollection}.archived = 0
-		) AS MDMap 
-		ON MDMap.mdMapSrc = RegMapCube.srcObject 
-		GROUP BY _id
-	) AS RegMapStatusMDCube 
-	LEFT JOIN 
-	(
-		SELECT _id AS uniregId, repo 
-		FROM ${uniregCollection}
-	) AS UniRegCube 
-	ON RegMapStatusMDCube.srcObject = UniRegCube.uniregId
-`;
-
-// Custom corpus
-export const regMapStatusUniregJoinCC = `
+// Regulation map + MD aggregation joined to unireg; uniregCubeSql must alias as UniRegCube.
+const regMapStatusUniregJoinCore = (uniregCubeSql) => `
 	(
 		SELECT _id, srcObject, status, tenantId, GROUP_CONCAT(destObject) AS mdIds 
 		FROM (
@@ -103,15 +80,23 @@ export const regMapStatusUniregJoinCC = `
 		) AS MDMap 
 		ON MDMap.mdMapSrc = RegMapCube.srcObject 
 		GROUP BY _id
-	) AS RegMapStatusMDCube 
+	) AS RegMapMD 
 	LEFT JOIN 
-	(
+	${uniregCubeSql}
+	ON RegMapMD.srcObject = UniRegCube.uniregId
+`;
+
+export const regMapStatusUniregJoin = regMapStatusUniregJoinCore(`	(
+		SELECT _id AS uniregId, repo 
+		FROM ${uniregCollection}
+	) AS UniRegCube`);
+
+// Custom corpus: restrict unireg to CC and expose uid for reg-site jurisdiction join
+export const regMapStatusUniregJoinCC = regMapStatusUniregJoinCore(`	(
 		SELECT _id AS uniregId, repo, uid 
 		FROM ${uniregCollection} 
 		WHERE ${uniregCollection}.repo = 'CC'
-	) AS UniRegCube 
-	ON RegMapStatusMDCube.srcObject = UniRegCube.uniregId
-`;
+	) AS UniRegCube`);
 
 export const CorpusJurisdictionJoin = `
 	(
@@ -127,13 +112,13 @@ export const CorpusJurisdictionJoin = `
 				FROM ${RegSubscriptionRepos}
 			) AS SubscribedRepos
 			ON Corpus._id = SubscribedRepos.repos
-		) AS CorpusCollectionCube
+		) AS CorpusCube
 		LEFT JOIN 
 		(
 			SELECT jurisdictionId, displayName 
 			FROM ${juridictionsCollection}
-		) AS JurisdictionCollectionCube
-		ON CorpusCollectionCube.jurisdiction = JurisdictionCollectionCube.jurisdictionId
+		) AS JurisCube
+		ON CorpusCube.jurisdiction = JurisCube.jurisdictionId
 	)
 `;
 
@@ -157,8 +142,8 @@ export const RegSiteJurisdictionJoin = `
 		(
 			SELECT _id AS jurisObjectId, displayName 
 			FROM ${juridictionsCollection}
-		) AS JurisdictionCollectionCube
-		ON RegSiteCube.jurisdiction = JurisdictionCollectionCube.jurisObjectId
+		) AS JurisCube
+		ON RegSiteCube.jurisdiction = JurisCube.jurisObjectId
 	)
 `;
 
@@ -167,15 +152,15 @@ const UserFeeds = `
 		(
 			SELECT feedId, tenantId 
 			FROM ${RegSubscriptionFeedIds}
-		) AS RegSubscribedFeedsCube
+		) AS SubFeeds
 		INNER JOIN
 		(
 			SELECT _id, jurisdiction, corpusType 
 			FROM ${regSiteConfigCollection} 
 			WHERE tenantId = "${defaultTenantId}" 
 				AND ${regSiteConfigCollection}.archived = 0
-		) AS regSiteConfigCube		
-		ON regSiteConfigCube._id = RegSubscribedFeedsCube.feedId
+		) AS regSiteConfigCube
+		ON regSiteConfigCube._id = SubFeeds.feedId
 	)
 `;
 

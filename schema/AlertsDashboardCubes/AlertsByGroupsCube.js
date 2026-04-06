@@ -1,8 +1,6 @@
 import { alertsCollection, alertsGroupsCollection } from "./collections";
-import {
-  CUBE_REFRESH_KEY_TIME,
-  PRE_AGG_REFRESH_KEY_TIME,
-} from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import { alertsActiveFilterSql } from "./sql-queries";
 
 cube(`AlertsByGroupsCube`, {
   sql: `
@@ -17,7 +15,7 @@ cube(`AlertsByGroupsCube`, {
 				alertCategory, 
 				\`info.docStatus\` as docStatus  
 			FROM ${alertsCollection} 
-			WHERE ${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)
+			WHERE ${alertsActiveFilterSql}
 		) as alerts 
 		INNER JOIN (
 			SELECT 
@@ -34,10 +32,6 @@ cube(`AlertsByGroupsCube`, {
   },
 
   joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
     Groups: {
       relationship: `belongsTo`,
       sql: `${CUBE.groups} = ${Groups._id}`,
@@ -45,65 +39,6 @@ cube(`AlertsByGroupsCube`, {
     AlertStatusCube: {
       relationship: `belongsTo`,
       sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1`,
-    },
-  },
-
-  preAggregations: {
-    alertsByGroupsRollUp: {
-      sqlAlias: "alByGrpsRP",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [AlertsByGroupsCube.count],
-      dimensions: [
-        Tenants.tenantId,
-        Groups.name,
-        Groups._id,
-        AlertStatusCube.statusId,
-        AlertStatusCube.statusName,
-        AlertsByGroupsCube.alertCategory,
-        AlertsByGroupsCube.docStatus,
-      ],
-      timeDimension: AlertsByGroupsCube.created,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`,
-      },
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
-    },
-    alertsGroupsSLARollUp: {
-      sqlAlias: "alByGrApRP",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [
-        AlertsByGroupsCube.count,
-        AlertsByGroupsCube.open,
-        AlertsByGroupsCube.closed,
-        AlertsByGroupsCube.total,
-      ],
-      dimensions: [
-        Tenants.tenantId,
-        Groups.name,
-        Groups._id,
-        AlertsByGroupsCube.docStatus,
-      ],
-      timeDimension: AlertsByGroupsCube.created,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`,
-      },
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
     },
   },
 

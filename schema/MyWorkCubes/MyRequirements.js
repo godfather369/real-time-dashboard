@@ -18,10 +18,6 @@ cube(`MyRequirements`, {
   },
 
   joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
     RequirementStatus: {
       relationship: `hasOne`,
       sql: `${CUBE.status} = ${RequirementStatus.statusId} AND ${CUBE.tenantId} = ${RequirementStatus.tenantId}`,

@@ -4,10 +4,8 @@ import {
   regMapGenericCollection,
   alertsCollection,
 } from "./collections";
-import {
-  CUBE_REFRESH_KEY_TIME,
-  PRE_AGG_REFRESH_KEY_TIME,
-} from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import { alertsActiveFilterSql } from "./sql-queries";
 
 cube(`ImpactsByGroupCube`, {
   sql: `
@@ -68,7 +66,7 @@ cube(`ImpactsByGroupCube`, {
 				_id AS Id, 
 				\`info.docStatus\` AS docStatus 
 			FROM ${alertsCollection} 
-			WHERE ${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)
+			WHERE ${alertsActiveFilterSql}
 		) AS alerts ON mappedImpacts.srcObject = alerts.Id
 	`,
 
@@ -79,46 +77,9 @@ cube(`ImpactsByGroupCube`, {
   },
 
   joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
     Groups: {
       relationship: `belongsTo`,
       sql: `${CUBE.groups} = ${Groups._id}`,
-    },
-  },
-
-  preAggregations: {
-    impactsGroupsRollUp: {
-      sqlAlias: "IAByAppRP",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [
-        ImpactsByGroupCube.count,
-        ImpactsByGroupCube.open,
-        ImpactsByGroupCube.New,
-        ImpactsByGroupCube.inProcess,
-        ImpactsByGroupCube.closed,
-      ],
-      dimensions: [
-        Tenants.tenantId,
-        Groups.name,
-        Groups._id,
-        ImpactsByGroupCube.docStatus,
-      ],
-      timeDimension: ImpactsByGroupCube.created,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`,
-      },
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
     },
   },
 

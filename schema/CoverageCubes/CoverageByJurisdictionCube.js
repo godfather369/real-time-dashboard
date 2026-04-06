@@ -4,10 +4,7 @@ import {
   CorpusJurisdictionJoin,
   RegSiteJurisdictionJoin,
 } from "./sql-queries";
-import {
-  CUBE_REFRESH_KEY_TIME,
-  PRE_AGG_REFRESH_KEY_TIME,
-} from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`CoverageByJurisdictionCube`, {
   sql: `
@@ -18,25 +15,23 @@ cube(`CoverageByJurisdictionCube`, {
 			status,
 			mdIds 
 		FROM (
-			(
-				SELECT 
-					_id,
-					tenantId,
-					repo,
-					status,
-					mdIds 
-				FROM ${regMapStatusUniregJoin}
-			) AS RegMapUniregJoin
-			LEFT JOIN (
-				SELECT 
-					id,
-					displayName,
-					tenantId as tenant 
-				FROM ${CorpusJurisdictionJoin}
-			) AS CorpusJurisdictionJoin
-			ON RegMapUniregJoin.repo = CorpusJurisdictionJoin.id 
-			AND RegMapUniregJoin.tenantId = CorpusJurisdictionJoin.tenant
-		)
+			SELECT 
+				_id,
+				tenantId,
+				repo,
+				status,
+				mdIds 
+			FROM ${regMapStatusUniregJoin}
+		) AS RegMapUniregJoin
+		LEFT JOIN (
+			SELECT 
+				id,
+				displayName,
+				tenantId as tenant 
+			FROM ${CorpusJurisdictionJoin}
+		) AS CorpJuris
+		ON RegMapUniregJoin.repo = CorpJuris.id 
+		AND RegMapUniregJoin.tenantId = CorpJuris.tenant
 		UNION ALL
 		SELECT 
 			_id,
@@ -45,25 +40,23 @@ cube(`CoverageByJurisdictionCube`, {
 			status,
 			mdIds 
 		FROM (
-			(
-				SELECT 
-					_id,
-					tenantId,
-					uid,
-					status,
-					mdIds 
-				FROM ${regMapStatusUniregJoinCC}
-			) AS RegMapUniregJoin
-			LEFT JOIN (
-				SELECT 
-					regSiteUid,
-					displayName,
-					tenantId as tenant 
-				FROM ${RegSiteJurisdictionJoin}
-			) AS RegSiteJurisdictionJoin
-			ON RegMapUniregJoin.uid = RegSiteJurisdictionJoin.regSiteUid 
-			AND RegMapUniregJoin.tenantId = RegSiteJurisdictionJoin.tenant
-		)
+			SELECT 
+				_id,
+				tenantId,
+				uid,
+				status,
+				mdIds 
+			FROM ${regMapStatusUniregJoinCC}
+		) AS RegMapCC
+		LEFT JOIN (
+			SELECT 
+				regSiteUid,
+				displayName,
+				tenantId as tenant 
+			FROM ${RegSiteJurisdictionJoin}
+		) AS SiteJuris
+		ON RegMapCC.uid = SiteJuris.regSiteUid 
+		AND RegMapCC.tenantId = SiteJuris.tenant
 	`,
 
   sqlAlias: `CvrgByJurCube`,
@@ -72,31 +65,7 @@ cube(`CoverageByJurisdictionCube`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
-  },
-
-  preAggregations: {
-    CoverageByJurisdictionRollUp: {
-      sqlAlias: "covJurisRP",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [CoverageByJurisdictionCube.count],
-      dimensions: [
-        CoverageByJurisdictionCube.jurisdictionName,
-        CoverageByJurisdictionCube.status,
-        CoverageByJurisdictionCube.mdIds,
-        Tenants.tenantId,
-      ],
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
-    },
-  },
+  joins: {},
 
   measures: {
     count: {

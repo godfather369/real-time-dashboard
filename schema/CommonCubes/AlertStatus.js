@@ -4,16 +4,16 @@ import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 cube(`AlertStatusCube`, {
   sql: `
 		SELECT 
-			_id, 
+			CONCAT(tenantId, '-', statusId) as _id, 
 			tenantId, 
 			statusId, 
 			statusName,
-            active,
-            isTerminal,
-            isExcluded,
-            isFollowing,
-            actionRequired,
-            class 
+			active,
+			isTerminal,
+			isExcluded,
+			isFollowing,
+			actionRequired,
+			class 
 		FROM (
 			SELECT 
 				_id, 
@@ -28,12 +28,13 @@ cube(`AlertStatusCube`, {
 				\`status.regChange.active\` as active, 
 				\`status.regChange.isTerminal\` as isTerminal, 
 				\`status.regChange.isExcluded\` as isExcluded,
-        \`status.regChange.actionRequired\` as actionRequired,
+				\`status.regChange.actionRequired\` as actionRequired,
 				\`status.regChange.meta.isFollowing\` as isFollowing,
 				\`status.regChange.class\` as class
 			FROM ${alertsByStatusCollection}
 		) as regChangeConfig 
-		ON regChangeConfig.configId = config._id;
+		ON regChangeConfig.configId = config._id
+		GROUP BY tenantId, statusId, statusName, active, isTerminal, isExcluded, isFollowing, actionRequired, class
 	`,
 
   sqlAlias: `AlSt`,
