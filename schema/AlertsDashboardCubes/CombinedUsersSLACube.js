@@ -4,7 +4,10 @@ import {
   impactAssessmentCollection,
   alertsUsersCollection,
 } from "./collections";
-import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import {
+  CUBE_REFRESH_KEY_TIME,
+  PRE_AGG_REFRESH_KEY_TIME,
+} from "./cube-constants";
 import { alertsActiveFilterSqlUnqualified } from "./sql-queries";
 
 cube(`combinedOwnersSLA`, {
@@ -50,6 +53,42 @@ cube(`combinedOwnersSLA`, {
     AlertStatusCube: {
       relationship: `belongsTo`,
       sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1`,
+    },
+  },
+
+  preAggregations: {
+    comUsSLARollUp: {
+      sqlAlias: "comUsRP",
+      type: `rollup`,
+      external: true,
+      scheduledRefresh: true,
+      measures: [
+        combinedOwnersSLA.openOpen,
+        combinedOwnersSLA.openClosed,
+        combinedOwnersSLA.openMissing,
+        combinedOwnersSLA.closedOpen,
+        combinedOwnersSLA.closedClosed,
+        combinedOwnersSLA.closedMissing,
+        combinedOwnersSLA.open,
+        combinedOwnersSLA.closed,
+      ],
+      dimensions: [
+        Users._id,
+        Users.fullName,
+        combinedOwnersSLA.tenantId,
+        combinedOwnersSLA.docStatus,
+      ],
+      timeDimension: combinedOwnersSLA.created,
+      granularity: `day`,
+      buildRangeStart: {
+        sql: `SELECT NOW() - interval '365 day'`,
+      },
+      buildRangeEnd: {
+        sql: `SELECT NOW()`,
+      },
+      refreshKey: {
+        every: PRE_AGG_REFRESH_KEY_TIME,
+      },
     },
   },
 

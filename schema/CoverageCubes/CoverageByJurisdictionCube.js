@@ -4,7 +4,10 @@ import {
   CorpusJurisdictionJoin,
   RegSiteJurisdictionJoin,
 } from "./sql-queries";
-import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import {
+  CUBE_REFRESH_KEY_TIME,
+  PRE_AGG_REFRESH_KEY_TIME,
+} from "./cube-constants";
 
 cube(`CoverageByJurisdictionCube`, {
   sql: `
@@ -66,6 +69,25 @@ cube(`CoverageByJurisdictionCube`, {
   },
 
   joins: {},
+
+  preAggregations: {
+    CoverageByJurisdictionRollUp: {
+      sqlAlias: "covJurisRP",
+      type: `rollup`,
+      external: true,
+      scheduledRefresh: true,
+      measures: [CoverageByJurisdictionCube.count],
+      dimensions: [
+        CoverageByJurisdictionCube.jurisdictionName,
+        CoverageByJurisdictionCube.status,
+        CoverageByJurisdictionCube.mdIds,
+        CoverageByJurisdictionCube.tenantId,
+      ],
+      refreshKey: {
+        every: PRE_AGG_REFRESH_KEY_TIME,
+      },
+    },
+  },
 
   measures: {
     count: {

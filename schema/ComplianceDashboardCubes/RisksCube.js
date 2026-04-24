@@ -4,7 +4,10 @@ import {
   risksByStatusCollection,
   regConfigCollection,
 } from "./collections";
-import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import {
+  CUBE_REFRESH_KEY_TIME,
+  PRE_AGG_REFRESH_KEY_TIME,
+} from "./cube-constants";
 
 cube(`RisksCube`, {
   sql: `
@@ -71,6 +74,19 @@ cube(`RisksCube`, {
     count: {
       type: `count`,
       drillMembers: [_id],
+    },
+  },
+
+  preAggregations: {
+    risksRollUp: {
+      sqlAlias: "risRollUp",
+      external: true,
+      measures: [RisksCube.count],
+      dimensions: [RisksCube.tenantId, RisksCube.status, RisksCube.statusId],
+      scheduledRefresh: true,
+      refreshKey: {
+        every: PRE_AGG_REFRESH_KEY_TIME,
+      },
     },
   },
 

@@ -4,7 +4,10 @@ import {
   tasksByStatusCollection,
   regConfigCollection,
 } from "./collections";
-import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import {
+  CUBE_REFRESH_KEY_TIME,
+  PRE_AGG_REFRESH_KEY_TIME,
+} from "./cube-constants";
 
 cube(`TasksCube`, {
   sql: `
@@ -71,6 +74,29 @@ cube(`TasksCube`, {
     count: {
       type: `count`,
       drillMembers: [_id],
+    },
+  },
+
+  preAggregations: {
+    tasksRollUp: {
+      sqlAlias: "taRollUp",
+      external: true,
+      measures: [TasksCube.count],
+      dimensions: [TasksCube.tenantId, TasksCube.status, TasksCube.statusId],
+      scheduledRefresh: true,
+      refreshKey: {
+        every: PRE_AGG_REFRESH_KEY_TIME,
+      },
+    },
+    tasksDueRollUp: {
+      sqlAlias: "taDueRollUp",
+      external: true,
+      measures: [TasksCube.count],
+      dimensions: [TasksCube.tenantId, TasksCube.dueDate],
+      scheduledRefresh: true,
+      refreshKey: {
+        every: PRE_AGG_REFRESH_KEY_TIME,
+      },
     },
   },
 

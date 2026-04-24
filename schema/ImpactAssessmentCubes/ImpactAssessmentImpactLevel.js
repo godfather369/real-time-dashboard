@@ -2,7 +2,10 @@ import {
   regConfigCollection,
   impactAssessmentImpactLevelCollection,
 } from "./collections";
-import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import {
+  CUBE_REFRESH_KEY_TIME,
+  PRE_AGG_REFRESH_KEY_TIME,
+} from "./cube-constants";
 
 cube(`ImpactsByLevelCube`, {
   sql: `
@@ -36,6 +39,28 @@ cube(`ImpactsByLevelCube`, {
     ImpactAssessmentCube: {
       relationship: `hasMany`,
       sql: `${CUBE.tenantId} = ${ImpactAssessmentCube.tenantId} AND ${CUBE.impactLevelId}=${ImpactAssessmentCube.impactLevel}`,
+    },
+  },
+
+  preAggregations: {
+    impactAssessmentByLevelRollUp: {
+      sqlAlias: "iaByLevel",
+      type: `rollup`,
+      external: true,
+      scheduledRefresh: true,
+      measures: [ImpactAssessmentCube.count],
+      dimensions: [ImpactsByLevelCube.impactLevel, ImpactsByLevelCube.tenantId],
+      timeDimension: ImpactAssessmentCube.startDate,
+      granularity: `day`,
+      buildRangeStart: {
+        sql: `SELECT NOW() - interval '365 day'`,
+      },
+      buildRangeEnd: {
+        sql: `SELECT NOW()`,
+      },
+      refreshKey: {
+        every: PRE_AGG_REFRESH_KEY_TIME,
+      },
     },
   },
 

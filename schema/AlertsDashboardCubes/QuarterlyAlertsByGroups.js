@@ -4,7 +4,10 @@ import {
   alertsGroupsCollection,
 } from "./collections";
 
-import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import {
+  CUBE_REFRESH_KEY_TIME,
+  PRE_AGG_REFRESH_KEY_TIME,
+} from "./cube-constants";
 import { alertsActiveFilterSql } from "./sql-queries";
 
 cube("QuarterlyAlertsByGroups", {
@@ -53,7 +56,8 @@ cube("QuarterlyAlertsByGroups", {
           AND ${regMapGenericCollection}.destType = "ImpactAssessment" 
           AND ${regMapGenericCollection}.srcType = "Alert"
       ) as Maps 
-      ON alertsbygrps._id = Maps.srcObject
+      ON alertsbygrps._id = Maps.srcObject 
+      AND alertsbygrps.tenantId = Maps.tntId
     `,
 
   sqlAlias: "QAlByGrps",
@@ -74,6 +78,40 @@ cube("QuarterlyAlertsByGroups", {
     AlertStatusCube: {
       relationship: `belongsTo`,
       sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1`,
+    },
+  },
+
+  preAggregations: {
+    quarterlyAlertsByGroupRollUp: {
+      sqlAlias: "qrAlByGrp",
+      type: `rollup`,
+      external: true,
+      scheduledRefresh: true,
+      measures: [
+        QuarterlyAlertsByGroups.following,
+        QuarterlyAlertsByGroups.open,
+        QuarterlyAlertsByGroups.applicable,
+        QuarterlyAlertsByGroups.excluded,
+        QuarterlyAlertsByGroups.potentialImp,
+        QuarterlyAlertsByGroups.totalCount,
+      ],
+      dimensions: [
+        QuarterlyAlertsByGroups.groupId,
+        Groups.name,
+        QuarterlyAlertsByGroups.docStatus,
+        QuarterlyAlertsByGroups.tenantId,
+      ],
+      timeDimension: QuarterlyAlertsByGroups.created,
+      granularity: `day`,
+      buildRangeStart: {
+        sql: `SELECT NOW() - interval '365 day'`,
+      },
+      buildRangeEnd: {
+        sql: `SELECT NOW()`,
+      },
+      refreshKey: {
+        every: PRE_AGG_REFRESH_KEY_TIME,
+      },
     },
   },
 

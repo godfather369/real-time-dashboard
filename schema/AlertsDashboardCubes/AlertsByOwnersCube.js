@@ -1,5 +1,8 @@
 import { alertsCollection, alertsUsersCollection } from "./collections";
-import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import {
+  CUBE_REFRESH_KEY_TIME,
+  PRE_AGG_REFRESH_KEY_TIME,
+} from "./cube-constants";
 import { alertsActiveFilterSql } from "./sql-queries";
 
 cube(`AlertsByOwnersCube`, {
@@ -39,6 +42,64 @@ cube(`AlertsByOwnersCube`, {
     AlertStatusCube: {
       relationship: `belongsTo`,
       sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1`,
+    },
+  },
+
+  preAggregations: {
+    alertsByUsersRollUp: {
+      sqlAlias: "alByUsrsRP",
+      type: `rollup`,
+      external: true,
+      scheduledRefresh: true,
+      measures: [AlertsByOwnersCube.count],
+      dimensions: [
+        AlertsByOwnersCube.tenantId,
+        Users.fullName,
+        Users._id,
+        AlertsByOwnersCube.alertCategory,
+        AlertStatusCube.statusId,
+        AlertStatusCube.statusName,
+      ],
+      timeDimension: AlertsByOwnersCube.created,
+      granularity: `day`,
+      buildRangeStart: {
+        sql: `SELECT NOW() - interval '365 day'`,
+      },
+      buildRangeEnd: {
+        sql: `SELECT NOW()`,
+      },
+      refreshKey: {
+        every: PRE_AGG_REFRESH_KEY_TIME,
+      },
+    },
+    alertsOwnersRollUp: {
+      sqlAlias: "alByAppRP",
+      type: `rollup`,
+      external: true,
+      scheduledRefresh: true,
+      measures: [
+        AlertsByOwnersCube.count,
+        AlertsByOwnersCube.open,
+        AlertsByOwnersCube.closed,
+        AlertsByOwnersCube.total,
+      ],
+      dimensions: [
+        AlertsByOwnersCube.tenantId,
+        Users.fullName,
+        Users._id,
+        AlertsByOwnersCube.docStatus,
+      ],
+      timeDimension: AlertsByOwnersCube.created,
+      granularity: `day`,
+      buildRangeStart: {
+        sql: `SELECT NOW() - interval '365 day'`,
+      },
+      buildRangeEnd: {
+        sql: `SELECT NOW()`,
+      },
+      refreshKey: {
+        every: PRE_AGG_REFRESH_KEY_TIME,
+      },
     },
   },
 

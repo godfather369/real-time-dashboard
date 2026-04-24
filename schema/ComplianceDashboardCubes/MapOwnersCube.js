@@ -6,7 +6,10 @@ import {
   mapUserCollection,
   tasksOwnersCollection,
 } from "./collections";
-import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import {
+  CUBE_REFRESH_KEY_TIME,
+  PRE_AGG_REFRESH_KEY_TIME,
+} from "./cube-constants";
 
 cube(`MapOwnersCube`, {
   sql: `
@@ -80,6 +83,25 @@ cube(`MapOwnersCube`, {
     Users: {
       relationship: `belongsTo`,
       sql: `${CUBE.owner} = ${Users._id}`,
+    },
+  },
+
+  preAggregations: {
+    ownersRollUp: {
+      sqlAlias: `oRollUp`,
+      external: true,
+      scheduledRefresh: true,
+      measures: [
+        MapOwnersCube.controlCount,
+        MapOwnersCube.riskCount,
+        MapOwnersCube.taskCount,
+        MapOwnersCube.requirementCount,
+        MapOwnersCube.total,
+      ],
+      dimensions: [MapOwnersCube.tenantId, Users.fullName, Users._id],
+      refreshKey: {
+        every: PRE_AGG_REFRESH_KEY_TIME,
+      },
     },
   },
 

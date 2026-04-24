@@ -1,4 +1,7 @@
-import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import {
+  CUBE_REFRESH_KEY_TIME,
+  PRE_AGG_REFRESH_KEY_TIME,
+} from "./cube-constants";
 import {
   enforcementActionsCollection,
   enforcementActionsAgencyMapCollection,
@@ -50,6 +53,87 @@ cube(`EnforcementActionsCube`, {
     Agency: {
       relationship: `belongsTo`,
       sql: `${CUBE.agencyMap} = ${Agency._id}`,
+    },
+  },
+
+  preAggregations: {
+    //roll up for # of enforcement actions and enforcement actions report
+    enforcementActionsAndPenaltiesReportRollUp: {
+      sqlAlias: `enfAcPenRepRP`,
+      type: `rollup`,
+      external: true,
+      scheduledRefresh: true,
+      measures: [
+        EnforcementActionsCube.count,
+        EnforcementActionsCube.netAmount,
+      ],
+      dimensions: [
+        EnforcementActionsCube.agencyMap,
+        Agency.shortCode,
+        Agency.agencyNames,
+        EnforcementActionsCube.currency,
+        EnforcementActionsCube.tenantId,
+      ],
+      timeDimension: EnforcementActionsCube.effectiveDate,
+      granularity: `day`,
+      buildRangeStart: {
+        sql: `SELECT NOW() - interval '365 day'`,
+      },
+      buildRangeEnd: {
+        sql: `SELECT NOW()`,
+      },
+      refreshKey: {
+        every: PRE_AGG_REFRESH_KEY_TIME,
+      },
+    },
+    actionsByAgencyRollUpJoin: {
+      sqlAlias: `HAGroll`,
+      type: `rollup`,
+      external: true,
+      scheduledRefresh: true,
+      measures: [EnforcementActionsCube.count],
+      dimensions: [
+        EnforcementActionsCube.agencyMap,
+        Agency.shortCode,
+        Agency.agencyNames,
+        HarmonizedActionTypeCube.harmonizedActionType,
+        EnforcementActionsCube.tenantId,
+      ],
+      timeDimension: EnforcementActionsCube.effectiveDate,
+      granularity: `day`,
+      buildRangeStart: {
+        sql: `SELECT NOW() - interval '365 day'`,
+      },
+      buildRangeEnd: {
+        sql: `SELECT NOW()`,
+      },
+      refreshKey: {
+        every: PRE_AGG_REFRESH_KEY_TIME,
+      },
+    },
+    authDocImpactedRollUp: {
+      sqlAlias: `auDocRoll`,
+      type: `rollup`,
+      external: true,
+      scheduledRefresh: true,
+      measures: [EnforcementActionsCube.count],
+      dimensions: [
+        RegulationsCube.authoritativeDocuments,
+        RegulationsCube.citations,
+        RegulationsCube.id,
+        EnforcementActionsCube.tenantId,
+      ],
+      timeDimension: EnforcementActionsCube.effectiveDate,
+      granularity: `day`,
+      refreshKey: {
+        every: PRE_AGG_REFRESH_KEY_TIME,
+      },
+      buildRangeStart: {
+        sql: `SELECT NOW() - interval '365 day'`,
+      },
+      buildRangeEnd: {
+        sql: `SELECT NOW()`,
+      },
     },
   },
 

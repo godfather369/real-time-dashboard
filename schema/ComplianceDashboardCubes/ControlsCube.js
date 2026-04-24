@@ -4,7 +4,10 @@ import {
   controlByStatusCollection,
   regConfigCollection,
 } from "./collections";
-import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import {
+  CUBE_REFRESH_KEY_TIME,
+  PRE_AGG_REFRESH_KEY_TIME,
+} from "./cube-constants";
 
 cube(`ControlsCube`, {
   sql: `
@@ -68,6 +71,23 @@ cube(`ControlsCube`, {
     count: {
       type: `count`,
       drillMembers: [_id],
+    },
+  },
+
+  preAggregations: {
+    controlsRollUp: {
+      sqlAlias: "conRollUp",
+      external: true,
+      measures: [ControlsCube.count],
+      dimensions: [
+        ControlsCube.tenantId,
+        ControlsCube.status,
+        ControlsCube.statusId,
+      ],
+      scheduledRefresh: true,
+      refreshKey: {
+        every: PRE_AGG_REFRESH_KEY_TIME,
+      },
     },
   },
 
