@@ -79,7 +79,7 @@ cube(`combinedOwnersSLA`, {
         combinedOwnersSLA.docStatus,
       ],
       timeDimension: combinedOwnersSLA.created,
-      granularity: `day`,
+      granularity: `second`,
       buildRangeStart: {
         sql: `SELECT NOW() - interval '365 day'`,
       },

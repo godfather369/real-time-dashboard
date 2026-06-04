@@ -25,8 +25,7 @@ cube(`AlertsByOwnersCube`, {
 				_id as Id, 
 				owners 
 			FROM ${alertsUsersCollection}
-		) as ownerIds ON alerts._id = ownerIds.Id
-	`,
+		) as ownerIds ON alerts._id = ownerIds.Id`,
 
   sqlAlias: `AlOwCube`,
 
@@ -34,16 +33,7 @@ cube(`AlertsByOwnersCube`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {
-    Users: {
-      relationship: `belongsTo`,
-      sql: `${CUBE.owners} = ${Users._id}`,
-    },
-    AlertStatusCube: {
-      relationship: `belongsTo`,
-      sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1`,
-    },
-  },
+  joins: {},
 
   preAggregations: {
     alertsByUsersRollUp: {
@@ -54,43 +44,13 @@ cube(`AlertsByOwnersCube`, {
       measures: [AlertsByOwnersCube.count],
       dimensions: [
         AlertsByOwnersCube.tenantId,
-        Users.fullName,
-        Users._id,
+        AlertsByOwnersCube.ownerId,
         AlertsByOwnersCube.alertCategory,
-        AlertStatusCube.statusId,
-        AlertStatusCube.statusName,
-      ],
-      timeDimension: AlertsByOwnersCube.created,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`,
-      },
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
-    },
-    alertsOwnersRollUp: {
-      sqlAlias: "alByAppRP",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [
-        AlertsByOwnersCube.count,
-        AlertsByOwnersCube.open,
-        AlertsByOwnersCube.closed,
-        AlertsByOwnersCube.total,
-      ],
-      dimensions: [
-        AlertsByOwnersCube.tenantId,
-        Users.fullName,
-        Users._id,
+        AlertsByOwnersCube.statusId,
         AlertsByOwnersCube.docStatus,
       ],
       timeDimension: AlertsByOwnersCube.created,
-      granularity: `day`,
+      granularity: `second`,
       buildRangeStart: {
         sql: `SELECT NOW() - interval '365 day'`,
       },
@@ -105,23 +65,8 @@ cube(`AlertsByOwnersCube`, {
 
   measures: {
     count: {
-      sql: `NOT ${AlertStatusCube}.isExcluded`,
-      type: `sum`,
-      title: "open",
-    },
-    open: {
-      sql: `NOT ${AlertStatusCube}.isTerminal`,
-      type: `sum`,
-      title: "open",
-    },
-    closed: {
-      sql: `${AlertStatusCube}.isTerminal `,
-      type: `sum`,
-      title: "closed",
-    },
-    total: {
-      sql: `${open} + ${closed}`,
-      type: `number`,
+      type: `count`,
+      drillMembers: [_id],
     },
   },
 
@@ -131,8 +76,12 @@ cube(`AlertsByOwnersCube`, {
       type: `string`,
       primaryKey: true,
     },
-    status: {
+    statusId: {
       sql: `${CUBE}.\`status\``,
+      type: `string`,
+    },
+    ownerId: {
+      sql: `${CUBE}.\`owners\``,
       type: `string`,
     },
     tenantId: {
@@ -151,11 +100,6 @@ cube(`AlertsByOwnersCube`, {
       sql: `${CUBE}.\`alertCategory\``,
       type: `string`,
       title: `Alert Category`,
-    },
-    owners: {
-      sql: `owners`,
-      type: `string`,
-      title: `owners`,
     },
     docStatus: {
       sql: `${CUBE}.\`docStatus\``,

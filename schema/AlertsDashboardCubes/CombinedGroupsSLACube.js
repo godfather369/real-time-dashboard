@@ -79,7 +79,7 @@ cube(`combinedGroupsSLA`, {
         combinedGroupsSLA.docStatus,
       ],
       timeDimension: combinedGroupsSLA.created,
-      granularity: `day`,
+      granularity: `second`,
       buildRangeStart: {
         sql: `SELECT NOW() - interval '365 day'`,
       },

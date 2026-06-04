@@ -43,16 +43,7 @@ cube(`AlertsByGrpIds`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {
-    Jurisdiction: {
-      relationship: `hasOne`,
-      sql: `${CUBE.jurisdiction} = ${Jurisdiction.jurisdictionId}`,
-    },
-    AlertStatusCube: {
-      relationship: `belongsTo`,
-      sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1 AND ${AlertStatusCube.isExcluded} = 0`,
-    },
-  },
+  joins: {},
 
   preAggregations: {
     alertsByJurisdictionMdRollUp: {
@@ -60,31 +51,17 @@ cube(`AlertsByGrpIds`, {
       type: `rollup`,
       external: true,
       scheduledRefresh: true,
-      measures: [
-        AlertsByGrpIds.introducedDocStatus,
-        AlertsByGrpIds.originDocStatus,
-        AlertsByGrpIds.secondBodyStatus,
-        AlertsByGrpIds.sentForSignatureStatus,
-        AlertsByGrpIds.diedStatus,
-        AlertsByGrpIds.becameLawStatus,
-        AlertsByGrpIds.statuteStatus,
-        AlertsByGrpIds.regulationStatus,
-        AlertsByGrpIds.ruleStatus,
-        AlertsByGrpIds.proposedRuleStatus,
-        AlertsByGrpIds.agencyUpdateStatus,
-      ],
+      measures: [AlertsByGrpIds.count],
       dimensions: [
         AlertsByGrpIds.tenantId,
-        Jurisdiction.displayName,
-        Jurisdiction.shortName,
-        Jurisdiction.jurisdictionId,
+        AlertsByGrpIds.jurisdiction,
+        AlertsByGrpIds.customDocStatus,
         AlertsByGrpIds.alertCategory,
-        AlertStatusCube.statusId,
-        AlertStatusCube.statusName,
+        AlertsByGrpIds.status,
         AlertsByGrpIds.MDiD,
       ],
       timeDimension: AlertsByGrpIds.publishedDate,
-      granularity: `day`,
+      granularity: `second`,
       buildRangeStart: {
         sql: `SELECT NOW() - interval '365 day'`,
       },
@@ -102,119 +79,6 @@ cube(`AlertsByGrpIds`, {
       sql: `_id`,
       type: `count`,
       title: `Count`,
-    },
-    introducedDocStatus: {
-      sql: `docStatus`,
-      type: `count`,
-      filters: [
-        {
-          sql: `${CUBE}.docStatus = 'Introduced'`,
-        },
-      ],
-    },
-    originDocStatus: {
-      sql: `docStatus`,
-      type: `count`,
-      filters: [
-        {
-          sql: `${CUBE}.docStatus = 'Passed Body of Origin'`,
-        },
-      ],
-    },
-    secondBodyStatus: {
-      sql: `docStatus`,
-      type: `count`,
-      filters: [
-        {
-          sql: `${CUBE}.docStatus = 'Passed Second Body'`,
-        },
-      ],
-    },
-    sentForSignatureStatus: {
-      sql: `docStatus`,
-      type: `count`,
-      filters: [
-        {
-          sql: `${CUBE}.docStatus = 'Sent for Signature'`,
-        },
-      ],
-    },
-    diedStatus: {
-      sql: `docStatus`,
-      type: `count`,
-      filters: [
-        {
-          sql: `${CUBE}.docStatus = 'Died'`,
-        },
-      ],
-    },
-    becameLawStatus: {
-      sql: `docStatus`,
-      type: `count`,
-      filters: [
-        {
-          sql: `${CUBE}.docStatus = 'Became Law'`,
-        },
-      ],
-    },
-    statuteStatus: {
-      sql: `docStatus`,
-      type: `count`,
-      filters: [
-        {
-          sql: `${CUBE}.docStatus = 'Statute'`,
-        },
-      ],
-    },
-    regulationStatus: {
-      sql: `docStatus`,
-      type: `count`,
-      filters: [
-        {
-          sql: `${CUBE}.docStatus = 'Regulation'`,
-        },
-      ],
-    },
-    ruleStatus: {
-      sql: `docStatus`,
-      type: `count`,
-      filters: [
-        {
-          sql: `${CUBE}.docStatus = 'Rule' AND ${CUBE}.alertCategory = 'Laws & Regulations'`,
-        },
-      ],
-    },
-    proposedRuleStatus: {
-      sql: `docStatus`,
-      type: `count`,
-      filters: [
-        {
-          sql: `${CUBE}.docStatus = 'Proposed Rule' AND ${CUBE}.alertCategory = 'Laws & Regulations'`,
-        },
-      ],
-    },
-    agencyUpdateStatus: {
-      sql: `docStatus`,
-      type: `count`,
-      filters: [
-        {
-          sql: `${CUBE}.alertCategory = 'News & Publications'`,
-        },
-      ],
-    },
-    totalCount: {
-      sql: `${introducedDocStatus}+
-        ${originDocStatus}+
-        ${secondBodyStatus}+
-        ${sentForSignatureStatus}+
-        ${diedStatus}+
-        ${becameLawStatus}+
-        ${statuteStatus}+
-        ${regulationStatus}+
-        ${ruleStatus}+
-        ${proposedRuleStatus}+
-        ${agencyUpdateStatus}`,
-      type: `number`,
     },
   },
 
@@ -255,6 +119,35 @@ cube(`AlertsByGrpIds`, {
       sql: `CONVERT(${CUBE}.\`MDiD\`,CHAR)`,
       type: `string`,
       title: `MDiD`,
+    },
+    customDocStatus: {
+      sql: `
+      CASE
+        WHEN ${CUBE}.docStatus = 'Introduced' THEN 'Introduced'
+
+        WHEN ${CUBE}.docStatus = 'Passed Body of Origin' THEN 'Passed Body of Origin'
+
+        WHEN ${CUBE}.docStatus = 'Passed Second Body' THEN 'Passed Second Body'
+
+        WHEN ${CUBE}.docStatus = 'Sent for Signature' THEN 'Sent for Signature'
+
+        WHEN ${CUBE}.docStatus = 'Died' THEN 'Died'
+
+        WHEN ${CUBE}.docStatus = 'Became Law' THEN 'Became Law'
+
+        WHEN ${CUBE}.docStatus = 'Statute' THEN 'Statute'
+
+        WHEN ${CUBE}.docStatus = 'Regulation' THEN 'Regulation'
+
+        WHEN ${CUBE}.docStatus = 'Rule' AND ${CUBE}.alertCategory = 'Laws & Regulations' THEN 'Rule'
+
+        WHEN ${CUBE}.docStatus = 'Proposed Rule' AND ${CUBE}.alertCategory = 'Laws & Regulations' THEN 'Proposed Rule'
+
+        WHEN ${CUBE}.alertCategory = 'News & Publications' THEN 'Agency Update'
+
+      END
+    `,
+      type: "string",
     },
   },
 });

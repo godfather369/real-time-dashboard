@@ -1,14 +1,15 @@
+const {
+  securityContext: { tenantId: tenant_id },
+} = COMPILE_CONTEXT;
+
 import {
   impactAssessmentCollection,
   impactAssessmentOwnersCollection,
   regMapGenericCollection,
   alertsCollection,
 } from "./collections";
-import {
-  CUBE_REFRESH_KEY_TIME,
-  PRE_AGG_REFRESH_KEY_TIME,
-} from "./cube-constants";
-import { alertsActiveFilterSql } from "./sql-queries";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import { alertsActiveFilterSqlUnqualified } from "./sql-queries";
 
 cube(`ImpactsByOwnersCube`, {
   sql: `
@@ -19,21 +20,34 @@ cube(`ImpactsByOwnersCube`, {
 			impacts.startDate,
 			impacts.created,
 			ownerIds.owners,
-			${alertsCollection}.\`info.docStatus\` AS docStatus
-		FROM ${impactAssessmentCollection} AS impacts
-		INNER JOIN ${impactAssessmentOwnersCollection} AS ownerIds
+			alerts.docStatus
+		FROM (
+			SELECT _id, tenantId, status, startDate, created
+			FROM ${impactAssessmentCollection}
+			WHERE ${impactAssessmentCollection}.archived = 0
+				AND ${impactAssessmentCollection}.tenantId = "${tenant_id}"
+		) AS impacts
+		INNER JOIN (
+			SELECT _id, owners
+			FROM ${impactAssessmentOwnersCollection}
+		) AS ownerIds
 			ON impacts._id = ownerIds._id
-		INNER JOIN ${regMapGenericCollection} AS Maps
+		INNER JOIN (
+			SELECT srcObject, destObject, tenantId
+			FROM ${regMapGenericCollection}
+			WHERE ${regMapGenericCollection}.archived = 0
+				AND ${regMapGenericCollection}.tenantId = "${tenant_id}"
+				AND ${regMapGenericCollection}.srcType = "Alert"
+				AND ${regMapGenericCollection}.destType = "ImpactAssessment"
+		) AS Maps
 			ON impacts._id = Maps.destObject
-			AND impacts.tenantId = Maps.tenantId
-			AND Maps.archived = 0
-			AND Maps.srcType = "Alert"
-			AND Maps.destType = "ImpactAssessment"
-		INNER JOIN ${alertsCollection}
-			ON Maps.srcObject = ${alertsCollection}._id
-			AND Maps.tenantId = ${alertsCollection}.tenantId
-		WHERE impacts.archived = 0
-			AND ${alertsActiveFilterSql}
+		INNER JOIN (
+			SELECT _id, tenantId, \`info.docStatus\` AS docStatus
+			FROM ${alertsCollection}
+			WHERE tenantId = "${tenant_id}"
+				AND ${alertsActiveFilterSqlUnqualified}
+		) AS alerts
+			ON CAST(Maps.srcObject AS CHAR) = CAST(alerts._id AS CHAR)
 	`,
 
   sqlAlias: `IAOwCube`,
@@ -45,59 +59,8 @@ cube(`ImpactsByOwnersCube`, {
   joins: {
     Users: {
       relationship: `belongsTo`,
-      sql: `${CUBE.owners} = ${Users._id}`,
-    },
-  },
-
-  preAggregations: {
-    impactsByUsersRollUp: {
-      sqlAlias: "IAByUsrsRP",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [ImpactsByOwnersCube.count],
-      dimensions: [ImpactsByOwnersCube.tenantId, Users.fullName, Users._id],
-      timeDimension: ImpactsByOwnersCube.startDate,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`,
-      },
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
-    },
-    impactsOwnersRollUp: {
-      sqlAlias: "IAByAppRP",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [
-        ImpactsByOwnersCube.count,
-        ImpactsByOwnersCube.open,
-        ImpactsByOwnersCube.New,
-        ImpactsByOwnersCube.inProcess,
-        ImpactsByOwnersCube.closed,
-      ],
-      dimensions: [
-        ImpactsByOwnersCube.tenantId,
-        Users.fullName,
-        Users._id,
-        ImpactsByOwnersCube.docStatus,
-      ],
-      timeDimension: ImpactsByOwnersCube.created,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`,
-      },
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
+      sql: `CAST(${CUBE.owners} AS CHAR) = CAST(${Users._id} AS CHAR)
+				AND ${CUBE}.tenantId = ${Users}.tenantId`,
     },
   },
 

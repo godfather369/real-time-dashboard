@@ -75,7 +75,7 @@ cube(`EnforcementActionsCube`, {
         EnforcementActionsCube.tenantId,
       ],
       timeDimension: EnforcementActionsCube.effectiveDate,
-      granularity: `day`,
+      granularity: `second`,
       buildRangeStart: {
         sql: `SELECT NOW() - interval '365 day'`,
       },
@@ -100,7 +100,7 @@ cube(`EnforcementActionsCube`, {
         EnforcementActionsCube.tenantId,
       ],
       timeDimension: EnforcementActionsCube.effectiveDate,
-      granularity: `day`,
+      granularity: `second`,
       buildRangeStart: {
         sql: `SELECT NOW() - interval '365 day'`,
       },
@@ -124,7 +124,7 @@ cube(`EnforcementActionsCube`, {
         EnforcementActionsCube.tenantId,
       ],
       timeDimension: EnforcementActionsCube.effectiveDate,
-      granularity: `day`,
+      granularity: `second`,
       refreshKey: {
         every: PRE_AGG_REFRESH_KEY_TIME,
       },

@@ -44,7 +44,7 @@ cube(`ImpactsByTeamCube`, {
       measures: [ImpactsByTeamCube.count],
       dimensions: [ImpactsByTeamCube.tenantId, ImpactsByTeamCube.team],
       timeDimension: ImpactsByTeamCube.startDate,
-      granularity: `day`,
+      granularity: `second`,
       buildRangeStart: {
         sql: `SELECT NOW() - interval '90 day'`,
       },

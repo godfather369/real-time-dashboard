@@ -33,16 +33,7 @@ cube(`AlertsByAgencyCube`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {
-    Agency: {
-      relationship: `belongsTo`,
-      sql: `${CUBE.agencyMap} = ${Agency._id}`,
-    },
-    AlertStatusCube: {
-      relationship: `belongsTo`,
-      sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1 AND ${AlertStatusCube.isExcluded} = 0`,
-    },
-  },
+  joins: {},
 
   preAggregations: {
     alertsByAgenciesRollUp: {
@@ -54,14 +45,11 @@ cube(`AlertsByAgencyCube`, {
       dimensions: [
         AlertsByAgencyCube.tenantId,
         AlertsByAgencyCube.alertCategory,
-        AlertStatusCube.statusId,
-        AlertStatusCube.statusName,
-        AlertsByAgencyCube.agencyMap,
-        Agency.agencyNames,
-        Agency.shortCode,
+        AlertsByAgencyCube.status,
+        AlertsByAgencyCube.agencyId,
       ],
       timeDimension: AlertsByAgencyCube.publishedDate,
-      granularity: `day`,
+      granularity: `second`,
       buildRangeStart: {
         sql: `SELECT NOW() - interval '365 day'`,
       },
@@ -104,10 +92,10 @@ cube(`AlertsByAgencyCube`, {
       type: `string`,
       title: `Alert Category`,
     },
-    agencyMap: {
+    agencyId: {
       sql: `agencyMap`,
       type: `string`,
-      title: `agencyMap`,
+      title: `Agency ID`,
     },
   },
 

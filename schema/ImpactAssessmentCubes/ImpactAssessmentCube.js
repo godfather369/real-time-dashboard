@@ -37,7 +37,7 @@ cube(`ImpactAssessmentCube`, {
       ],
       dimensions: [ImpactAssessmentCube.tenantId],
       timeDimension: ImpactAssessmentCube.startDate,
-      granularity: `day`,
+      granularity: `second`,
       buildRangeStart: {
         sql: `SELECT NOW() - interval '365 day'`,
       },

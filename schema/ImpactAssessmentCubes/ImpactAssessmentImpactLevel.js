@@ -51,7 +51,7 @@ cube(`ImpactsByLevelCube`, {
       measures: [ImpactAssessmentCube.count],
       dimensions: [ImpactsByLevelCube.impactLevel, ImpactsByLevelCube.tenantId],
       timeDimension: ImpactAssessmentCube.startDate,
-      granularity: `day`,
+      granularity: `second`,
       buildRangeStart: {
         sql: `SELECT NOW() - interval '365 day'`,
       },
