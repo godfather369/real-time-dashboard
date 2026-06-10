@@ -12,7 +12,34 @@ import { MY_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 import { alertsActiveFilterSql } from "./sql-queries";
 
 cube(`MyAlerts`, {
-  sql: `SELECT * FROM ((SELECT _id as UId FROM ${alertsUsersCollection} WHERE ${alertsUsersCollection}.owners="${userId}") UNION SELECT GId as UId FROM (SELECT functionalRole FROM ${groupsOfUserCollection} WHERE ${groupsOfUserCollection}._id="${userId}") as userGroups INNER JOIN (SELECT _id as GId , groups FROM ${alertsGroupsCollection}) as groupIds ON groupIds.groups = userGroups.functionalRole) as Users INNER JOIN (SELECT _id, alertCategory, publishedDate, tenantId, status FROM ${alertsCollection} WHERE ${alertsActiveFilterSql}) as alerts ON alerts._id=Users.UId`,
+  sql: `
+    SELECT alerts._id, alerts.alertCategory, alerts.publishedDate, alerts.tenantId, alerts.status
+    FROM (
+      SELECT _id AS UId
+      FROM ${alertsUsersCollection}
+      WHERE ${alertsUsersCollection}.owners = "${userId}"
+
+      UNION
+
+      SELECT groupIds._id AS UId
+      FROM (
+        SELECT functionalRole
+        FROM ${groupsOfUserCollection}
+        WHERE ${groupsOfUserCollection}._id = "${userId}"
+      ) AS userGroups
+      INNER JOIN (
+        SELECT _id, groups
+        FROM ${alertsGroupsCollection}
+      ) AS groupIds
+        ON groupIds.groups = userGroups.functionalRole
+    ) AS Users
+    INNER JOIN (
+      SELECT _id, alertCategory, publishedDate, tenantId, status
+      FROM ${alertsCollection}
+      WHERE ${alertsActiveFilterSql}
+    ) AS alerts
+      ON alerts._id = Users.UId
+  `,
   sqlAlias: `myAl`,
 
   refreshKey: {

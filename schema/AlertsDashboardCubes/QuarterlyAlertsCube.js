@@ -8,34 +8,26 @@ import { alertsActiveFilterSql } from "./sql-queries";
 
 cube("QuarterlyAlertsCube", {
   sql: `
-    SELECT 
-      _id, 
-      status, 
-      docStatus, 
-      created, 
-      tenantId, 
-      destObject 
+    SELECT
+      alerts._id,
+      alerts.status,
+      alerts.docStatus,
+      alerts.created,
+      alerts.tenantId,
+      Maps.destObject
     FROM (
-      SELECT 
-        _id, 
-        status, 
-        \`info.docStatus\` as docStatus, 
-        created, 
-        tenantId 
-      FROM ${alertsCollection} 
+      SELECT _id, status, \`info.docStatus\` AS docStatus, created, tenantId
+      FROM ${alertsCollection}
       WHERE ${alertsActiveFilterSql}
-    ) as alerts 
+    ) AS alerts
     LEFT JOIN (
-      SELECT 
-        srcObject, 
-        destObject, 
-        tenantId as tntId 
-      FROM ${regMapGenericCollection} 
-      WHERE ${regMapGenericCollection}.archived = 0 
-        AND ${regMapGenericCollection}.destType = "ImpactAssessment" 
+      SELECT srcObject, destObject, tenantId AS tntId
+      FROM ${regMapGenericCollection}
+      WHERE ${regMapGenericCollection}.archived = 0
+        AND ${regMapGenericCollection}.destType = "ImpactAssessment"
         AND ${regMapGenericCollection}.srcType = "Alert"
-    ) as Maps 
-      ON alerts._id = Maps.srcObject 
+    ) AS Maps
+      ON alerts._id = Maps.srcObject
       AND alerts.tenantId = Maps.tntId
   `,
 

@@ -8,7 +8,10 @@ import {
   regMapGenericCollection,
   alertsCollection,
 } from "./collections";
-import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import {
+  CUBE_REFRESH_KEY_TIME,
+  PRE_AGG_REFRESH_KEY_TIME,
+} from "./cube-constants";
 import { alertsActiveFilterSqlUnqualified } from "./sql-queries";
 
 cube(`ImpactsByGroupCube`, {
@@ -33,7 +36,7 @@ cube(`ImpactsByGroupCube`, {
 		) AS groupIds
 			ON impacts._id = groupIds._id
 		INNER JOIN (
-			SELECT srcObject, destObject, tenantId
+			SELECT srcObject, destObject
 			FROM ${regMapGenericCollection}
 			WHERE ${regMapGenericCollection}.archived = 0
 				AND ${regMapGenericCollection}.srcType = "Alert"
@@ -42,12 +45,12 @@ cube(`ImpactsByGroupCube`, {
 		) AS Maps
 			ON impacts._id = Maps.destObject
 		INNER JOIN (
-			SELECT _id, tenantId, \`info.docStatus\` AS docStatus
+			SELECT _id, \`info.docStatus\` AS docStatus
 			FROM ${alertsCollection}
 			WHERE tenantId = "${tenant_id}"
 				AND ${alertsActiveFilterSqlUnqualified}
 		) AS alerts
-			ON CAST(Maps.srcObject AS CHAR) = CAST(alerts._id AS CHAR)
+			ON Maps.srcObject = alerts._id
 	`,
 
   sqlAlias: `IAGrCube`,
@@ -61,6 +64,39 @@ cube(`ImpactsByGroupCube`, {
       relationship: `belongsTo`,
       sql: `CAST(${CUBE.groups} AS CHAR) = CAST(${Groups._id} AS CHAR)
 				AND ${CUBE}.tenantId = ${Groups}.tenantId`,
+    },
+  },
+
+  preAggregations: {
+    impactsGroupsRollUp: {
+      sqlAlias: "IAByAppRP",
+      type: `rollup`,
+      external: true,
+      scheduledRefresh: true,
+      measures: [
+        ImpactsByGroupCube.count,
+        ImpactsByGroupCube.open,
+        ImpactsByGroupCube.New,
+        ImpactsByGroupCube.inProcess,
+        ImpactsByGroupCube.closed,
+      ],
+      dimensions: [
+        ImpactsByGroupCube.tenantId,
+        Groups.name,
+        Groups._id,
+        ImpactsByGroupCube.docStatus,
+      ],
+      timeDimension: ImpactsByGroupCube.created,
+      granularity: `second`,
+      buildRangeStart: {
+        sql: `SELECT NOW() - interval '365 day'`,
+      },
+      buildRangeEnd: {
+        sql: `SELECT NOW()`,
+      },
+      refreshKey: {
+        every: PRE_AGG_REFRESH_KEY_TIME,
+      },
     },
   },
 

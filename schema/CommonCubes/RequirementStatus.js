@@ -6,25 +6,13 @@ import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`RequirementStatus`, {
   sql: `
-    SELECT 
-      _id, 
-      tenantId, 
-      statusId, 
-      statusName 
-    FROM (
-      SELECT 
-        _id, 
-        tenantId 
-      FROM ${regConfigCollection}
-    ) as config 
+    SELECT config._id, config.tenantId, requirementConfig.statusId, requirementConfig.statusName
+    FROM ${regConfigCollection} AS config
     INNER JOIN (
-      SELECT 
-        _id as ID, 
-        \`status.requirement.id\` as statusId, 
-        \`status.requirement.name\` as statusName 
+      SELECT _id AS ID, \`status.requirement.id\` AS statusId, \`status.requirement.name\` AS statusName
       FROM ${requirementsByStatusCollection}
-    ) as requirementConfig 
-    ON requirementConfig.ID = config._id
+    ) AS requirementConfig
+      ON requirementConfig.ID = config._id
   `,
 
   sqlAlias: `ReSt`,

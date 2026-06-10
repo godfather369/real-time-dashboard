@@ -5,40 +5,42 @@ import { tasksCollection, regMapStatusCollection, tasksOwnersCollection, tasksGr
 import { MY_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`MyTasks`, {
-	sql: `SELECT *
+	sql: `
+		SELECT tasks._id, tasks.tenantId, tasks.dueDate, status.status
+		FROM (
+			SELECT _id AS uid
+			FROM ${tasksOwnersCollection}
+			WHERE ${tasksOwnersCollection}.owners = "${userId}"
+
+			UNION
+
+			SELECT groupIds._id AS uid
 			FROM (
-					(
-						SELECT _id AS uid
-						FROM ${tasksOwnersCollection}
-						WHERE ${tasksOwnersCollection}.owners = "${userId}"
-					)
-					UNION
-					SELECT gid AS uid
-					FROM (
-							SELECT functionalrole
-							FROM ${groupsOfUserCollection}
-							WHERE ${groupsOfUserCollection}._id = "${userId}"
-						) AS usergroups
-					INNER JOIN (
-							SELECT _id AS gid, groups
-							FROM ${tasksGroupsCollection}
-						) AS groupids
-					ON groupids.groups = usergroups.functionalrole
-				) AS users
-			LEFT JOIN (
-					SELECT _id, tenantid, duedate
-					FROM ${tasksCollection}
-					WHERE ${tasksCollection}.archived = 0
-				) AS tasks
+				SELECT functionalRole
+				FROM ${groupsOfUserCollection}
+				WHERE ${groupsOfUserCollection}._id = "${userId}"
+			) AS userGroups
+			INNER JOIN (
+				SELECT _id, groups
+				FROM ${tasksGroupsCollection}
+			) AS groupIds
+				ON groupIds.groups = userGroups.functionalRole
+		) AS users
+		INNER JOIN (
+			SELECT _id, tenantId, dueDate
+			FROM ${tasksCollection}
+			WHERE ${tasksCollection}.archived = 0
+		) AS tasks
 			ON tasks._id = users.uid
-			LEFT JOIN (
-					SELECT srcobject, status, tenantid AS tntid
-					FROM ${regMapStatusCollection}
-					WHERE ${regMapStatusCollection}.srctype = "Task"
-					AND ${regMapStatusCollection}.archived = 0
-				) AS status
-			ON status.srcobject = tasks._id
-			AND status.tntid = tasks.tenantid;`,
+		LEFT JOIN (
+			SELECT srcObject, status, tenantId AS tntId
+			FROM ${regMapStatusCollection}
+			WHERE ${regMapStatusCollection}.srcType = "Task"
+				AND ${regMapStatusCollection}.archived = 0
+		) AS status
+			ON status.srcObject = tasks._id
+			AND status.tntId = tasks.tenantId
+	`,
 
 	sqlAlias: `MyTaCube`,
 

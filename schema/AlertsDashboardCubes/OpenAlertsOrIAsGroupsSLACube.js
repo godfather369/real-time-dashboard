@@ -14,8 +14,17 @@ import { alertsActiveFilterSqlUnqualified } from "./sql-queries";
 
 cube(`OpenAlertsOrIAsGroupsSLA`, {
   sql: `
-    SELECT * FROM (
-      SELECT 
+    SELECT
+      OpenAlertsOrIAs._id,
+      OpenAlertsOrIAs.groups,
+      OpenAlertsOrIAs.status,
+      OpenAlertsOrIAs.docStatus,
+      OpenAlertsOrIAs.created,
+      OpenAlertsOrIAs.tenantId,
+      OpenAlertsOrIAs.impactStatus,
+      regChangeConfig.isTerminal
+    FROM (
+      SELECT
         alerts._id,
         grp.groups,
         alerts.status,
@@ -26,7 +35,7 @@ cube(`OpenAlertsOrIAsGroupsSLA`, {
       FROM (
         SELECT _id, status, \`info.docStatus\` AS docStatus, created, tenantId
         FROM ${alertsCollection}
-        Where ${alertsActiveFilterSqlUnqualified}
+        WHERE ${alertsActiveFilterSqlUnqualified}
       ) AS alerts
       INNER JOIN ${alertsGroupsCollection} grp
         ON alerts._id = grp._id
@@ -40,20 +49,18 @@ cube(`OpenAlertsOrIAsGroupsSLA`, {
         ON impacts._id = maps.destObject
         AND impacts.tenantId = maps.tenantId
       WHERE maps.destObject IS NULL OR impacts._id IS NOT NULL
-    ) as OpenAlertsOrIAs
+    ) AS OpenAlertsOrIAs
     LEFT JOIN (
-      SELECT tenantId as configTenantId, statusId, statusName, isTerminal FROM 
-        ( SELECT _id, tenantId FROM ${regConfigCollection} ) as Config 
-        INNER JOIN
-        (
-        SELECT 
-            _id as configId,
-            \`status.regChange.id\` as statusId, 
-            \`status.regChange.isTerminal\` as isTerminal,
-            \`status.regChange.name\` as statusName
-          FROM ${alertsByStatusCollection}
-        ) as alertsStatusConfig ON alertsStatusConfig.configId = Config._id
-      ) as regChangeConfig ON OpenAlertsOrIAs.tenantId = regChangeConfig.configTenantId AND OpenAlertsOrIAs.status = regChangeConfig.statusId
+      SELECT Config.tenantId AS configTenantId, alertsStatusConfig.statusId, alertsStatusConfig.isTerminal
+      FROM ${regConfigCollection} AS Config
+      INNER JOIN (
+        SELECT _id AS configId, \`status.regChange.id\` AS statusId, \`status.regChange.isTerminal\` AS isTerminal
+        FROM ${alertsByStatusCollection}
+      ) AS alertsStatusConfig
+        ON alertsStatusConfig.configId = Config._id
+    ) AS regChangeConfig
+      ON OpenAlertsOrIAs.tenantId = regChangeConfig.configTenantId
+      AND OpenAlertsOrIAs.status = regChangeConfig.statusId
   `,
 
   sqlAlias: `openGrpsSLA`,

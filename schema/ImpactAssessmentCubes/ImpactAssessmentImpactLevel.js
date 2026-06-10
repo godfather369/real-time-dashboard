@@ -9,24 +9,19 @@ import {
 
 cube(`ImpactsByLevelCube`, {
   sql: `
-		SELECT 
-			impLevelId, 
-			impLevel, 
-			tenantId 
-		FROM (
-			SELECT 
-				_id as configId, 
-				tenantId 
-			FROM ${regConfigCollection}
-		) as config 
+		SELECT
+			impLevelConfig.impLevelId,
+			impLevelConfig.impLevel,
+			config.tenantId
+		FROM ${regConfigCollection} AS config
 		INNER JOIN (
-			SELECT 
-				_id as impLevel_Id, 
-				\`impactAssessment.extensions.fields.IMPACT_LEVEL.allowed_values.id\` as impLevelId, 
-				\`impactAssessment.extensions.fields.IMPACT_LEVEL.allowed_values.name\` as impLevel  
+			SELECT
+				_id AS impLevel_Id,
+				\`impactAssessment.extensions.fields.IMPACT_LEVEL.allowed_values.id\` AS impLevelId,
+				\`impactAssessment.extensions.fields.IMPACT_LEVEL.allowed_values.name\` AS impLevel
 			FROM ${impactAssessmentImpactLevelCollection}
-		) as impLevelConfig 
-		ON impLevelConfig.impLevel_Id = config.configId
+		) AS impLevelConfig
+			ON impLevelConfig.impLevel_Id = config._id
 	`,
 
   sqlAlias: `ImpByLevel`,

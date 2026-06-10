@@ -8,7 +8,7 @@
   "template": "docker",
   "templateVersion": "0.28.67",
   "devDependencies": {
-    "@cubejs-backend/mongobi-driver": "^0.29.37",
-    "@cubejs-backend/server": "^0.29.42"
+    "@cubejs-backend/mongobi-driver": "1.5.15",
+    "@cubejs-backend/server": "1.5.15"
   }
 }

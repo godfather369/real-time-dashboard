@@ -11,52 +11,28 @@ import {
 
 cube(`ControlsCube`, {
   sql: `
-		SELECT 
-			_id, 
-			statusId, 
-			statusName, 
-			tenantId 
-		FROM (
-			SELECT 
-				_id, 
-				status, 
-				tenantId 
-			FROM (
-				SELECT 
-					_id, 
-					tenantId 
-				FROM ${controlsCollection} 
-				WHERE ${controlsCollection}.archived = 0
-			) AS controls 
-			INNER JOIN (
-				SELECT 
-					status, 
-					srcObject 
-				FROM ${regMapStatusCollection} 
-				WHERE ${regMapStatusCollection}.srcType = "Control" 
-					AND ${regMapStatusCollection}.archived = 0
-			) AS mapStatus ON controls._id = mapStatus.srcObject
-		) AS controlStatus 
+		SELECT
+			controls._id,
+			configStatus.statusId,
+			configStatus.statusName,
+			controls.tenantId
+		FROM ${controlsCollection} AS controls
 		INNER JOIN (
-			SELECT 
-				tenantId AS tenant, 
-				statusId, 
-				statusName 
-			FROM (
-				SELECT 
-					_id, 
-					tenantId 
-				FROM ${regConfigCollection}
-			) AS config 
-			INNER JOIN (
-				SELECT 
-					_id AS ID, 
-					\`status.control.id\` AS statusId, 
-					\`status.control.name\` AS statusName  
-				FROM ${controlByStatusCollection}
-			) AS configStatus ON config._id = configStatus.ID
-		) AS controlConfig ON controlConfig.tenant = controlStatus.tenantId 
-			AND controlConfig.statusId = controlStatus.status
+			SELECT status, srcObject
+			FROM ${regMapStatusCollection}
+			WHERE ${regMapStatusCollection}.srcType = "Control"
+				AND ${regMapStatusCollection}.archived = 0
+		) AS mapStatus
+			ON controls._id = mapStatus.srcObject
+		INNER JOIN ${regConfigCollection} AS config
+			ON config.tenantId = controls.tenantId
+		INNER JOIN (
+			SELECT _id AS ID, \`status.control.id\` AS statusId, \`status.control.name\` AS statusName
+			FROM ${controlByStatusCollection}
+		) AS configStatus
+			ON config._id = configStatus.ID
+			AND configStatus.statusId = mapStatus.status
+		WHERE controls.archived = 0
 	`,
 
   sqlAlias: `ConCube`,

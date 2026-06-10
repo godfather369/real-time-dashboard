@@ -12,52 +12,33 @@ import { alertsActiveFilterSql } from "./sql-queries";
 
 cube("QuarterlyAlertsByGroups", {
   sql: `
-      SELECT 
-        _id, 
-        status, 
-        docStatus, 
-        created, 
-        groups, 
-        tenantId, 
-        destObject 
+      SELECT
+        alerts._id,
+        alerts.status,
+        alerts.docStatus,
+        alerts.created,
+        groupAlerts.groups,
+        alerts.tenantId,
+        Maps.destObject
       FROM (
-        SELECT 
-          _id, 
-          status, 
-          docStatus, 
-          created, 
-          tenantId, 
-          groups 
-        FROM (
-          SELECT 
-            _id, 
-            status, 
-            \`info.docStatus\` as docStatus, 
-            created, 
-            tenantId 
-          FROM ${alertsCollection} 
-          WHERE ${alertsActiveFilterSql}
-        ) as alerts
-        INNER JOIN (
-          SELECT 
-            _id as grpAlertId, 
-            groups 
-          FROM ${alertsGroupsCollection}
-        ) as groupAlerts
+        SELECT _id, status, \`info.docStatus\` AS docStatus, created, tenantId
+        FROM ${alertsCollection}
+        WHERE ${alertsActiveFilterSql}
+      ) AS alerts
+      INNER JOIN (
+        SELECT _id AS grpAlertId, groups
+        FROM ${alertsGroupsCollection}
+      ) AS groupAlerts
         ON groupAlerts.grpAlertId = alerts._id
-      ) as alertsbygrps 
       LEFT JOIN (
-        SELECT 
-          srcObject, 
-          destObject, 
-          tenantId as tntId 
-        FROM ${regMapGenericCollection} 
-        WHERE ${regMapGenericCollection}.archived = 0 
-          AND ${regMapGenericCollection}.destType = "ImpactAssessment" 
+        SELECT srcObject, destObject, tenantId AS tntId
+        FROM ${regMapGenericCollection}
+        WHERE ${regMapGenericCollection}.archived = 0
+          AND ${regMapGenericCollection}.destType = "ImpactAssessment"
           AND ${regMapGenericCollection}.srcType = "Alert"
-      ) as Maps 
-      ON alertsbygrps._id = Maps.srcObject 
-      AND alertsbygrps.tenantId = Maps.tntId
+      ) AS Maps
+        ON alerts._id = Maps.srcObject
+        AND alerts.tenantId = Maps.tntId
     `,
 
   sqlAlias: "QAlByGrps",

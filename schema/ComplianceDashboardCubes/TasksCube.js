@@ -11,55 +11,29 @@ import {
 
 cube(`TasksCube`, {
   sql: `
-		SELECT 
-			_id, 
-			statusId, 
-			statusName, 
-			tenantId, 
-			dueDate 
-		FROM (
-			SELECT 
-				_id, 
-				status, 
-				tenantId, 
-				dueDate 
-			FROM (
-				SELECT 
-					_id, 
-					tenantId, 
-					dueDate 
-				FROM ${tasksCollection} 
-				WHERE ${tasksCollection}.archived = 0
-			) AS tasks 
-			INNER JOIN (
-				SELECT 
-					status, 
-					srcObject 
-				FROM ${regMapStatusCollection} 
-				WHERE ${regMapStatusCollection}.srcType = "Task" 
-					AND ${regMapStatusCollection}.archived = 0
-			) AS mapStatus ON tasks._id = mapStatus.srcObject
-		) AS taskStatus 
+		SELECT
+			tasks._id,
+			configStatus.statusId,
+			configStatus.statusName,
+			tasks.tenantId,
+			tasks.dueDate
+		FROM ${tasksCollection} AS tasks
 		INNER JOIN (
-			SELECT 
-				tenantId AS tenant, 
-				statusId, 
-				statusName 
-			FROM (
-				SELECT 
-					_id, 
-					tenantId 
-				FROM ${regConfigCollection}
-			) AS config 
-			INNER JOIN (
-				SELECT 
-					_id AS ID, 
-					\`status.task.id\` AS statusId, 
-					\`status.task.name\` AS statusName  
-				FROM ${tasksByStatusCollection}
-			) AS configStatus ON config._id = configStatus.ID
-		) AS taskConfig ON taskConfig.tenant = taskStatus.tenantId 
-			AND taskConfig.statusId = taskStatus.status
+			SELECT status, srcObject
+			FROM ${regMapStatusCollection}
+			WHERE ${regMapStatusCollection}.srcType = "Task"
+				AND ${regMapStatusCollection}.archived = 0
+		) AS mapStatus
+			ON tasks._id = mapStatus.srcObject
+		INNER JOIN ${regConfigCollection} AS config
+			ON config.tenantId = tasks.tenantId
+		INNER JOIN (
+			SELECT _id AS ID, \`status.task.id\` AS statusId, \`status.task.name\` AS statusName
+			FROM ${tasksByStatusCollection}
+		) AS configStatus
+			ON config._id = configStatus.ID
+			AND configStatus.statusId = mapStatus.status
+		WHERE tasks.archived = 0
 	`,
 
   sqlAlias: `TaCube`,

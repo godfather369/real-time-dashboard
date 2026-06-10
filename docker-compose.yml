@@ -1,16 +1,203 @@
-
-version: '2.2'
+version: "2.2"
 
 services:
-  cube:
-    image: cubejs/cube:v0.29.42
-    ports:
-      # It's better to use random port binding for 4000/3000 ports
-      # without it you will not able to start multiple projects inside docker
-      - 4000:4000  # Cube.js API and Developer Playground
-      - 3000:3000  # Dashboard app, if created
-    env_file: .env
+  ############################
+  # CubeStore Router
+  ############################
+  cubestore_router:
+    image: cubejs/cubestore:${CUBESTORE_VERSION}
+    restart: always
+    networks:
+      - webnet
+    environment:
+      CUBESTORE_SERVER_NAME: cubestore_router:9999
+      CUBESTORE_META_PORT: ${CUBESTORE_ROUTER_META_PORT}
+      CUBESTORE_WORKERS: ${CUBESTORE_WORKERS}
+      CUBESTORE_REMOTE_DIR: ${CUBESTORE_REMOTE_DIR}
+      CUBESTORE_LOG_LEVEL: DEBUG
     volumes:
+      - .cubestore:${CUBESTORE_REMOTE_DIR}
+
+  ############################
+  # CubeStore Workers
+  ############################
+  cubestore_worker_1:
+    image: cubejs/cubestore:${CUBESTORE_VERSION}
+    restart: always
+    networks: [webnet]
+    environment:
+      CUBESTORE_SERVER_NAME: cubestore_worker_1:9001
+      CUBESTORE_WORKER_PORT: ${CUBESTORE_WORKER_PORT}
+      CUBESTORE_META_ADDR: ${CUBESTORE_ROUTER_META_ADDR}
+      CUBESTORE_WORKERS: ${CUBESTORE_WORKERS}
+      CUBESTORE_REMOTE_DIR: ${CUBESTORE_REMOTE_DIR}
+    depends_on: [cubestore_router]
+    volumes:
+      - .cubestore:${CUBESTORE_REMOTE_DIR}
+
+  cubestore_worker_2:
+    image: cubejs/cubestore:${CUBESTORE_VERSION}
+    restart: always
+    networks: [webnet]
+    environment:
+      CUBESTORE_SERVER_NAME: cubestore_worker_2:9001
+      CUBESTORE_WORKER_PORT: ${CUBESTORE_WORKER_PORT}
+      CUBESTORE_META_ADDR: ${CUBESTORE_ROUTER_META_ADDR}
+      CUBESTORE_WORKERS: ${CUBESTORE_WORKERS}
+      CUBESTORE_REMOTE_DIR: ${CUBESTORE_REMOTE_DIR}
+    depends_on: [cubestore_router]
+    volumes:
+      - .cubestore:${CUBESTORE_REMOTE_DIR}
+
+  cubestore_worker_3:
+    image: cubejs/cubestore:${CUBESTORE_VERSION}
+    restart: always
+    networks: [webnet]
+    environment:
+      CUBESTORE_SERVER_NAME: cubestore_worker_3:9001
+      CUBESTORE_WORKER_PORT: ${CUBESTORE_WORKER_PORT}
+      CUBESTORE_META_ADDR: ${CUBESTORE_ROUTER_META_ADDR}
+      CUBESTORE_WORKERS: ${CUBESTORE_WORKERS}
+      CUBESTORE_REMOTE_DIR: ${CUBESTORE_REMOTE_DIR}
+    depends_on: [cubestore_router]
+    volumes:
+      - .cubestore:${CUBESTORE_REMOTE_DIR}
+
+  cubestore_worker_4:
+    image: cubejs/cubestore:${CUBESTORE_VERSION}
+    restart: always
+    networks: [webnet]
+    environment:
+      CUBESTORE_SERVER_NAME: cubestore_worker_4:9001
+      CUBESTORE_WORKER_PORT: ${CUBESTORE_WORKER_PORT}
+      CUBESTORE_META_ADDR: ${CUBESTORE_ROUTER_META_ADDR}
+      CUBESTORE_WORKERS: ${CUBESTORE_WORKERS}
+      CUBESTORE_REMOTE_DIR: ${CUBESTORE_REMOTE_DIR}
+    depends_on: [cubestore_router]
+    volumes:
+      - .cubestore:${CUBESTORE_REMOTE_DIR}
+
+  cubestore_worker_5:
+    image: cubejs/cubestore:${CUBESTORE_VERSION}
+    restart: always
+    networks: [webnet]
+    environment:
+      CUBESTORE_SERVER_NAME: cubestore_worker_5:9001
+      CUBESTORE_WORKER_PORT: ${CUBESTORE_WORKER_PORT}
+      CUBESTORE_META_ADDR: ${CUBESTORE_ROUTER_META_ADDR}
+      CUBESTORE_WORKERS: ${CUBESTORE_WORKERS}
+      CUBESTORE_REMOTE_DIR: ${CUBESTORE_REMOTE_DIR}
+    depends_on: [cubestore_router]
+    volumes:
+      - .cubestore:${CUBESTORE_REMOTE_DIR}
+
+  cubestore_worker_6:
+    image: cubejs/cubestore:${CUBESTORE_VERSION}
+    restart: always
+    networks: [webnet]
+    environment:
+      CUBESTORE_SERVER_NAME: cubestore_worker_6:9001
+      CUBESTORE_WORKER_PORT: ${CUBESTORE_WORKER_PORT}
+      CUBESTORE_META_ADDR: ${CUBESTORE_ROUTER_META_ADDR}
+      CUBESTORE_WORKERS: ${CUBESTORE_WORKERS}
+      CUBESTORE_REMOTE_DIR: ${CUBESTORE_REMOTE_DIR}
+    depends_on: [cubestore_router]
+    volumes:
+      - .cubestore:${CUBESTORE_REMOTE_DIR}
+
+  cubestore_worker_7:
+    image: cubejs/cubestore:${CUBESTORE_VERSION}
+    restart: always
+    networks: [webnet]
+    environment:
+      CUBESTORE_SERVER_NAME: cubestore_worker_7:9001
+      CUBESTORE_WORKER_PORT: ${CUBESTORE_WORKER_PORT}
+      CUBESTORE_META_ADDR: ${CUBESTORE_ROUTER_META_ADDR}
+      CUBESTORE_WORKERS: ${CUBESTORE_WORKERS}
+      CUBESTORE_REMOTE_DIR: ${CUBESTORE_REMOTE_DIR}
+    depends_on: [cubestore_router]
+    volumes:
+      - .cubestore:${CUBESTORE_REMOTE_DIR}
+
+  cubestore_worker_8:
+    image: cubejs/cubestore:${CUBESTORE_VERSION}
+    restart: always
+    networks: [webnet]
+    environment:
+      CUBESTORE_SERVER_NAME: cubestore_worker_8:9001
+      CUBESTORE_WORKER_PORT: ${CUBESTORE_WORKER_PORT}
+      CUBESTORE_META_ADDR: ${CUBESTORE_ROUTER_META_ADDR}
+      CUBESTORE_WORKERS: ${CUBESTORE_WORKERS}
+      CUBESTORE_REMOTE_DIR: ${CUBESTORE_REMOTE_DIR}
+    depends_on: [cubestore_router]
+    volumes:
+      - .cubestore:${CUBESTORE_REMOTE_DIR}
+
+  ############################
+  # Cube.js Refresh Worker
+  ############################
+  cube_refresh_worker:
+    image: cubejs/cube:${CUBEJS_VERSION}
+    restart: always
+    networks: [webnet]
+    environment:
+      CUBEJS_DB_HOST: ${CUBEJS_DB_HOST}
+      CUBEJS_DB_PORT: ${CUBEJS_DB_PORT}
+      CUBEJS_DB_USER: ${CUBEJS_DB_USER}
+      CUBEJS_DB_PASS: ${CUBEJS_DB_PASS}
+      CUBEJS_DB_NAME: ${CUBEJS_DB_NAME}
+      CUBEJS_DB_TYPE: ${CUBEJS_DB_TYPE}
+      CUBEJS_API_SECRET: ${CUBEJS_API_SECRET}
+      CUBEJS_DB_SSL: ${CUBEJS_DB_SSL}
+      CUBEJS_DB_SSL_REJECT_UNAUTHORIZED: ${CUBEJS_DB_SSL_REJECT_UNAUTHORIZED}
+      CUBEJS_DEV_MODE: ${CUBEJS_DEV_MODE}
+      CUBEJS_CACHE_AND_QUEUE_DRIVER: ${CUBEJS_CACHE_AND_QUEUE_DRIVER}
+      CUBEJS_REFRESH_WORKER: ${CUBEJS_REFRESH_WORKER}
+      CUBEJS_CUBESTORE_HOST: ${CUBEJS_CUBESTORE_HOST}
+      CUBEJS_CUBESTORE_PORT: ${CUBEJS_CUBESTORE_PORT}
+      CUBEJS_REFRESH_WORKER_CONCURRENCY: ${CUBEJS_REFRESH_WORKER_CONCURRENCY}
+      CUBEJS_DB_QUERY_TIMEOUT: 20m
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./schema:${CUBEJS_SCHEMAS_PATH}
       - .:/cube/conf
-      # We ignore Cube.js deps, because they are built-in inside the official Docker image
-      - .empty:/cube/conf/node_modules/@cubejs-backend/
+
+  ############################
+  # Cube.js API
+  ############################
+  cube:
+    image: cubejs/cube:${CUBEJS_VERSION}
+    restart: always
+    ports:
+      - "4000:4000"
+    networks:
+      - webnet
+    environment:
+      CUBEJS_DB_HOST: ${CUBEJS_DB_HOST}
+      CUBEJS_DB_PORT: ${CUBEJS_DB_PORT}
+      CUBEJS_DB_USER: ${CUBEJS_DB_USER}
+      CUBEJS_DB_PASS: ${CUBEJS_DB_PASS}
+      CUBEJS_DB_NAME: ${CUBEJS_DB_NAME}
+      CUBEJS_DB_TYPE: ${CUBEJS_DB_TYPE}
+      CUBEJS_API_SECRET: ${CUBEJS_API_SECRET}
+      CUBEJS_DB_SSL: ${CUBEJS_DB_SSL}
+      CUBEJS_DB_SSL_REJECT_UNAUTHORIZED: ${CUBEJS_DB_SSL_REJECT_UNAUTHORIZED}
+      CUBEJS_DEV_MODE: ${CUBEJS_DEV_MODE}
+      CUBEJS_LOG_LEVEL: ${CUBEJS_LOG_LEVEL}
+      CUBEJS_CACHE_AND_QUEUE_DRIVER: ${CUBEJS_CACHE_AND_QUEUE_DRIVER}
+      CUBEJS_CUBESTORE_HOST: ${CUBEJS_CUBESTORE_HOST}
+      CUBEJS_CUBESTORE_PORT: ${CUBEJS_CUBESTORE_PORT}
+      CUBEJS_SCHEMA_PATH: ${CUBEJS_SCHEMA_PATH}
+      CUBEJS_DEFAULT_API_SCOPES: ${CUBEJS_DEFAULT_API_SCOPES}
+      MONGOHQ_URL: ${MONGOHQ_URL}
+      CUBEJS_DB_QUERY_TIMEOUT: 20m
+    depends_on:
+      - cubestore_router
+    volumes:
+      - ./schema:${CUBEJS_SCHEMAS_PATH}
+      - .:/cube/conf
+
+networks:
+  webnet:
+    driver: bridge

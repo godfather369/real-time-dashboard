@@ -8,7 +8,10 @@ import {
   regMapGenericCollection,
   alertsCollection,
 } from "./collections";
-import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
+import {
+  CUBE_REFRESH_KEY_TIME,
+  PRE_AGG_REFRESH_KEY_TIME,
+} from "./cube-constants";
 import { alertsActiveFilterSqlUnqualified } from "./sql-queries";
 
 cube(`ImpactsByOwnersCube`, {
@@ -33,7 +36,7 @@ cube(`ImpactsByOwnersCube`, {
 		) AS ownerIds
 			ON impacts._id = ownerIds._id
 		INNER JOIN (
-			SELECT srcObject, destObject, tenantId
+			SELECT srcObject, destObject
 			FROM ${regMapGenericCollection}
 			WHERE ${regMapGenericCollection}.archived = 0
 				AND ${regMapGenericCollection}.tenantId = "${tenant_id}"
@@ -42,12 +45,12 @@ cube(`ImpactsByOwnersCube`, {
 		) AS Maps
 			ON impacts._id = Maps.destObject
 		INNER JOIN (
-			SELECT _id, tenantId, \`info.docStatus\` AS docStatus
+			SELECT _id, \`info.docStatus\` AS docStatus
 			FROM ${alertsCollection}
 			WHERE tenantId = "${tenant_id}"
 				AND ${alertsActiveFilterSqlUnqualified}
 		) AS alerts
-			ON CAST(Maps.srcObject AS CHAR) = CAST(alerts._id AS CHAR)
+			ON Maps.srcObject = alerts._id
 	`,
 
   sqlAlias: `IAOwCube`,
@@ -61,6 +64,58 @@ cube(`ImpactsByOwnersCube`, {
       relationship: `belongsTo`,
       sql: `CAST(${CUBE.owners} AS CHAR) = CAST(${Users._id} AS CHAR)
 				AND ${CUBE}.tenantId = ${Users}.tenantId`,
+    },
+  },
+
+  preAggregations: {
+    impactsByUsersRollUp: {
+      sqlAlias: "IAByUsrsRP",
+      type: `rollup`,
+      external: true,
+      scheduledRefresh: true,
+      measures: [ImpactsByOwnersCube.count],
+      dimensions: [ImpactsByOwnersCube.tenantId, Users.fullName, Users._id],
+      timeDimension: ImpactsByOwnersCube.startDate,
+      granularity: `second`,
+      buildRangeStart: {
+        sql: `SELECT NOW() - interval '365 day'`,
+      },
+      buildRangeEnd: {
+        sql: `SELECT NOW()`,
+      },
+      refreshKey: {
+        every: PRE_AGG_REFRESH_KEY_TIME,
+      },
+    },
+    impactsOwnersRollUp: {
+      sqlAlias: "IAByAppRP",
+      type: `rollup`,
+      external: true,
+      scheduledRefresh: true,
+      measures: [
+        ImpactsByOwnersCube.count,
+        ImpactsByOwnersCube.open,
+        ImpactsByOwnersCube.New,
+        ImpactsByOwnersCube.inProcess,
+        ImpactsByOwnersCube.closed,
+      ],
+      dimensions: [
+        ImpactsByOwnersCube.tenantId,
+        Users.fullName,
+        Users._id,
+        ImpactsByOwnersCube.docStatus,
+      ],
+      timeDimension: ImpactsByOwnersCube.created,
+      granularity: `second`,
+      buildRangeStart: {
+        sql: `SELECT NOW() - interval '365 day'`,
+      },
+      buildRangeEnd: {
+        sql: `SELECT NOW()`,
+      },
+      refreshKey: {
+        every: PRE_AGG_REFRESH_KEY_TIME,
+      },
     },
   },
 

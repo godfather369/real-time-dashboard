@@ -9,22 +9,21 @@ import {
 
 cube(`ImpactsByTeamCube`, {
   sql: `
-		SELECT * 
+		SELECT
+			impacts._id,
+			impacts.tenantId,
+			impacts.startDate,
+			teamIds.team
 		FROM (
-			SELECT 
-				_id, 
-				tenantId, 
-				startDate  
-			FROM ${impactAssessmentCollection} 
+			SELECT _id, tenantId, startDate
+			FROM ${impactAssessmentCollection}
 			WHERE ${impactAssessmentCollection}.archived = 0
-		) AS impacts 
+		) AS impacts
 		INNER JOIN (
-			SELECT 
-				_id AS Id, 
-				\`customAttributes.I_E_F_IMPACTED_TEAM\` AS team 
+			SELECT _id AS Id, \`customAttributes.I_E_F_IMPACTED_TEAM\` AS team
 			FROM ${impactAssessmentImpactedTeamCollection}
-		) AS teamIds 
-		ON impacts._id = teamIds.Id
+		) AS teamIds
+			ON impacts._id = teamIds.Id
 	`,
 
   sqlAlias: `IAITCube`,

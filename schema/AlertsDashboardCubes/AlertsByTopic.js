@@ -7,23 +7,23 @@ import { alertsActiveFilterSql } from "./sql-queries";
 
 cube(`AlertsByTopic`, {
   sql: `
-		SELECT * 
+		SELECT
+			alerts._id,
+			alerts.status,
+			alerts.tenantId,
+			alerts.publishedDate,
+			alerts.alertCategory,
+			TopicIds.mdId
 		FROM (
-			SELECT 
-				_id, 
-				status, 
-				tenantId, 
-				publishedDate, 
-				alertCategory  
-			FROM ${alertsCollection} 
+			SELECT _id, status, tenantId, publishedDate, alertCategory
+			FROM ${alertsCollection}
 			WHERE ${alertsActiveFilterSql}
-		) AS alerts 
+		) AS alerts
 		INNER JOIN (
-			SELECT 
-				_id AS Id,  
-				\`mdInfo._id\` AS mdId
+			SELECT _id AS Id, \`mdInfo._id\` AS mdId
 			FROM ${alertMDIDCollection}
-		) AS TopicIds ON alerts._id = TopicIds.Id
+		) AS TopicIds
+			ON alerts._id = TopicIds.Id
 	`,
 
   sqlAlias: `AlTopCube`,
