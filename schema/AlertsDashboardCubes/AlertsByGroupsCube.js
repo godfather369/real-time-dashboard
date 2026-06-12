@@ -1,9 +1,4 @@
-import {
-  alertsCollection,
-  alertsGroupsCollection,
-  alertsByStatusCollection,
-  regConfigCollection,
-} from "./collections";
+import { alertsCollection, alertsGroupsCollection } from "./collections";
 import {
   CUBE_REFRESH_KEY_TIME,
   PRE_AGG_REFRESH_KEY_TIME,
@@ -20,10 +15,7 @@ cube(`AlertsByGroupsCube`, {
 			alerts.created,
 			alerts.alertCategory,
 			alerts.docStatus,
-			groupIds.groups,
-			regChangeConfig.statusId,
-			regChangeConfig.statusName,
-			regChangeConfig.isTerminal
+			groupIds.groups
 		FROM (
 			SELECT _id, status, tenantId, publishedDate, created, alertCategory, \`info.docStatus\` AS docStatus
 			FROM ${alertsCollection}
@@ -34,17 +26,6 @@ cube(`AlertsByGroupsCube`, {
 			FROM ${alertsGroupsCollection}
 		) AS groupIds
 			ON alerts._id = groupIds.Id
-		LEFT JOIN (
-			SELECT Config.tenantId AS configTenantId, alertsStatusConfig.statusId, alertsStatusConfig.statusName, alertsStatusConfig.isTerminal
-			FROM ${regConfigCollection} AS Config
-			INNER JOIN (
-				SELECT _id AS configId, \`status.regChange.id\` AS statusId, \`status.regChange.isTerminal\` AS isTerminal, \`status.regChange.name\` AS statusName
-				FROM ${alertsByStatusCollection}
-			) AS alertsStatusConfig
-				ON alertsStatusConfig.configId = Config._id
-		) AS regChangeConfig
-			ON alerts.tenantId = regChangeConfig.configTenantId
-			AND alerts.status = regChangeConfig.statusId
 	`,
 
   sqlAlias: `AlGrCube`,
@@ -53,12 +34,7 @@ cube(`AlertsByGroupsCube`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {
-    Groups: {
-      relationship: `belongsTo`,
-      sql: `${CUBE.groups} = ${Groups._id}`,
-    },
-  },
+  joins: {},
 
   preAggregations: {
     alertsByGroupsRollUp: {
@@ -69,40 +45,9 @@ cube(`AlertsByGroupsCube`, {
       measures: [AlertsByGroupsCube.count],
       dimensions: [
         AlertsByGroupsCube.tenantId,
-        Groups.name,
-        Groups._id,
-        AlertsByGroupsCube.statusId,
-        AlertsByGroupsCube.statusName,
+        AlertsByGroupsCube.groups,
         AlertsByGroupsCube.alertCategory,
-        AlertsByGroupsCube.docStatus,
-      ],
-      timeDimension: AlertsByGroupsCube.created,
-      granularity: `second`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`,
-      },
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
-    },
-    alertsGroupsSLARollUp: {
-      sqlAlias: "alByGrApRP",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [
-        AlertsByGroupsCube.count,
-        AlertsByGroupsCube.open,
-        AlertsByGroupsCube.closed,
-        AlertsByGroupsCube.total,
-      ],
-      dimensions: [
-        AlertsByGroupsCube.tenantId,
-        Groups.name,
-        Groups._id,
+        AlertsByGroupsCube.status,
         AlertsByGroupsCube.docStatus,
       ],
       timeDimension: AlertsByGroupsCube.created,
@@ -124,21 +69,6 @@ cube(`AlertsByGroupsCube`, {
       type: `count`,
       drillMembers: [_id],
     },
-    open: {
-      sql: `NOT ${CUBE}.isTerminal`,
-      type: `sum`,
-      title: "open",
-    },
-    closed: {
-      sql: `${CUBE}.isTerminal `,
-      type: `sum`,
-      title: "closed",
-    },
-    total: {
-      sql: `${open}+${closed}`,
-      type: `number`,
-      title: "total",
-    },
   },
 
   dimensions: {
@@ -149,14 +79,6 @@ cube(`AlertsByGroupsCube`, {
     },
     status: {
       sql: `${CUBE}.\`status\``,
-      type: `string`,
-    },
-    statusId: {
-      sql: `${CUBE}.\`statusId\``,
-      type: `string`,
-    },
-    statusName: {
-      sql: `${CUBE}.\`statusName\``,
       type: `string`,
     },
     tenantId: {

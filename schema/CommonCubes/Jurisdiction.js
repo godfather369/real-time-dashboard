@@ -25,7 +25,7 @@ cube(`Jurisdiction`, {
       title: `Jurisdiction`,
       type: `string`,
       primaryKey: true,
-      public: true
+      shown: true
     },
     displayName: {
       sql: `${CUBE}.\`displayName\``,
