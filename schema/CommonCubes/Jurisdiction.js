@@ -17,7 +17,12 @@ cube(`Jurisdiction`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {},
+  joins: {
+    Tenants: {
+      relationship: `hasOne`,
+      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
+    },
+  },
 
   dimensions: {
     jurisdictionId: {
@@ -25,7 +30,6 @@ cube(`Jurisdiction`, {
       title: `Jurisdiction`,
       type: `string`,
       primaryKey: true,
-      shown: true
     },
     displayName: {
       sql: `${CUBE}.\`displayName\``,

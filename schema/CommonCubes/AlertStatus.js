@@ -3,35 +3,37 @@ import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`AlertStatusCube`, {
   sql: `
-		SELECT
-			CONCAT(config.tenantId, '-', regChangeConfig.statusId) AS _id,
-			config.tenantId,
-			regChangeConfig.statusId,
-			regChangeConfig.statusName,
-			regChangeConfig.active,
-			regChangeConfig.isTerminal,
-			regChangeConfig.isExcluded,
-			regChangeConfig.isFollowing,
-			regChangeConfig.actionRequired,
-			regChangeConfig.class
-		FROM ${regConfigCollection} AS config
+		SELECT 
+			_id, 
+			tenantId, 
+			statusId, 
+			statusName,
+            active,
+            isTerminal,
+            isExcluded,
+            isFollowing,
+            actionRequired,
+            class 
+		FROM (
+			SELECT 
+				_id, 
+				tenantId 
+			FROM ${regConfigCollection}
+		) as config 
 		INNER JOIN (
-			SELECT
-				_id AS configId,
-				\`status.regChange.id\` AS statusId,
-				\`status.regChange.name\` AS statusName,
-				\`status.regChange.active\` AS active,
-				\`status.regChange.isTerminal\` AS isTerminal,
-				\`status.regChange.isExcluded\` AS isExcluded,
-				\`status.regChange.actionRequired\` AS actionRequired,
-				\`status.regChange.meta.isFollowing\` AS isFollowing,
-				\`status.regChange.class\` AS class
+			SELECT 
+				_id as configId, 
+				\`status.regChange.id\` as statusId, 
+				\`status.regChange.name\` as statusName,
+				\`status.regChange.active\` as active, 
+				\`status.regChange.isTerminal\` as isTerminal, 
+				\`status.regChange.isExcluded\` as isExcluded,
+        \`status.regChange.actionRequired\` as actionRequired,
+				\`status.regChange.meta.isFollowing\` as isFollowing,
+				\`status.regChange.class\` as class
 			FROM ${alertsByStatusCollection}
-		) AS regChangeConfig
-			ON regChangeConfig.configId = config._id
-		GROUP BY config.tenantId, regChangeConfig.statusId, regChangeConfig.statusName,
-			regChangeConfig.active, regChangeConfig.isTerminal, regChangeConfig.isExcluded,
-			regChangeConfig.isFollowing, regChangeConfig.actionRequired, regChangeConfig.class
+		) as regChangeConfig 
+		ON regChangeConfig.configId = config._id;
 	`,
 
   sqlAlias: `AlSt`,

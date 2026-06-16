@@ -9,27 +9,7 @@ import {
 import { MY_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`MyRisks`, {
-	sql: `
-		SELECT risk._id, statusMap.status, userMap.tenantId
-		FROM ${risksCollection} AS risk
-		INNER JOIN (
-			SELECT srcObject AS _id, tenantId
-			FROM ${mapUserCollection}
-			WHERE ${mapUserCollection}.archived = 0
-				AND ${mapUserCollection}.srcType = "Risk"
-				AND ${mapUserCollection}.user = "${userId}"
-		) AS userMap
-			ON userMap._id = risk._id
-		INNER JOIN (
-			SELECT status, srcObject
-			FROM ${regMapStatusCollection}
-			WHERE ${regMapStatusCollection}.archived = 0
-				AND ${regMapStatusCollection}.srcType = "Risk"
-		) AS statusMap
-			ON statusMap.srcObject = risk._id
-		WHERE risk.archived = 0
-			AND userMap.tenantId = risk.tenantId
-	`,
+	sql: `SELECT _id, status, tenantId FROM (SELECT _id as id, tenantId as tntId FROM ${risksCollection} WHERE ${risksCollection}.archived=0) as risk INNER JOIN (SELECT _id, status, tenantId FROM (SELECT srcObject as _id, tenantId FROM ${mapUserCollection} where ${mapUserCollection}.archived=0 AND ${mapUserCollection}.srcType="Risk" AND ${mapUserCollection}.user="${userId}")as userMap INNER JOIN (SELECT status, srcObject FROM ${regMapStatusCollection} WHERE ${regMapStatusCollection}.archived=0 AND ${regMapStatusCollection}.srcType="Risk") as statusMap ON userMap._id=statusMap.srcObject) as mappedRisk ON mappedRisk._id=risk.id AND mappedRisk.tenantId=risk.tntId`,
 
 	sqlAlias: `MyRiCube`,
 
@@ -38,6 +18,10 @@ cube(`MyRisks`, {
 	},
 
 	joins: {
+		Tenants: {
+			relationship: `hasOne`,
+			sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
+		},
 		RiskStatus: {
 			relationship: `hasOne`,
 			sql: `${CUBE.status} = ${RiskStatus.statusId} AND ${CUBE.tenantId} = ${RiskStatus.tenantId}`,

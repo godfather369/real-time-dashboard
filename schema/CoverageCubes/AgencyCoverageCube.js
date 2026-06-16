@@ -7,27 +7,30 @@ import {
 
 cube(`AgencyCoverageCube`, {
   sql: `
-		SELECT 
-			AggregateFeedCube._id,
-			JurisCube.displayName,
-			AggregateFeedCube.tenantId,
-			AggregateFeedCube.corpusType 
-		FROM (
-			SELECT 
-				_id,
-				jurisdiction,
-				tenantId,
-				corpusType 
-			FROM ${AggregateUserFeeds}
-		) AS AggregateFeedCube
-		LEFT JOIN (
-			SELECT 
-				_id as jurisId,
-				displayName 
-			FROM ${juridictionsCollection}
-		) AS JurisCube
-		ON AggregateFeedCube.jurisdiction = JurisCube.jurisId 
-	`,
+    SELECT 
+      _id,
+      displayName,
+      tenantId,
+      corpusType 
+    FROM (
+      (
+        SELECT 
+          _id,
+          jurisdiction,
+          tenantId, 
+          corpusType 
+        FROM ${AggregateUserFeeds}
+      ) AS AggregateFeedCube
+      LEFT JOIN 
+      (
+        SELECT 
+          _id as jurisId, 
+          displayName 
+        FROM ${juridictionsCollection}
+      ) AS JurisdictionCollectionCube
+        ON AggregateFeedCube.jurisdiction = JurisdictionCollectionCube.jurisId 
+    )
+  `,
 
   sqlAlias: `AgenCov`,
 
@@ -45,7 +48,7 @@ cube(`AgencyCoverageCube`, {
       dimensions: [
         AgencyCoverageCube.jurisdictionName,
         AgencyCoverageCube.corpusType,
-        AgencyCoverageCube.tenantId,
+        Tenants.tenantId,
       ],
       refreshKey: {
         every: PRE_AGG_REFRESH_KEY_TIME,
@@ -53,7 +56,12 @@ cube(`AgencyCoverageCube`, {
     },
   },
 
-  joins: {},
+  joins: {
+    Tenants: {
+      relationship: `hasOne`,
+      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
+    },
+  },
 
   measures: {
     count: {

@@ -9,21 +9,22 @@ import {
 
 cube(`ImpactsByTeamCube`, {
   sql: `
-		SELECT
-			impacts._id,
-			impacts.tenantId,
-			impacts.startDate,
-			teamIds.team
+		SELECT * 
 		FROM (
-			SELECT _id, tenantId, startDate
-			FROM ${impactAssessmentCollection}
+			SELECT 
+				_id, 
+				tenantId, 
+				startDate  
+			FROM ${impactAssessmentCollection} 
 			WHERE ${impactAssessmentCollection}.archived = 0
-		) AS impacts
+		) AS impacts 
 		INNER JOIN (
-			SELECT _id AS Id, \`customAttributes.I_E_F_IMPACTED_TEAM\` AS team
+			SELECT 
+				_id AS Id, 
+				\`customAttributes.I_E_F_IMPACTED_TEAM\` AS team 
 			FROM ${impactAssessmentImpactedTeamCollection}
-		) AS teamIds
-			ON impacts._id = teamIds.Id
+		) AS teamIds 
+		ON impacts._id = teamIds.Id
 	`,
 
   sqlAlias: `IAITCube`,
@@ -32,7 +33,12 @@ cube(`ImpactsByTeamCube`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {},
+  joins: {
+    Tenants: {
+      relationship: `hasOne`,
+      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
+    },
+  },
 
   preAggregations: {
     impactTeamRollUp: {
@@ -41,9 +47,9 @@ cube(`ImpactsByTeamCube`, {
       external: true,
       scheduledRefresh: true,
       measures: [ImpactsByTeamCube.count],
-      dimensions: [ImpactsByTeamCube.tenantId, ImpactsByTeamCube.team],
+      dimensions: [Tenants.tenantId, ImpactsByTeamCube.team],
       timeDimension: ImpactsByTeamCube.startDate,
-      granularity: `second`,
+      granularity: `day`,
       buildRangeStart: {
         sql: `SELECT NOW() - interval '90 day'`,
       },

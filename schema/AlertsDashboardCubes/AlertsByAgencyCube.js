@@ -3,27 +3,27 @@ import {
   CUBE_REFRESH_KEY_TIME,
   PRE_AGG_REFRESH_KEY_TIME,
 } from "./cube-constants";
-import { alertsActiveFilterSql } from "./sql-queries";
 
 cube(`AlertsByAgencyCube`, {
   sql: `
-		SELECT 
-			alerts._id,
-			alerts.status,
-			alerts.tenantId,
-			alerts.publishedDate,
-			alerts.alertCategory,
-			agencies.agencyMap
+		SELECT * 
 		FROM (
-			SELECT _id, status, tenantId, publishedDate, alertCategory
-			FROM ${alertsCollection}
-			WHERE ${alertsActiveFilterSql}
-		) AS alerts
+			SELECT 
+				_id, 
+				status, 
+				tenantId, 
+				publishedDate, 
+				alertCategory  
+			FROM ${alertsCollection} 
+			WHERE ${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)
+		) AS alerts 
 		INNER JOIN (
-			SELECT _id AS Id, agencyMap
+			SELECT 
+				_id AS Id, 
+				agencyMap 
 			FROM ${agencyMapCollection}
-		) AS agencies
-			ON alerts._id = agencies.Id
+		) AS agencies 
+		ON alerts._id = agencies.Id
 	`,
 
   sqlAlias: `AlAgCube`,
@@ -32,7 +32,20 @@ cube(`AlertsByAgencyCube`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {},
+  joins: {
+    Tenants: {
+      relationship: `hasOne`,
+      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
+    },
+    Agency: {
+      relationship: `belongsTo`,
+      sql: `${CUBE.agencyMap} = ${Agency._id}`,
+    },
+    AlertStatusCube: {
+      relationship: `belongsTo`,
+      sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1 AND ${AlertStatusCube.isExcluded} = 0`,
+    },
+  },
 
   preAggregations: {
     alertsByAgenciesRollUp: {
@@ -42,13 +55,16 @@ cube(`AlertsByAgencyCube`, {
       scheduledRefresh: true,
       measures: [AlertsByAgencyCube.count],
       dimensions: [
-        AlertsByAgencyCube.tenantId,
+        Tenants.tenantId,
         AlertsByAgencyCube.alertCategory,
-        AlertsByAgencyCube.status,
-        AlertsByAgencyCube.agencyId,
+        AlertStatusCube.statusId,
+        AlertStatusCube.statusName,
+        AlertsByAgencyCube.agencyMap,
+        Agency.agencyNames,
+        Agency.shortCode,
       ],
       timeDimension: AlertsByAgencyCube.publishedDate,
-      granularity: `second`,
+      granularity: `day`,
       buildRangeStart: {
         sql: `SELECT NOW() - interval '365 day'`,
       },
@@ -91,10 +107,10 @@ cube(`AlertsByAgencyCube`, {
       type: `string`,
       title: `Alert Category`,
     },
-    agencyId: {
+    agencyMap: {
       sql: `agencyMap`,
       type: `string`,
-      title: `Agency ID`,
+      title: `agencyMap`,
     },
   },
 

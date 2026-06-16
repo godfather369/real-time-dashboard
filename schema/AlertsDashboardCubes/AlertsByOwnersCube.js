@@ -3,29 +3,28 @@ import {
   CUBE_REFRESH_KEY_TIME,
   PRE_AGG_REFRESH_KEY_TIME,
 } from "./cube-constants";
-import { alertsActiveFilterSql } from "./sql-queries";
 
 cube(`AlertsByOwnersCube`, {
   sql: `
-		SELECT
-			alerts._id,
-			alerts.status,
-			alerts.tenantId,
-			alerts.publishedDate,
-			alerts.created,
-			alerts.alertCategory,
-			alerts.docStatus,
-			ownerIds.owners
+		SELECT * 
 		FROM (
-			SELECT _id, status, tenantId, publishedDate, created, alertCategory, \`info.docStatus\` AS docStatus
-			FROM ${alertsCollection}
-			WHERE ${alertsActiveFilterSql}
-		) AS alerts
+			SELECT 
+				_id, 
+				status, 
+				tenantId, 
+				publishedDate, 
+				created, 
+				alertCategory, 
+				\`info.docStatus\` as docStatus  
+			FROM ${alertsCollection} 
+			WHERE ${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)
+		) as alerts 
 		INNER JOIN (
-			SELECT _id AS Id, owners
+			SELECT 
+				_id as Id, 
+				owners 
 			FROM ${alertsUsersCollection}
-		) AS ownerIds
-			ON alerts._id = ownerIds.Id
+		) as ownerIds ON alerts._id = ownerIds.Id
 	`,
 
   sqlAlias: `AlOwCube`,
@@ -34,7 +33,20 @@ cube(`AlertsByOwnersCube`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {},
+  joins: {
+    Tenants: {
+      relationship: `hasOne`,
+      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
+    },
+    Users: {
+      relationship: `belongsTo`,
+      sql: `${CUBE.owners} = ${Users._id}`,
+    },
+    AlertStatusCube: {
+      relationship: `belongsTo`,
+      sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1`,
+    },
+  },
 
   preAggregations: {
     alertsByUsersRollUp: {
@@ -44,14 +56,44 @@ cube(`AlertsByOwnersCube`, {
       scheduledRefresh: true,
       measures: [AlertsByOwnersCube.count],
       dimensions: [
-        AlertsByOwnersCube.tenantId,
-        AlertsByOwnersCube.ownerId,
+        Tenants.tenantId,
+        Users.fullName,
+        Users._id,
         AlertsByOwnersCube.alertCategory,
-        AlertsByOwnersCube.statusId,
+        AlertStatusCube.statusId,
+        AlertStatusCube.statusName,
+      ],
+      timeDimension: AlertsByOwnersCube.created,
+      granularity: `day`,
+      buildRangeStart: {
+        sql: `SELECT NOW() - interval '365 day'`,
+      },
+      buildRangeEnd: {
+        sql: `SELECT NOW()`,
+      },
+      refreshKey: {
+        every: PRE_AGG_REFRESH_KEY_TIME,
+      },
+    },
+    alertsOwnersRollUp: {
+      sqlAlias: "alByAppRP",
+      type: `rollup`,
+      external: true,
+      scheduledRefresh: true,
+      measures: [
+        AlertsByOwnersCube.count,
+        AlertsByOwnersCube.open,
+        AlertsByOwnersCube.closed,
+        AlertsByOwnersCube.total,
+      ],
+      dimensions: [
+        Tenants.tenantId,
+        Users.fullName,
+        Users._id,
         AlertsByOwnersCube.docStatus,
       ],
       timeDimension: AlertsByOwnersCube.created,
-      granularity: `second`,
+      granularity: `day`,
       buildRangeStart: {
         sql: `SELECT NOW() - interval '365 day'`,
       },
@@ -66,8 +108,23 @@ cube(`AlertsByOwnersCube`, {
 
   measures: {
     count: {
-      type: `count`,
-      drillMembers: [_id],
+      sql: `NOT ${AlertStatusCube}.isExcluded`,
+      type: `sum`,
+      title: "open",
+    },
+    open: {
+      sql: `NOT ${AlertStatusCube}.isTerminal`,
+      type: `sum`,
+      title: "open",
+    },
+    closed: {
+      sql: `${AlertStatusCube}.isTerminal `,
+      type: `sum`,
+      title: "closed",
+    },
+    total: {
+      sql: `${open} + ${closed}`,
+      type: `number`,
     },
   },
 
@@ -77,12 +134,8 @@ cube(`AlertsByOwnersCube`, {
       type: `string`,
       primaryKey: true,
     },
-    statusId: {
+    status: {
       sql: `${CUBE}.\`status\``,
-      type: `string`,
-    },
-    ownerId: {
-      sql: `${CUBE}.\`owners\``,
       type: `string`,
     },
     tenantId: {
@@ -101,6 +154,11 @@ cube(`AlertsByOwnersCube`, {
       sql: `${CUBE}.\`alertCategory\``,
       type: `string`,
       title: `Alert Category`,
+    },
+    owners: {
+      sql: `owners`,
+      type: `string`,
+      title: `owners`,
     },
     docStatus: {
       sql: `${CUBE}.\`docStatus\``,

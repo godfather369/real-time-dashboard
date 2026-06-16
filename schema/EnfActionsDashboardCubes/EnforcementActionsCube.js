@@ -42,6 +42,10 @@ cube(`EnforcementActionsCube`, {
   },
 
   joins: {
+    Tenants: {
+      relationship: `hasOne`,
+      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
+    },
     HarmonizedActionTypeCube: {
       relationship: `hasMany`,
       sql: `${CUBE._id} = ${HarmonizedActionTypeCube._id}`,
@@ -72,10 +76,10 @@ cube(`EnforcementActionsCube`, {
         Agency.shortCode,
         Agency.agencyNames,
         EnforcementActionsCube.currency,
-        EnforcementActionsCube.tenantId,
+        Tenants.tenantId,
       ],
       timeDimension: EnforcementActionsCube.effectiveDate,
-      granularity: `second`,
+      granularity: `day`,
       buildRangeStart: {
         sql: `SELECT NOW() - interval '365 day'`,
       },
@@ -97,10 +101,10 @@ cube(`EnforcementActionsCube`, {
         Agency.shortCode,
         Agency.agencyNames,
         HarmonizedActionTypeCube.harmonizedActionType,
-        EnforcementActionsCube.tenantId,
+        Tenants.tenantId,
       ],
       timeDimension: EnforcementActionsCube.effectiveDate,
-      granularity: `second`,
+      granularity: `day`,
       buildRangeStart: {
         sql: `SELECT NOW() - interval '365 day'`,
       },
@@ -121,10 +125,10 @@ cube(`EnforcementActionsCube`, {
         RegulationsCube.authoritativeDocuments,
         RegulationsCube.citations,
         RegulationsCube.id,
-        EnforcementActionsCube.tenantId,
+        Tenants.tenantId,
       ],
       timeDimension: EnforcementActionsCube.effectiveDate,
-      granularity: `second`,
+      granularity: `day`,
       refreshKey: {
         every: PRE_AGG_REFRESH_KEY_TIME,
       },

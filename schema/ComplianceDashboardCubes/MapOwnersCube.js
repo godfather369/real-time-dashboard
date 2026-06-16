@@ -13,50 +13,64 @@ import {
 
 cube(`MapOwnersCube`, {
   sql: `
-		SELECT TaskOwner._id, TaskOwner.owners AS user, task.tenantId, 'Task' AS type
-		FROM ${tasksOwnersCollection} AS TaskOwner
-		INNER JOIN ${tasksCollection} AS task
-			ON task._id = TaskOwner._id
-			AND task.archived = 0
-
-		UNION ALL
-
-		SELECT Risks._id, mapUser.user, Risks.tenantId, 'Risk' AS type
-		FROM ${risksCollection} AS Risks
-		INNER JOIN (
-			SELECT user, srcObject
-			FROM ${mapUserCollection}
-			WHERE ${mapUserCollection}.srcType = "Risk"
+		SELECT * FROM (
+			SELECT 
+				TaskOwner._id, 
+				TaskOwner.owners AS user, 
+				task.tenantId, 
+				task.type 
+			FROM ${tasksOwnersCollection} AS TaskOwner 
+			INNER JOIN (
+				SELECT _id, tenantId, 'Task' AS type 
+				FROM ${tasksCollection} 
+				WHERE ${tasksCollection}.archived = 0
+			) AS task ON task._id = TaskOwner._id 
+			
+			UNION ALL
+			
+			SELECT _id, user, tenantId, type 
+			FROM (
+				SELECT _id, tenantId, 'Risk' AS type 
+				FROM ${risksCollection} 
+				WHERE ${risksCollection}.archived = 0
+			) AS Risks 
+			INNER JOIN (
+				SELECT user, srcObject 
+				FROM ${mapUserCollection} 
+				WHERE ${mapUserCollection}.srcType = "Risk" 
 				AND ${mapUserCollection}.archived = 0
-		) AS mapUser
-			ON Risks._id = mapUser.srcObject
-		WHERE Risks.archived = 0
-
-		UNION ALL
-
-		SELECT Requirements._id, mapUser.user, Requirements.tenantId, 'Requirement' AS type
-		FROM ${requirementsCollection} AS Requirements
-		INNER JOIN (
-			SELECT user, srcObject
-			FROM ${mapUserCollection}
-			WHERE ${mapUserCollection}.srcType = "Requirement"
+			) AS mapUser ON Risks._id = mapUser.srcObject 
+			
+			UNION ALL
+			
+			SELECT _id, user, tenantId, type 
+			FROM (
+				SELECT _id, tenantId, 'Requirement' AS type 
+				FROM ${requirementsCollection} 
+				WHERE ${requirementsCollection}.archived = 0
+			) AS Requirements 
+			INNER JOIN (
+				SELECT user, srcObject 
+				FROM ${mapUserCollection} 
+				WHERE ${mapUserCollection}.srcType = "Requirement" 
 				AND ${mapUserCollection}.archived = 0
-		) AS mapUser
-			ON Requirements._id = mapUser.srcObject
-		WHERE Requirements.archived = 0
-
-		UNION ALL
-
-		SELECT Controls._id, mapUser.user, Controls.tenantId, 'Control' AS type
-		FROM ${controlsCollection} AS Controls
-		INNER JOIN (
-			SELECT user, srcObject
-			FROM ${mapUserCollection}
-			WHERE ${mapUserCollection}.srcType = "Control"
+			) AS mapUser ON Requirements._id = mapUser.srcObject 
+			
+			UNION ALL
+			
+			SELECT _id, user, tenantId, type 
+			FROM (
+				SELECT _id, tenantId, 'Control' AS type 
+				FROM ${controlsCollection} 
+				WHERE ${controlsCollection}.archived = 0
+			) AS Controls 
+			INNER JOIN (
+				SELECT user, srcObject 
+				FROM ${mapUserCollection} 
+				WHERE ${mapUserCollection}.srcType = "Control" 
 				AND ${mapUserCollection}.archived = 0
-		) AS mapUser
-			ON Controls._id = mapUser.srcObject
-		WHERE Controls.archived = 0
+			) AS mapUser ON Controls._id = mapUser.srcObject
+		) AS MapOwners
 	`,
 
   sqlAlias: `MapOwCube`,
@@ -69,6 +83,10 @@ cube(`MapOwnersCube`, {
     Users: {
       relationship: `belongsTo`,
       sql: `${CUBE.owner} = ${Users._id}`,
+    },
+    Tenants: {
+      relationship: `hasOne`,
+      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
     },
   },
 
@@ -84,7 +102,7 @@ cube(`MapOwnersCube`, {
         MapOwnersCube.requirementCount,
         MapOwnersCube.total,
       ],
-      dimensions: [MapOwnersCube.tenantId, Users.fullName, Users._id],
+      dimensions: [Tenants.tenantId, Users.fullName, Users._id],
       refreshKey: {
         every: PRE_AGG_REFRESH_KEY_TIME,
       },

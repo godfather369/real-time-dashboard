@@ -3,27 +3,27 @@ import {
   CUBE_REFRESH_KEY_TIME,
   PRE_AGG_REFRESH_KEY_TIME,
 } from "./cube-constants";
-import { alertsActiveFilterSql } from "./sql-queries";
 
 cube(`AlertsByTopic`, {
   sql: `
-		SELECT
-			alerts._id,
-			alerts.status,
-			alerts.tenantId,
-			alerts.publishedDate,
-			alerts.alertCategory,
-			TopicIds.mdId
+		SELECT * 
 		FROM (
-			SELECT _id, status, tenantId, publishedDate, alertCategory
-			FROM ${alertsCollection}
-			WHERE ${alertsActiveFilterSql}
-		) AS alerts
+			SELECT 
+				_id, 
+				status, 
+				tenantId, 
+				publishedDate, 
+				alertCategory  
+			FROM ${alertsCollection} 
+			WHERE ${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)
+		) AS alerts 
 		INNER JOIN (
-			SELECT _id AS Id, \`mdInfo._id\` AS mdId
+			SELECT 
+				_id AS Id,  
+				\`mdInfo._id\` AS MDiD, 
+				\`mdInfo.name\` AS MDName 
 			FROM ${alertMDIDCollection}
-		) AS TopicIds
-			ON alerts._id = TopicIds.Id
+		) AS TopicIds ON alerts._id = TopicIds.Id
 	`,
 
   sqlAlias: `AlTopCube`,
@@ -32,7 +32,16 @@ cube(`AlertsByTopic`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {},
+  joins: {
+    Tenants: {
+      relationship: `hasOne`,
+      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
+    },
+    AlertStatusCube: {
+      relationship: `belongsTo`,
+      sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1 AND ${AlertStatusCube.isExcluded} = 0`,
+    },
+  },
 
   preAggregations: {
     alertsByTopicRollUp: {
@@ -42,13 +51,15 @@ cube(`AlertsByTopic`, {
       scheduledRefresh: true,
       measures: [AlertsByTopic.count],
       dimensions: [
-        AlertsByTopic.tenantId,
-        AlertsByTopic.mdId,
+        Tenants.tenantId,
+        AlertsByTopic.MDName,
+        AlertsByTopic.MDiD,
         AlertsByTopic.alertCategory,
-        AlertsByTopic.statusId,
+        AlertStatusCube.statusId,
+        AlertStatusCube.statusName,
       ],
       timeDimension: AlertsByTopic.publishedDate,
-      granularity: `second`,
+      granularity: `day`,
       buildRangeStart: {
         sql: `SELECT NOW() - interval '365 day'`,
       },
@@ -74,7 +85,7 @@ cube(`AlertsByTopic`, {
       type: `string`,
       primaryKey: true,
     },
-    statusId: {
+    status: {
       sql: `${CUBE}.\`status\``,
       type: `string`,
     },
@@ -91,8 +102,13 @@ cube(`AlertsByTopic`, {
       type: `string`,
       title: `Alert Category`,
     },
-    mdId: {
-      sql: `${CUBE}.\`mdId\``,
+    MDName: {
+      sql: `${CUBE}.\`MDName\``,
+      type: `string`,
+      title: `MDName`,
+    },
+    MDiD: {
+      sql: `CONVERT(${CUBE}.\`MDiD\`,CHAR)`,
       type: `string`,
       title: `MD Id`,
     },

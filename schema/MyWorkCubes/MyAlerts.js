@@ -9,37 +9,9 @@ import {
   groupsOfUserCollection,
 } from "./collections";
 import { MY_CUBE_REFRESH_KEY_TIME } from "./cube-constants";
-import { alertsActiveFilterSql } from "./sql-queries";
 
 cube(`MyAlerts`, {
-  sql: `
-    SELECT alerts._id, alerts.alertCategory, alerts.publishedDate, alerts.tenantId, alerts.status
-    FROM (
-      SELECT _id AS UId
-      FROM ${alertsUsersCollection}
-      WHERE ${alertsUsersCollection}.owners = "${userId}"
-
-      UNION
-
-      SELECT groupIds._id AS UId
-      FROM (
-        SELECT functionalRole
-        FROM ${groupsOfUserCollection}
-        WHERE ${groupsOfUserCollection}._id = "${userId}"
-      ) AS userGroups
-      INNER JOIN (
-        SELECT _id, groups
-        FROM ${alertsGroupsCollection}
-      ) AS groupIds
-        ON groupIds.groups = userGroups.functionalRole
-    ) AS Users
-    INNER JOIN (
-      SELECT _id, alertCategory, publishedDate, tenantId, status
-      FROM ${alertsCollection}
-      WHERE ${alertsActiveFilterSql}
-    ) AS alerts
-      ON alerts._id = Users.UId
-  `,
+  sql: `SELECT * FROM ((SELECT _id as UId FROM ${alertsUsersCollection} WHERE ${alertsUsersCollection}.owners="${userId}") UNION SELECT GId as UId FROM (SELECT functionalRole FROM ${groupsOfUserCollection} WHERE ${groupsOfUserCollection}._id="${userId}") as userGroups INNER JOIN (SELECT _id as GId , groups FROM ${alertsGroupsCollection}) as groupIds ON groupIds.groups = userGroups.functionalRole) as Users INNER JOIN (SELECT _id, alertCategory, publishedDate, tenantId, status FROM ${alertsCollection} where ${alertsCollection}.archived=0 AND (${alertsCollection}.\`reggi.validity\`!=0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)) as alerts ON alerts._id=Users.UId`,
   sqlAlias: `myAl`,
 
   refreshKey: {
@@ -47,6 +19,10 @@ cube(`MyAlerts`, {
   },
 
   joins: {
+    Tenants: {
+      relationship: `belongsTo`,
+      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
+    },
     AlertStatusCube: {
       relationship: `belongsTo`,
       sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1 AND ${AlertStatusCube.isExcluded} != 1`,

@@ -11,29 +11,55 @@ import {
 
 cube(`TasksCube`, {
   sql: `
-		SELECT
-			tasks._id,
-			configStatus.statusId,
-			configStatus.statusName,
-			tasks.tenantId,
-			tasks.dueDate
-		FROM ${tasksCollection} AS tasks
+		SELECT 
+			_id, 
+			statusId, 
+			statusName, 
+			tenantId, 
+			dueDate 
+		FROM (
+			SELECT 
+				_id, 
+				status, 
+				tenantId, 
+				dueDate 
+			FROM (
+				SELECT 
+					_id, 
+					tenantId, 
+					dueDate 
+				FROM ${tasksCollection} 
+				WHERE ${tasksCollection}.archived = 0
+			) AS tasks 
+			INNER JOIN (
+				SELECT 
+					status, 
+					srcObject 
+				FROM ${regMapStatusCollection} 
+				WHERE ${regMapStatusCollection}.srcType = "Task" 
+					AND ${regMapStatusCollection}.archived = 0
+			) AS mapStatus ON tasks._id = mapStatus.srcObject
+		) AS taskStatus 
 		INNER JOIN (
-			SELECT status, srcObject
-			FROM ${regMapStatusCollection}
-			WHERE ${regMapStatusCollection}.srcType = "Task"
-				AND ${regMapStatusCollection}.archived = 0
-		) AS mapStatus
-			ON tasks._id = mapStatus.srcObject
-		INNER JOIN ${regConfigCollection} AS config
-			ON config.tenantId = tasks.tenantId
-		INNER JOIN (
-			SELECT _id AS ID, \`status.task.id\` AS statusId, \`status.task.name\` AS statusName
-			FROM ${tasksByStatusCollection}
-		) AS configStatus
-			ON config._id = configStatus.ID
-			AND configStatus.statusId = mapStatus.status
-		WHERE tasks.archived = 0
+			SELECT 
+				tenantId AS tenant, 
+				statusId, 
+				statusName 
+			FROM (
+				SELECT 
+					_id, 
+					tenantId 
+				FROM ${regConfigCollection}
+			) AS config 
+			INNER JOIN (
+				SELECT 
+					_id AS ID, 
+					\`status.task.id\` AS statusId, 
+					\`status.task.name\` AS statusName  
+				FROM ${tasksByStatusCollection}
+			) AS configStatus ON config._id = configStatus.ID
+		) AS taskConfig ON taskConfig.tenant = taskStatus.tenantId 
+			AND taskConfig.statusId = taskStatus.status
 	`,
 
   sqlAlias: `TaCube`,
@@ -42,7 +68,12 @@ cube(`TasksCube`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {},
+  joins: {
+    Tenants: {
+      relationship: `hasOne`,
+      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
+    },
+  },
 
   measures: {
     count: {
@@ -56,7 +87,7 @@ cube(`TasksCube`, {
       sqlAlias: "taRollUp",
       external: true,
       measures: [TasksCube.count],
-      dimensions: [TasksCube.tenantId, TasksCube.status, TasksCube.statusId],
+      dimensions: [Tenants.tenantId, TasksCube.status, TasksCube.statusId],
       scheduledRefresh: true,
       refreshKey: {
         every: PRE_AGG_REFRESH_KEY_TIME,
@@ -66,7 +97,7 @@ cube(`TasksCube`, {
       sqlAlias: "taDueRollUp",
       external: true,
       measures: [TasksCube.count],
-      dimensions: [TasksCube.tenantId, TasksCube.dueDate],
+      dimensions: [Tenants.tenantId, TasksCube.dueDate],
       scheduledRefresh: true,
       refreshKey: {
         every: PRE_AGG_REFRESH_KEY_TIME,

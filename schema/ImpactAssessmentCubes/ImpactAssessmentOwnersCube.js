@@ -1,7 +1,3 @@
-const {
-  securityContext: { tenantId: tenant_id },
-} = COMPILE_CONTEXT;
-
 import {
   impactAssessmentCollection,
   impactAssessmentOwnersCollection,
@@ -12,45 +8,68 @@ import {
   CUBE_REFRESH_KEY_TIME,
   PRE_AGG_REFRESH_KEY_TIME,
 } from "./cube-constants";
-import { alertsActiveFilterSqlUnqualified } from "./sql-queries";
 
 cube(`ImpactsByOwnersCube`, {
   sql: `
-		SELECT
-			impacts._id,
-			impacts.tenantId,
-			impacts.status,
-			impacts.startDate,
-			impacts.created,
-			ownerIds.owners,
-			alerts.docStatus
+		SELECT 
+			_id, 
+			tenantId, 
+			status, 
+			startDate, 
+			docStatus, 
+			created, 
+			owners 
 		FROM (
-			SELECT _id, tenantId, status, startDate, created
-			FROM ${impactAssessmentCollection}
-			WHERE ${impactAssessmentCollection}.archived = 0
-				AND ${impactAssessmentCollection}.tenantId = "${tenant_id}"
-		) AS impacts
+			SELECT 
+				_id, 
+				tenantId, 
+				status, 
+				startDate, 
+				srcObject, 
+				created, 
+				owners 
+			FROM (
+				SELECT 
+					_id, 
+					tenantId, 
+					startDate, 
+					created, 
+					status, 
+					owners 
+				FROM (
+					SELECT 
+						_id, 
+						tenantId, 
+						startDate, 
+						created, 
+						status  
+					FROM ${impactAssessmentCollection} 
+					WHERE ${impactAssessmentCollection}.archived = 0
+				) AS impacts 
+				INNER JOIN (
+					SELECT 
+						_id AS Id, 
+						owners 
+					FROM ${impactAssessmentOwnersCollection}
+				) AS ownerIds ON impacts._id = ownerIds.Id
+			) AS UserImpacts 
+			INNER JOIN (
+				SELECT 
+					srcObject, 
+					destObject 
+				FROM ${regMapGenericCollection} 
+				WHERE ${regMapGenericCollection}.archived = 0 
+					AND ${regMapGenericCollection}.srcType = "Alert" 
+					AND ${regMapGenericCollection}.destType = "ImpactAssessment"
+			) AS Maps ON UserImpacts._id = Maps.destObject
+		) AS mappedImpacts 
 		INNER JOIN (
-			SELECT _id, owners
-			FROM ${impactAssessmentOwnersCollection}
-		) AS ownerIds
-			ON impacts._id = ownerIds._id
-		INNER JOIN (
-			SELECT srcObject, destObject
-			FROM ${regMapGenericCollection}
-			WHERE ${regMapGenericCollection}.archived = 0
-				AND ${regMapGenericCollection}.tenantId = "${tenant_id}"
-				AND ${regMapGenericCollection}.srcType = "Alert"
-				AND ${regMapGenericCollection}.destType = "ImpactAssessment"
-		) AS Maps
-			ON impacts._id = Maps.destObject
-		INNER JOIN (
-			SELECT _id, \`info.docStatus\` AS docStatus
-			FROM ${alertsCollection}
-			WHERE tenantId = "${tenant_id}"
-				AND ${alertsActiveFilterSqlUnqualified}
-		) AS alerts
-			ON Maps.srcObject = alerts._id
+			SELECT 
+				_id AS Id, 
+				\`info.docStatus\` AS docStatus 
+			FROM ${alertsCollection} 
+			WHERE ${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)
+		) AS alerts ON mappedImpacts.srcObject = alerts.Id
 	`,
 
   sqlAlias: `IAOwCube`,
@@ -60,10 +79,13 @@ cube(`ImpactsByOwnersCube`, {
   },
 
   joins: {
+    Tenants: {
+      relationship: `hasOne`,
+      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
+    },
     Users: {
       relationship: `belongsTo`,
-      sql: `CAST(${CUBE.owners} AS CHAR) = CAST(${Users._id} AS CHAR)
-				AND ${CUBE}.tenantId = ${Users}.tenantId`,
+      sql: `${CUBE.owners} = ${Users._id}`,
     },
   },
 
@@ -74,9 +96,9 @@ cube(`ImpactsByOwnersCube`, {
       external: true,
       scheduledRefresh: true,
       measures: [ImpactsByOwnersCube.count],
-      dimensions: [ImpactsByOwnersCube.tenantId, Users.fullName, Users._id],
+      dimensions: [Tenants.tenantId, Users.fullName, Users._id],
       timeDimension: ImpactsByOwnersCube.startDate,
-      granularity: `second`,
+      granularity: `day`,
       buildRangeStart: {
         sql: `SELECT NOW() - interval '365 day'`,
       },
@@ -100,13 +122,13 @@ cube(`ImpactsByOwnersCube`, {
         ImpactsByOwnersCube.closed,
       ],
       dimensions: [
-        ImpactsByOwnersCube.tenantId,
+        Tenants.tenantId,
         Users.fullName,
         Users._id,
         ImpactsByOwnersCube.docStatus,
       ],
       timeDimension: ImpactsByOwnersCube.created,
-      granularity: `second`,
+      granularity: `day`,
       buildRangeStart: {
         sql: `SELECT NOW() - interval '365 day'`,
       },

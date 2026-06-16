@@ -11,28 +11,52 @@ import {
 
 cube(`ControlsCube`, {
   sql: `
-		SELECT
-			controls._id,
-			configStatus.statusId,
-			configStatus.statusName,
-			controls.tenantId
-		FROM ${controlsCollection} AS controls
+		SELECT 
+			_id, 
+			statusId, 
+			statusName, 
+			tenantId 
+		FROM (
+			SELECT 
+				_id, 
+				status, 
+				tenantId 
+			FROM (
+				SELECT 
+					_id, 
+					tenantId 
+				FROM ${controlsCollection} 
+				WHERE ${controlsCollection}.archived = 0
+			) AS controls 
+			INNER JOIN (
+				SELECT 
+					status, 
+					srcObject 
+				FROM ${regMapStatusCollection} 
+				WHERE ${regMapStatusCollection}.srcType = "Control" 
+					AND ${regMapStatusCollection}.archived = 0
+			) AS mapStatus ON controls._id = mapStatus.srcObject
+		) AS controlStatus 
 		INNER JOIN (
-			SELECT status, srcObject
-			FROM ${regMapStatusCollection}
-			WHERE ${regMapStatusCollection}.srcType = "Control"
-				AND ${regMapStatusCollection}.archived = 0
-		) AS mapStatus
-			ON controls._id = mapStatus.srcObject
-		INNER JOIN ${regConfigCollection} AS config
-			ON config.tenantId = controls.tenantId
-		INNER JOIN (
-			SELECT _id AS ID, \`status.control.id\` AS statusId, \`status.control.name\` AS statusName
-			FROM ${controlByStatusCollection}
-		) AS configStatus
-			ON config._id = configStatus.ID
-			AND configStatus.statusId = mapStatus.status
-		WHERE controls.archived = 0
+			SELECT 
+				tenantId AS tenant, 
+				statusId, 
+				statusName 
+			FROM (
+				SELECT 
+					_id, 
+					tenantId 
+				FROM ${regConfigCollection}
+			) AS config 
+			INNER JOIN (
+				SELECT 
+					_id AS ID, 
+					\`status.control.id\` AS statusId, 
+					\`status.control.name\` AS statusName  
+				FROM ${controlByStatusCollection}
+			) AS configStatus ON config._id = configStatus.ID
+		) AS controlConfig ON controlConfig.tenant = controlStatus.tenantId 
+			AND controlConfig.statusId = controlStatus.status
 	`,
 
   sqlAlias: `ConCube`,
@@ -41,7 +65,12 @@ cube(`ControlsCube`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {},
+  joins: {
+    Tenants: {
+      relationship: `hasOne`,
+      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
+    },
+  },
 
   measures: {
     count: {
@@ -56,7 +85,7 @@ cube(`ControlsCube`, {
       external: true,
       measures: [ControlsCube.count],
       dimensions: [
-        ControlsCube.tenantId,
+        Tenants.tenantId,
         ControlsCube.status,
         ControlsCube.statusId,
       ],

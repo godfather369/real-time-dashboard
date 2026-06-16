@@ -3,7 +3,7 @@ import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`HarmonizedActionTypeCube`, {
   sql: `
-    SELECT _id, \`info.harmonizedActionType\`
+    SELECT * 
     FROM ${harmonizedActionCollection}
   `,
 

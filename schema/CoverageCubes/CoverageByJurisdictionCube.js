@@ -18,23 +18,25 @@ cube(`CoverageByJurisdictionCube`, {
 			status,
 			mdIds 
 		FROM (
-			SELECT 
-				_id,
-				tenantId,
-				repo,
-				status,
-				mdIds 
-			FROM ${regMapStatusUniregJoin}
-		) AS RegMapUniregJoin
-		LEFT JOIN (
-			SELECT 
-				id,
-				displayName,
-				tenantId as tenant 
-			FROM ${CorpusJurisdictionJoin}
-		) AS CorpJuris
-		ON RegMapUniregJoin.repo = CorpJuris.id 
-		AND RegMapUniregJoin.tenantId = CorpJuris.tenant
+			(
+				SELECT 
+					_id,
+					tenantId,
+					repo,
+					status,
+					mdIds 
+				FROM ${regMapStatusUniregJoin}
+			) AS RegMapUniregJoin
+			LEFT JOIN (
+				SELECT 
+					id,
+					displayName,
+					tenantId as tenant 
+				FROM ${CorpusJurisdictionJoin}
+			) AS CorpusJurisdictionJoin
+			ON RegMapUniregJoin.repo = CorpusJurisdictionJoin.id 
+			AND RegMapUniregJoin.tenantId = CorpusJurisdictionJoin.tenant
+		)
 		UNION ALL
 		SELECT 
 			_id,
@@ -43,23 +45,25 @@ cube(`CoverageByJurisdictionCube`, {
 			status,
 			mdIds 
 		FROM (
-			SELECT 
-				_id,
-				tenantId,
-				uid,
-				status,
-				mdIds 
-			FROM ${regMapStatusUniregJoinCC}
-		) AS RegMapCC
-		LEFT JOIN (
-			SELECT 
-				regSiteUid,
-				displayName,
-				tenantId as tenant 
-			FROM ${RegSiteJurisdictionJoin}
-		) AS SiteJuris
-		ON RegMapCC.uid = SiteJuris.regSiteUid 
-		AND RegMapCC.tenantId = SiteJuris.tenant
+			(
+				SELECT 
+					_id,
+					tenantId,
+					uid,
+					status,
+					mdIds 
+				FROM ${regMapStatusUniregJoinCC}
+			) AS RegMapUniregJoin
+			LEFT JOIN (
+				SELECT 
+					regSiteUid,
+					displayName,
+					tenantId as tenant 
+				FROM ${RegSiteJurisdictionJoin}
+			) AS RegSiteJurisdictionJoin
+			ON RegMapUniregJoin.uid = RegSiteJurisdictionJoin.regSiteUid 
+			AND RegMapUniregJoin.tenantId = RegSiteJurisdictionJoin.tenant
+		)
 	`,
 
   sqlAlias: `CvrgByJurCube`,
@@ -68,7 +72,12 @@ cube(`CoverageByJurisdictionCube`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {},
+  joins: {
+    Tenants: {
+      relationship: `hasOne`,
+      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
+    },
+  },
 
   preAggregations: {
     CoverageByJurisdictionRollUp: {
@@ -81,7 +90,7 @@ cube(`CoverageByJurisdictionCube`, {
         CoverageByJurisdictionCube.jurisdictionName,
         CoverageByJurisdictionCube.status,
         CoverageByJurisdictionCube.mdIds,
-        CoverageByJurisdictionCube.tenantId,
+        Tenants.tenantId,
       ],
       refreshKey: {
         every: PRE_AGG_REFRESH_KEY_TIME,

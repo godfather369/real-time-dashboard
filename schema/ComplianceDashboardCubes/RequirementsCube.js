@@ -11,28 +11,55 @@ import {
 
 cube(`RequirementsCube`, {
   sql: `
-    SELECT
-      requirements._id,
-      configStatus.statusName,
-      configStatus.statusId,
-      requirements.tenantId
-    FROM ${requirementsCollection} AS requirements
+    SELECT 
+      _id, 
+      statusName, 
+      statusId, 
+      tenantId 
+    FROM (
+      SELECT 
+        _id, 
+        status, 
+        tenantId 
+      FROM (
+        SELECT 
+          _id, 
+          tenantId 
+        FROM ${requirementsCollection} 
+        WHERE ${requirementsCollection}.archived = 0
+      ) AS requirements 
+      INNER JOIN (
+        SELECT 
+          status, 
+          srcObject 
+        FROM ${regMapStatusCollection} 
+        WHERE ${regMapStatusCollection}.srcType = "Requirement" 
+          AND ${regMapStatusCollection}.archived = 0
+      ) AS mapStatus 
+        ON requirements._id = mapStatus.srcObject
+    ) AS requirementStatus 
     INNER JOIN (
-      SELECT status, srcObject
-      FROM ${regMapStatusCollection}
-      WHERE ${regMapStatusCollection}.srcType = "Requirement"
-        AND ${regMapStatusCollection}.archived = 0
-    ) AS mapStatus
-      ON requirements._id = mapStatus.srcObject
-    INNER JOIN ${regConfigCollection} AS config
-      ON config.tenantId = requirements.tenantId
-    INNER JOIN (
-      SELECT _id AS ID, \`status.requirement.id\` AS statusId, \`status.requirement.name\` AS statusName
-      FROM ${requirementsByStatusCollection}
-    ) AS configStatus
-      ON config._id = configStatus.ID
-      AND configStatus.statusId = mapStatus.status
-    WHERE requirements.archived = 0
+      SELECT 
+        tenantId AS tenant, 
+        statusId, 
+        statusName 
+      FROM (
+        SELECT 
+          _id, 
+          tenantId 
+        FROM ${regConfigCollection}
+      ) AS config 
+      INNER JOIN (
+        SELECT 
+          _id AS ID, 
+          \`status.requirement.id\` AS statusId, 
+          \`status.requirement.name\` AS statusName  
+        FROM ${requirementsByStatusCollection}
+      ) AS configStatus 
+        ON config._id = configStatus.ID
+    ) AS requirementConfig 
+      ON requirementConfig.tenant = requirementStatus.tenantId 
+        AND requirementConfig.statusId = requirementStatus.status
   `,
 
   sqlAlias: `ReCube`,
@@ -41,7 +68,12 @@ cube(`RequirementsCube`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {},
+  joins: {
+    Tenants: {
+      relationship: `hasOne`,
+      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
+    },
+  },
 
   measures: {
     count: {
@@ -56,7 +88,7 @@ cube(`RequirementsCube`, {
       external: true,
       measures: [RequirementsCube.count],
       dimensions: [
-        RequirementsCube.tenantId,
+        Tenants.tenantId,
         RequirementsCube.status,
         RequirementsCube.statusId,
       ],

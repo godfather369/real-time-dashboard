@@ -9,19 +9,24 @@ import {
 
 cube(`ImpactsByLevelCube`, {
   sql: `
-		SELECT
-			impLevelConfig.impLevelId,
-			impLevelConfig.impLevel,
-			config.tenantId
-		FROM ${regConfigCollection} AS config
+		SELECT 
+			impLevelId, 
+			impLevel, 
+			tenantId 
+		FROM (
+			SELECT 
+				_id as configId, 
+				tenantId 
+			FROM ${regConfigCollection}
+		) as config 
 		INNER JOIN (
-			SELECT
-				_id AS impLevel_Id,
-				\`impactAssessment.extensions.fields.IMPACT_LEVEL.allowed_values.id\` AS impLevelId,
-				\`impactAssessment.extensions.fields.IMPACT_LEVEL.allowed_values.name\` AS impLevel
+			SELECT 
+				_id as impLevel_Id, 
+				\`impactAssessment.extensions.fields.IMPACT_LEVEL.allowed_values.id\` as impLevelId, 
+				\`impactAssessment.extensions.fields.IMPACT_LEVEL.allowed_values.name\` as impLevel  
 			FROM ${impactAssessmentImpactLevelCollection}
-		) AS impLevelConfig
-			ON impLevelConfig.impLevel_Id = config._id
+		) as impLevelConfig 
+		ON impLevelConfig.impLevel_Id = config.configId
 	`,
 
   sqlAlias: `ImpByLevel`,
@@ -31,6 +36,10 @@ cube(`ImpactsByLevelCube`, {
   },
 
   joins: {
+    Tenants: {
+      relationship: `hasOne`,
+      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
+    },
     ImpactAssessmentCube: {
       relationship: `hasMany`,
       sql: `${CUBE.tenantId} = ${ImpactAssessmentCube.tenantId} AND ${CUBE.impactLevelId}=${ImpactAssessmentCube.impactLevel}`,
@@ -44,9 +53,9 @@ cube(`ImpactsByLevelCube`, {
       external: true,
       scheduledRefresh: true,
       measures: [ImpactAssessmentCube.count],
-      dimensions: [ImpactsByLevelCube.impactLevel, ImpactsByLevelCube.tenantId],
+      dimensions: [ImpactsByLevelCube.impactLevel, Tenants.tenantId],
       timeDimension: ImpactAssessmentCube.startDate,
-      granularity: `second`,
+      granularity: `day`,
       buildRangeStart: {
         sql: `SELECT NOW() - interval '365 day'`,
       },

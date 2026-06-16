@@ -2,50 +2,59 @@ import { alertsCollection, regMapGenericCollection } from "./collections";
 
 import {
   CUBE_REFRESH_KEY_TIME,
-  PRE_AGG_REFRESH_KEY_TIME
+  PRE_AGG_REFRESH_KEY_TIME,
 } from "./cube-constants";
-import { alertsActiveFilterSql } from "./sql-queries";
 
 cube("QuarterlyAlertsCube", {
   sql: `
-    SELECT
-      alerts._id,
-      alerts.status,
-      alerts.docStatus,
-      alerts.created,
-      alerts.tenantId,
-      Maps.destObject
+    SELECT 
+      _id, 
+      status, 
+      docStatus, 
+      created, 
+      tenantId, 
+      destObject 
     FROM (
-      SELECT _id, status, \`info.docStatus\` AS docStatus, created, tenantId
-      FROM ${alertsCollection}
-      WHERE ${alertsActiveFilterSql}
-    ) AS alerts
+      SELECT 
+        _id, 
+        status, 
+        \`info.docStatus\` as docStatus, 
+        created, 
+        tenantId 
+      FROM ${alertsCollection} 
+      WHERE ${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)
+    ) as alerts 
     LEFT JOIN (
-      SELECT srcObject, destObject, tenantId AS tntId
-      FROM ${regMapGenericCollection}
-      WHERE ${regMapGenericCollection}.archived = 0
-        AND ${regMapGenericCollection}.destType = "ImpactAssessment"
+      SELECT 
+        srcObject, 
+        destObject, 
+        tenantId as tntId 
+      FROM ${regMapGenericCollection} 
+      WHERE ${regMapGenericCollection}.archived = 0 
+        AND ${regMapGenericCollection}.destType = "ImpactAssessment" 
         AND ${regMapGenericCollection}.srcType = "Alert"
-    ) AS Maps
-      ON alerts._id = Maps.srcObject
-      AND alerts.tenantId = Maps.tntId
+    ) as Maps ON alerts._id = Maps.srcObject
   `,
 
   sqlAlias: "QrAl",
 
   refreshKey: {
-    every: CUBE_REFRESH_KEY_TIME
+    every: CUBE_REFRESH_KEY_TIME,
   },
 
   joins: {
+    Tenants: {
+      relationship: `hasOne`,
+      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
+    },
     ImpactAssessmentCube: {
       relationship: `hasOne`,
-      sql: `${CUBE.impId}=${ImpactAssessmentCube._id}`
+      sql: `${CUBE.impId}=${ImpactAssessmentCube._id}`,
     },
     AlertStatusCube: {
       relationship: `belongsTo`,
-      sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1`
-    }
+      sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1`,
+    },
   },
 
   preAggregations: {
@@ -60,21 +69,21 @@ cube("QuarterlyAlertsCube", {
         QuarterlyAlertsCube.applicable,
         QuarterlyAlertsCube.excluded,
         QuarterlyAlertsCube.potentialImp,
-        QuarterlyAlertsCube.totalCount
+        QuarterlyAlertsCube.totalCount,
       ],
-      dimensions: [QuarterlyAlertsCube.tenantId, QuarterlyAlertsCube.docStatus],
-      timeDimension: QuarterlyAlertsCube.createdDate,
-      granularity: `second`,
+      dimensions: [Tenants.tenantId, QuarterlyAlertsCube.docStatus],
+      timeDimension: QuarterlyAlertsCube.created,
+      granularity: `day`,
       buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`
+        sql: `SELECT NOW() - interval '365 day'`,
       },
       buildRangeEnd: {
-        sql: `SELECT NOW()`
+        sql: `SELECT NOW()`,
       },
       refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME
-      }
-    }
+        every: PRE_AGG_REFRESH_KEY_TIME,
+      },
+    },
   },
 
   measures: {
@@ -82,43 +91,43 @@ cube("QuarterlyAlertsCube", {
       type: `count`,
       filters: [
         {
-          sql: `${AlertStatusCube}.isExcluded!=1`
-        }
-      ]
+          sql: `${AlertStatusCube}.isExcluded!=1`,
+        },
+      ],
     },
     following: {
       type: `count`,
       filters: [
         {
-          sql: `${AlertStatusCube}.isFollowing = 1 AND ${AlertStatusCube}.isExcluded != 1`
-        }
+          sql: `${AlertStatusCube}.isFollowing = 1 AND ${AlertStatusCube}.isExcluded != 1`,
+        },
       ],
-      title: "Following"
+      title: "Following",
     },
     open: {
       type: `count`,
       filters: [
         {
-          sql: `${AlertStatusCube}.isTerminal = 0 AND ${AlertStatusCube}.isExcluded != 1`
-        }
-      ]
+          sql: `${AlertStatusCube}.isTerminal = 0 AND ${AlertStatusCube}.isExcluded != 1`,
+        },
+      ],
     },
     applicable: {
       type: `count`,
       filters: [
         {
-          sql: `${AlertStatusCube}.actionRequired = 1 AND ${AlertStatusCube}.isTerminal = 1 AND ${AlertStatusCube}.isExcluded != 1`
-        }
-      ]
+          sql: `${AlertStatusCube}.actionRequired = 1 AND ${AlertStatusCube}.isTerminal = 1 AND ${AlertStatusCube}.isExcluded != 1`,
+        },
+      ],
     },
     excluded: {
       type: `count`,
       filters: [
         {
-          sql: `${AlertStatusCube}.isExcluded= 1`
-        }
+          sql: `${AlertStatusCube}.isExcluded= 1`,
+        },
       ],
-      title: "Excluded"
+      title: "Excluded",
     },
     potentialImp: {
       type: `count`,
@@ -126,39 +135,39 @@ cube("QuarterlyAlertsCube", {
         {
           sql: `${ImpactAssessmentCube}.impactLevel = 'CB - N/A' 
             AND ${AlertStatusCube}.isExcluded != 1 
-            AND (${AlertStatusCube}.isTerminal = 1 OR ${AlertStatusCube}.isFollowing = 1)`
-        }
-      ]
-    }
+            AND (${AlertStatusCube}.isTerminal = 1 OR ${AlertStatusCube}.isFollowing = 1)`,
+        },
+      ],
+    },
   },
 
   dimensions: {
     _id: {
       sql: `${CUBE}.\`_id\``,
       type: `string`,
-      primaryKey: true
+      primaryKey: true,
     },
     status: {
       sql: `${CUBE}.\`status\``,
-      type: `string`
+      type: `string`,
     },
     docStatus: {
       sql: `${CUBE}.\`docStatus\``,
-      type: `string`
+      type: `string`,
     },
     impId: {
       sql: `${CUBE}.\`destObject\``,
-      type: `string`
+      type: `string`,
     },
-    createdDate: {
+    created: {
       sql: `${CUBE}.\`created\``,
-      type: `time`
+      type: `time`,
     },
     tenantId: {
       sql: `${CUBE}.\`tenantId\``,
-      type: `string`
-    }
+      type: `string`,
+    },
   },
 
-  dataSource: `default`
+  dataSource: `default`,
 });

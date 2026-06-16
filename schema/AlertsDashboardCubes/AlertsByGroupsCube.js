@@ -3,29 +3,28 @@ import {
   CUBE_REFRESH_KEY_TIME,
   PRE_AGG_REFRESH_KEY_TIME,
 } from "./cube-constants";
-import { alertsActiveFilterSql } from "./sql-queries";
 
 cube(`AlertsByGroupsCube`, {
   sql: `
-		SELECT
-			alerts._id,
-			alerts.status,
-			alerts.tenantId,
-			alerts.publishedDate,
-			alerts.created,
-			alerts.alertCategory,
-			alerts.docStatus,
-			groupIds.groups
+		SELECT * 
 		FROM (
-			SELECT _id, status, tenantId, publishedDate, created, alertCategory, \`info.docStatus\` AS docStatus
-			FROM ${alertsCollection}
-			WHERE ${alertsActiveFilterSql}
-		) AS alerts
+			SELECT 
+				_id, 
+				status, 
+				tenantId, 
+				publishedDate, 
+				created, 
+				alertCategory, 
+				\`info.docStatus\` as docStatus  
+			FROM ${alertsCollection} 
+			WHERE ${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)
+		) as alerts 
 		INNER JOIN (
-			SELECT _id AS Id, groups
+			SELECT 
+				_id as Id, 
+				groups 
 			FROM ${alertsGroupsCollection}
-		) AS groupIds
-			ON alerts._id = groupIds.Id
+		) as groupIds ON alerts._id = groupIds.Id
 	`,
 
   sqlAlias: `AlGrCube`,
@@ -34,7 +33,20 @@ cube(`AlertsByGroupsCube`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {},
+  joins: {
+    Tenants: {
+      relationship: `hasOne`,
+      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
+    },
+    Groups: {
+      relationship: `belongsTo`,
+      sql: `${CUBE.groups} = ${Groups._id}`,
+    },
+    AlertStatusCube: {
+      relationship: `belongsTo`,
+      sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1`,
+    },
+  },
 
   preAggregations: {
     alertsByGroupsRollUp: {
@@ -44,14 +56,45 @@ cube(`AlertsByGroupsCube`, {
       scheduledRefresh: true,
       measures: [AlertsByGroupsCube.count],
       dimensions: [
-        AlertsByGroupsCube.tenantId,
-        AlertsByGroupsCube.groups,
+        Tenants.tenantId,
+        Groups.name,
+        Groups._id,
+        AlertStatusCube.statusId,
+        AlertStatusCube.statusName,
         AlertsByGroupsCube.alertCategory,
-        AlertsByGroupsCube.status,
         AlertsByGroupsCube.docStatus,
       ],
       timeDimension: AlertsByGroupsCube.created,
-      granularity: `second`,
+      granularity: `day`,
+      buildRangeStart: {
+        sql: `SELECT NOW() - interval '365 day'`,
+      },
+      buildRangeEnd: {
+        sql: `SELECT NOW()`,
+      },
+      refreshKey: {
+        every: PRE_AGG_REFRESH_KEY_TIME,
+      },
+    },
+    alertsGroupsSLARollUp: {
+      sqlAlias: "alByGrApRP",
+      type: `rollup`,
+      external: true,
+      scheduledRefresh: true,
+      measures: [
+        AlertsByGroupsCube.count,
+        AlertsByGroupsCube.open,
+        AlertsByGroupsCube.closed,
+        AlertsByGroupsCube.total,
+      ],
+      dimensions: [
+        Tenants.tenantId,
+        Groups.name,
+        Groups._id,
+        AlertsByGroupsCube.docStatus,
+      ],
+      timeDimension: AlertsByGroupsCube.created,
+      granularity: `day`,
       buildRangeStart: {
         sql: `SELECT NOW() - interval '365 day'`,
       },
@@ -66,8 +109,23 @@ cube(`AlertsByGroupsCube`, {
 
   measures: {
     count: {
-      type: `count`,
-      drillMembers: [_id],
+      sql: `NOT ${AlertStatusCube}.isExcluded`,
+      type: `sum`,
+      title: "open",
+    },
+    open: {
+      sql: `NOT ${AlertStatusCube}.isTerminal`,
+      type: `sum`,
+      title: "open",
+    },
+    closed: {
+      sql: `${AlertStatusCube}.isTerminal`,
+      type: `sum`,
+      title: "closed",
+    },
+    total: {
+      sql: `${open} + ${closed}`,
+      type: `number`,
     },
   },
 

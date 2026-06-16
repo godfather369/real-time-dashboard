@@ -1,0 +1,29 @@
+containers=(
+  cubejs_cube_refresh_worker_1_1
+  cubejs_cube_refresh_worker_2_1
+  cubejs_cube_refresh_worker_3_1
+  cubejs_cube_refresh_worker_4_1
+  cubejs_cube_refresh_worker_5_1
+  cubejs_cube_refresh_worker_6_1
+  cubejs_cube_refresh_worker_7_1
+  cubejs_cube_refresh_worker_8_1
+  cubejs_cubestore_router_1
+  cubejs_cubestore_worker_1_1
+  cubejs_cubestore_worker_2_1
+  cubejs_cubestore_worker_3_1
+  cubejs_cubestore_worker_4_1
+  cubejs_cubestore_worker_5_1
+  cubejs_cubestore_worker_6_1
+  cubejs_cubestore_worker_7_1
+  cubejs_cubestore_worker_8_1
+  cubejs_cube_1
+)
+
+for container in "${containers[@]}"; do
+  echo ""
+  echo "========================================"
+  echo "  LOGS: $container"
+  echo "========================================"
+  echo ""
+  docker logs --tail 50 "$container"
+done
