@@ -75,10 +75,6 @@ cube(`combinedOwnersSLA`, {
   },
 
   joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
     Users: {
       relationship: `belongsTo`,
       sql: `${CUBE.owners} = ${Users._id}`,
@@ -108,7 +104,7 @@ cube(`combinedOwnersSLA`, {
       dimensions: [
         Users._id,
         Users.fullName,
-        Tenants.tenantId,
+        combinedOwnersSLA.tenantId,
         combinedOwnersSLA.docStatus,
       ],
       timeDimension: combinedOwnersSLA.created,

@@ -42,10 +42,6 @@ cube(`EnforcementActionsCube`, {
   },
 
   joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
     HarmonizedActionTypeCube: {
       relationship: `hasMany`,
       sql: `${CUBE._id} = ${HarmonizedActionTypeCube._id}`,
@@ -76,7 +72,7 @@ cube(`EnforcementActionsCube`, {
         Agency.shortCode,
         Agency.agencyNames,
         EnforcementActionsCube.currency,
-        Tenants.tenantId,
+        EnforcementActionsCube.tenantId,
       ],
       timeDimension: EnforcementActionsCube.effectiveDate,
       granularity: `day`,
@@ -101,7 +97,7 @@ cube(`EnforcementActionsCube`, {
         Agency.shortCode,
         Agency.agencyNames,
         HarmonizedActionTypeCube.harmonizedActionType,
-        Tenants.tenantId,
+        EnforcementActionsCube.tenantId,
       ],
       timeDimension: EnforcementActionsCube.effectiveDate,
       granularity: `day`,
@@ -125,7 +121,7 @@ cube(`EnforcementActionsCube`, {
         RegulationsCube.authoritativeDocuments,
         RegulationsCube.citations,
         RegulationsCube.id,
-        Tenants.tenantId,
+        EnforcementActionsCube.tenantId,
       ],
       timeDimension: EnforcementActionsCube.effectiveDate,
       granularity: `day`,

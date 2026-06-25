@@ -68,12 +68,7 @@ cube(`TasksCube`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
-  },
+  joins: {},
 
   measures: {
     count: {
@@ -87,7 +82,7 @@ cube(`TasksCube`, {
       sqlAlias: "taRollUp",
       external: true,
       measures: [TasksCube.count],
-      dimensions: [Tenants.tenantId, TasksCube.status, TasksCube.statusId],
+      dimensions: [TasksCube.tenantId, TasksCube.status, TasksCube.statusId],
       scheduledRefresh: true,
       refreshKey: {
         every: PRE_AGG_REFRESH_KEY_TIME,
@@ -97,7 +92,7 @@ cube(`TasksCube`, {
       sqlAlias: "taDueRollUp",
       external: true,
       measures: [TasksCube.count],
-      dimensions: [Tenants.tenantId, TasksCube.dueDate],
+      dimensions: [TasksCube.tenantId, TasksCube.dueDate],
       scheduledRefresh: true,
       refreshKey: {
         every: PRE_AGG_REFRESH_KEY_TIME,

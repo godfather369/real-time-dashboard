@@ -40,10 +40,6 @@ cube(`AlertsByGrpIds`, {
       relationship: `hasOne`,
       sql: `${CUBE.jurisdiction} = ${Jurisdiction.jurisdictionId}`,
     },
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
     AlertStatusCube: {
       relationship: `belongsTo`,
       sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1 AND ${AlertStatusCube.isExcluded} = 0`,
@@ -70,7 +66,7 @@ cube(`AlertsByGrpIds`, {
         AlertsByGrpIds.agencyUpdateStatus,
       ],
       dimensions: [
-        Tenants.tenantId,
+        AlertsByGrpIds.tenantId,
         Jurisdiction.displayName,
         Jurisdiction.shortName,
         Jurisdiction.jurisdictionId,

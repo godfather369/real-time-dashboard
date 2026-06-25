@@ -72,12 +72,7 @@ cube(`CoverageByJurisdictionCube`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
-  },
+  joins: {},
 
   preAggregations: {
     CoverageByJurisdictionRollUp: {
@@ -90,7 +85,7 @@ cube(`CoverageByJurisdictionCube`, {
         CoverageByJurisdictionCube.jurisdictionName,
         CoverageByJurisdictionCube.status,
         CoverageByJurisdictionCube.mdIds,
-        Tenants.tenantId,
+        CoverageByJurisdictionCube.tenantId,
       ],
       refreshKey: {
         every: PRE_AGG_REFRESH_KEY_TIME,

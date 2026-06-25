@@ -47,10 +47,6 @@ cube(`MyTasks`, {
 	},
 
 	joins: {
-		Tenants: {
-			relationship: `hasOne`,
-			sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-		},
 		TaskStatus: {
 			relationship: `hasOne`,
 			sql: `${CUBE.status} = ${TaskStatus.statusId} AND ${CUBE.tenantId} = ${TaskStatus.tenantId}`,

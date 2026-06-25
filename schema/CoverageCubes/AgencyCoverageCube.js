@@ -48,7 +48,7 @@ cube(`AgencyCoverageCube`, {
       dimensions: [
         AgencyCoverageCube.jurisdictionName,
         AgencyCoverageCube.corpusType,
-        Tenants.tenantId,
+        AgencyCoverageCube.tenantId,
       ],
       refreshKey: {
         every: PRE_AGG_REFRESH_KEY_TIME,
@@ -56,12 +56,7 @@ cube(`AgencyCoverageCube`, {
     },
   },
 
-  joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
-  },
+  joins: {},
 
   measures: {
     count: {

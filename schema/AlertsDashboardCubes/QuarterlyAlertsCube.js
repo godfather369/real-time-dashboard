@@ -43,10 +43,6 @@ cube("QuarterlyAlertsCube", {
   },
 
   joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
     ImpactAssessmentCube: {
       relationship: `hasOne`,
       sql: `${CUBE.impId}=${ImpactAssessmentCube._id}`,
@@ -71,7 +67,7 @@ cube("QuarterlyAlertsCube", {
         QuarterlyAlertsCube.potentialImp,
         QuarterlyAlertsCube.totalCount,
       ],
-      dimensions: [Tenants.tenantId, QuarterlyAlertsCube.docStatus],
+      dimensions: [QuarterlyAlertsCube.tenantId, QuarterlyAlertsCube.docStatus],
       timeDimension: QuarterlyAlertsCube.created,
       granularity: `day`,
       buildRangeStart: {

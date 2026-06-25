@@ -22,12 +22,7 @@ cube(`ImpactAssessmentCube`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
-  },
+  joins: {},
 
   preAggregations: {
     impactAssessmentByStatusRollUp: {
@@ -40,7 +35,7 @@ cube(`ImpactAssessmentCube`, {
         ImpactAssessmentCube.new,
         ImpactAssessmentCube.closed,
       ],
-      dimensions: [Tenants.tenantId],
+      dimensions: [ImpactAssessmentCube.tenantId],
       timeDimension: ImpactAssessmentCube.startDate,
       granularity: `day`,
       buildRangeStart: {

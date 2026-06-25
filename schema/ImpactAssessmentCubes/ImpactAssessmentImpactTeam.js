@@ -33,12 +33,7 @@ cube(`ImpactsByTeamCube`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
-  },
+  joins: {},
 
   preAggregations: {
     impactTeamRollUp: {
@@ -47,7 +42,7 @@ cube(`ImpactsByTeamCube`, {
       external: true,
       scheduledRefresh: true,
       measures: [ImpactsByTeamCube.count],
-      dimensions: [Tenants.tenantId, ImpactsByTeamCube.team],
+      dimensions: [ImpactsByTeamCube.tenantId, ImpactsByTeamCube.team],
       timeDimension: ImpactsByTeamCube.startDate,
       granularity: `day`,
       buildRangeStart: {

@@ -20,10 +20,6 @@ cube(`MyImpacts`, {
 	},
 
 	joins: {
-		Tenants: {
-			relationship: `belongsTo`,
-			sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-		},
 		ImpactsByLevelCube: {
 			relationship: `hasMany`,
 			sql: `${CUBE.tenantId} = ${ImpactsByLevelCube.tenantId} AND ${CUBE.impactLevelId}=${ImpactsByLevelCube.impactLevelId}`,

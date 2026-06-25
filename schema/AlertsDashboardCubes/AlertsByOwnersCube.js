@@ -34,10 +34,6 @@ cube(`AlertsByOwnersCube`, {
   },
 
   joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
     Users: {
       relationship: `belongsTo`,
       sql: `${CUBE.owners} = ${Users._id}`,
@@ -56,7 +52,7 @@ cube(`AlertsByOwnersCube`, {
       scheduledRefresh: true,
       measures: [AlertsByOwnersCube.count],
       dimensions: [
-        Tenants.tenantId,
+        AlertsByOwnersCube.tenantId,
         Users.fullName,
         Users._id,
         AlertsByOwnersCube.alertCategory,
@@ -87,7 +83,7 @@ cube(`AlertsByOwnersCube`, {
         AlertsByOwnersCube.total,
       ],
       dimensions: [
-        Tenants.tenantId,
+        AlertsByOwnersCube.tenantId,
         Users.fullName,
         Users._id,
         AlertsByOwnersCube.docStatus,

@@ -28,10 +28,6 @@ cube(`AlertsCube`, {
   },
 
   joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
     Corpus: {
       relationship: `belongsTo`,
       sql: `${CUBE.infoRepo} = ${Corpus.id}`,
@@ -54,7 +50,7 @@ cube(`AlertsCube`, {
       scheduledRefresh: true,
       measures: [AlertsCube.count],
       dimensions: [
-        Tenants.tenantId,
+        AlertsCube.tenantId,
         AlertsCube.alertCategory,
         Corpus.name,
         Corpus.id,
@@ -93,7 +89,7 @@ cube(`AlertsCube`, {
         AlertsCube.totalBillsDocStatusCount,
       ],
       dimensions: [
-        Tenants.tenantId,
+        AlertsCube.tenantId,
         Jurisdiction.displayName,
         Jurisdiction.shortName,
         Jurisdiction.jurisdictionId,
@@ -121,7 +117,7 @@ cube(`AlertsCube`, {
       scheduledRefresh: true,
       measures: [AlertsCube.count],
       dimensions: [
-        Tenants.tenantId,
+        AlertsCube.tenantId,
         Jurisdiction.displayName,
         Jurisdiction.shortName,
         Jurisdiction.jurisdictionId,
@@ -164,7 +160,7 @@ cube(`AlertsCube`, {
         AlertsCube.totalAUDocStatusCount,
       ],
       dimensions: [
-        Tenants.tenantId,
+        AlertsCube.tenantId,
         Jurisdiction.shortName,
         Jurisdiction.jurisdictionId,
         Jurisdiction.displayName,
@@ -190,7 +186,7 @@ cube(`AlertsCube`, {
       scheduledRefresh: true,
       measures: [AlertsCube.feedCount],
       dimensions: [
-        Tenants.tenantId,
+        AlertsCube.tenantId,
         Jurisdiction.displayName,
         AlertsCube.feedName,
         AlertsCube.alertCategory,

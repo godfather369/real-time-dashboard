@@ -33,10 +33,6 @@ cube(`AlertsByAgencyCube`, {
   },
 
   joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
     Agency: {
       relationship: `belongsTo`,
       sql: `${CUBE.agencyMap} = ${Agency._id}`,
@@ -55,7 +51,7 @@ cube(`AlertsByAgencyCube`, {
       scheduledRefresh: true,
       measures: [AlertsByAgencyCube.count],
       dimensions: [
-        Tenants.tenantId,
+        AlertsByAgencyCube.tenantId,
         AlertsByAgencyCube.alertCategory,
         AlertStatusCube.statusId,
         AlertStatusCube.statusName,

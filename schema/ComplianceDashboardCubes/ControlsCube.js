@@ -65,12 +65,7 @@ cube(`ControlsCube`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
-  },
+  joins: {},
 
   measures: {
     count: {
@@ -85,7 +80,7 @@ cube(`ControlsCube`, {
       external: true,
       measures: [ControlsCube.count],
       dimensions: [
-        Tenants.tenantId,
+        ControlsCube.tenantId,
         ControlsCube.status,
         ControlsCube.statusId,
       ],

@@ -154,10 +154,6 @@ cube(`combinedGroupsSLA`, {
   },
 
   joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
     Groups: {
       relationship: `belongsTo`,
       sql: `${CUBE.groups} = ${Groups._id}`,
@@ -187,7 +183,7 @@ cube(`combinedGroupsSLA`, {
       dimensions: [
         Groups._id,
         Groups.name,
-        Tenants.tenantId,
+        combinedGroupsSLA.tenantId,
         combinedGroupsSLA.docStatus,
       ],
       timeDimension: combinedGroupsSLA.created,

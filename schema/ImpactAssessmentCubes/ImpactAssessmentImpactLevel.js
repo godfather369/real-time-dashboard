@@ -36,10 +36,6 @@ cube(`ImpactsByLevelCube`, {
   },
 
   joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
     ImpactAssessmentCube: {
       relationship: `hasMany`,
       sql: `${CUBE.tenantId} = ${ImpactAssessmentCube.tenantId} AND ${CUBE.impactLevelId}=${ImpactAssessmentCube.impactLevel}`,
@@ -53,7 +49,7 @@ cube(`ImpactsByLevelCube`, {
       external: true,
       scheduledRefresh: true,
       measures: [ImpactAssessmentCube.count],
-      dimensions: [ImpactsByLevelCube.impactLevel, Tenants.tenantId],
+      dimensions: [ImpactsByLevelCube.impactLevel, ImpactsByLevelCube.tenantId],
       timeDimension: ImpactAssessmentCube.startDate,
       granularity: `day`,
       buildRangeStart: {

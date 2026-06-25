@@ -68,12 +68,7 @@ cube(`RequirementsCube`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
-  },
+  joins: {},
 
   measures: {
     count: {
@@ -88,7 +83,7 @@ cube(`RequirementsCube`, {
       external: true,
       measures: [RequirementsCube.count],
       dimensions: [
-        Tenants.tenantId,
+        RequirementsCube.tenantId,
         RequirementsCube.status,
         RequirementsCube.statusId,
       ],

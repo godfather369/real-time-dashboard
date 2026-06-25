@@ -68,12 +68,7 @@ cube(`RisksCube`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
-  },
+  joins: {},
 
   measures: {
     count: {
@@ -87,7 +82,7 @@ cube(`RisksCube`, {
       sqlAlias: "risRollUp",
       external: true,
       measures: [RisksCube.count],
-      dimensions: [Tenants.tenantId, RisksCube.status, RisksCube.statusId],
+      dimensions: [RisksCube.tenantId, RisksCube.status, RisksCube.statusId],
       scheduledRefresh: true,
       refreshKey: {
         every: PRE_AGG_REFRESH_KEY_TIME,

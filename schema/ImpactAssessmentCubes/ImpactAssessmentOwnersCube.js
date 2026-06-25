@@ -79,10 +79,6 @@ cube(`ImpactsByOwnersCube`, {
   },
 
   joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
     Users: {
       relationship: `belongsTo`,
       sql: `${CUBE.owners} = ${Users._id}`,
@@ -96,7 +92,7 @@ cube(`ImpactsByOwnersCube`, {
       external: true,
       scheduledRefresh: true,
       measures: [ImpactsByOwnersCube.count],
-      dimensions: [Tenants.tenantId, Users.fullName, Users._id],
+      dimensions: [ImpactsByOwnersCube.tenantId, Users.fullName, Users._id],
       timeDimension: ImpactsByOwnersCube.startDate,
       granularity: `day`,
       buildRangeStart: {
@@ -122,7 +118,7 @@ cube(`ImpactsByOwnersCube`, {
         ImpactsByOwnersCube.closed,
       ],
       dimensions: [
-        Tenants.tenantId,
+        ImpactsByOwnersCube.tenantId,
         Users.fullName,
         Users._id,
         ImpactsByOwnersCube.docStatus,

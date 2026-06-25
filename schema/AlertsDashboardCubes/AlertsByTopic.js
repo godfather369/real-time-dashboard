@@ -33,10 +33,6 @@ cube(`AlertsByTopic`, {
   },
 
   joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
     AlertStatusCube: {
       relationship: `belongsTo`,
       sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1 AND ${AlertStatusCube.isExcluded} = 0`,
@@ -51,7 +47,7 @@ cube(`AlertsByTopic`, {
       scheduledRefresh: true,
       measures: [AlertsByTopic.count],
       dimensions: [
-        Tenants.tenantId,
+        AlertsByTopic.tenantId,
         AlertsByTopic.MDName,
         AlertsByTopic.MDiD,
         AlertsByTopic.alertCategory,

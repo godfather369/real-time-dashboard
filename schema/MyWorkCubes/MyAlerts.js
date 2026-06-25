@@ -19,10 +19,6 @@ cube(`MyAlerts`, {
   },
 
   joins: {
-    Tenants: {
-      relationship: `belongsTo`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
     AlertStatusCube: {
       relationship: `belongsTo`,
       sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1 AND ${AlertStatusCube.isExcluded} != 1`,

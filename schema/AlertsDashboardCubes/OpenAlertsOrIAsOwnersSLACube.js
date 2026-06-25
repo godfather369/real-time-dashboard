@@ -150,10 +150,6 @@ cube(`OpenAlertsOrIAsOwnersSLA`, {
   },
 
   joins: {
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
     Users: {
       relationship: `belongsTo`,
       sql: `${CUBE.owners} = ${Users._id}`,
@@ -174,7 +170,7 @@ cube(`OpenAlertsOrIAsOwnersSLA`, {
       dimensions: [
         Users._id,
         Users.fullName,
-        Tenants.tenantId,
+        OpenAlertsOrIAsOwnersSLA.tenantId,
         OpenAlertsOrIAsOwnersSLA.docStatus,
       ],
       timeDimension: OpenAlertsOrIAsOwnersSLA.created,

@@ -19,10 +19,6 @@ cube(`MyControls`, {
 	},
 
 	joins: {
-		Tenants: {
-			relationship: `hasOne`,
-			sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-		},
 		ControlStatus: {
 			relationship: `hasOne`,
 			sql: `${CUBE.status} = ${ControlStatus.statusId} AND ${CUBE.tenantId} = ${ControlStatus.tenantId}`,

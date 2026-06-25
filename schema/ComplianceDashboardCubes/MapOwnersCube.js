@@ -84,10 +84,6 @@ cube(`MapOwnersCube`, {
       relationship: `belongsTo`,
       sql: `${CUBE.owner} = ${Users._id}`,
     },
-    Tenants: {
-      relationship: `hasOne`,
-      sql: `${CUBE.tenantId} = ${Tenants.tenantId}`,
-    },
   },
 
   preAggregations: {
@@ -102,7 +98,7 @@ cube(`MapOwnersCube`, {
         MapOwnersCube.requirementCount,
         MapOwnersCube.total,
       ],
-      dimensions: [Tenants.tenantId, Users.fullName, Users._id],
+      dimensions: [MapOwnersCube.tenantId, Users.fullName, Users._id],
       refreshKey: {
         every: PRE_AGG_REFRESH_KEY_TIME,
       },
