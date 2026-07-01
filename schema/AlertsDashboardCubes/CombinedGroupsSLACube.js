@@ -1,151 +1,44 @@
+const {
+  securityContext: { tenantId: secTenantId },
+} = COMPILE_CONTEXT;
+
 import {
-  alertsCollection,
-  regMapGenericCollection,
-  impactAssessmentCollection,
-  impactAssessmentGroupsCollection,
-  alertsGroupsCollection,
+  enrichedAlertsCollection,
+  enrichedAlertsGroupsCollection,
+  alertsByStatusCollection,
+  regConfigCollection,
 } from "./collections";
-import {
-  CUBE_REFRESH_KEY_TIME,
-  PRE_AGG_REFRESH_KEY_TIME,
-} from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`combinedGroupsSLA`, {
   sql: `
-		SELECT * FROM (
-			SELECT 
-				srcObject as _id, 
-				groups, 
-				status, 
-				docStatus, 
-				created, 
-				tenantId, 
-				impactStatus 
-			FROM (
-				SELECT 
-					_id, 
-					groups, 
-					impactStatus, 
-					tenantId, 
-					srcObject 
-				FROM (
-					SELECT 
-						_id, 
-						groups,
-						impactStatus, 
-						tenantId 
-					FROM (
-						SELECT 
-							_id, 
-							groups 
-						FROM ${impactAssessmentGroupsCollection}
-					) AS impactGroups 
-					INNER JOIN (
-						SELECT 
-							_id AS impactId, 
-							status AS impactStatus, 
-							tenantId 
-						FROM ${impactAssessmentCollection} 
-						WHERE ${impactAssessmentCollection}.archived = 0
-					) AS impacts ON impacts.impactId = impactGroups._id
-				) as groupImpacts 
-				INNER JOIN (
-					SELECT 
-						srcObject, 
-						destObject, 
-						tenantId as tntId 
-					FROM ${regMapGenericCollection} 
-					WHERE ${regMapGenericCollection}.archived = 0 
-						AND ${regMapGenericCollection}.destType = "ImpactAssessment" 
-						AND ${regMapGenericCollection}.srcType = "Alert"
-				) as maps ON groupImpacts._id = maps.destObject
-					AND (groupImpacts.tenantId) = maps.tntId
-			) as mappedImpacts 
-			INNER JOIN (
-				SELECT 
-					alertId, 
-					status, 
-					docStatus, 
-					created, 
-					tentId 
-				FROM (
-					SELECT 
-						_id as alertGroupId, 
-						groups as alertGroup 
-					FROM ${alertsGroupsCollection}
-				) as alertGroups 
-				INNER JOIN (
-					SELECT 
-						_id as alertId, 
-						status, 
-						\`info.docStatus\` as docStatus, 
-						created, 
-						tenantId as tentId 
-					FROM ${alertsCollection} 
-					WHERE ${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)
-				) as alerts ON alerts.alertId = alertGroups.alertGroupId
-			) as groupAlerts ON mappedImpacts.srcObject = groupAlerts.alertId
-				AND mappedImpacts.tenantId = groupAlerts.tentId
-		) AS impactedAlerts 
-		
-		UNION
-		
-		SELECT 
-			_id, 
-			groups, 
-			status, 
-			docStatus, 
-			created, 
-			tenantId, 
-			"No" as impactStatus 
-		FROM (
-			SELECT 
-				_id, 
-				groups, 
-				status, 
-				docStatus, 
-				created, 
-				tenantId, 
-				destObject 
-			FROM (
-				SELECT 
-					_id, 
-					groups, 
-					status, 
-					docStatus, 
-					created, 
-					tenantId 
-				FROM (
-					SELECT 
-						_id, 
-						groups 
-					FROM ${alertsGroupsCollection}
-				) as groups 
-				INNER JOIN (
-					SELECT 
-						_id as alertId, 
-						status, 
-						\`info.docStatus\` as docStatus, 
-						created, 
-						tenantId 
-					FROM ${alertsCollection} 
-					WHERE ${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)
-				) as alerts ON alerts.alertID = groups._id
-			) as groupAlerts 
-			LEFT JOIN (
-				SELECT 
-					srcObject, 
-					destObject, 
-					tenantId as tntId 
-				FROM ${regMapGenericCollection} 
-				WHERE ${regMapGenericCollection}.archived = 0 
-					AND ${regMapGenericCollection}.destType = "ImpactAssessment" 
-					AND ${regMapGenericCollection}.srcType = "Alert"
-			) as maps ON maps.srcObject = groupAlerts._id
-				AND maps.tntId = groupAlerts.tenantId
-		) as mappedAlerts 
-		WHERE ISNULL(mappedAlerts.destObject) = 1
-	`,
+    SELECT
+      a.\`_id\`,
+      g.\`groups\`,
+      a.\`status\`,
+      a.\`docStatus\`,
+      a.\`created\`,
+      a.\`tenantId\`,
+      a.\`impactStatus\`,
+      sc.\`isTerminal\`
+    FROM ${enrichedAlertsCollection} a
+    INNER JOIN ${enrichedAlertsGroupsCollection} g
+      ON g.\`_id\` = a.\`_id\`
+    INNER JOIN (
+      SELECT
+        \`_id\` AS configId,
+        \`status.regChange.id\` AS statusId,
+        \`status.regChange.isTerminal\` AS isTerminal
+      FROM ${alertsByStatusCollection}
+      WHERE \`status.regChange.active\` = 1
+        AND \`_id\` IN (
+          SELECT _id FROM ${regConfigCollection}
+          WHERE tenantId = '${secTenantId}'
+        )
+    ) AS sc
+      ON sc.statusId = a.\`status\`
+    WHERE a.\`tenantId\` = '${secTenantId}'
+  `,
 
   sqlAlias: `comSLA`,
 
@@ -153,59 +46,14 @@ cube(`combinedGroupsSLA`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {
-    Groups: {
-      relationship: `belongsTo`,
-      sql: `${CUBE.groups} = ${Groups._id}`,
-    },
-    AlertStatusCube: {
-      relationship: `belongsTo`,
-      sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1`,
-    },
-  },
-
-  preAggregations: {
-    comGrSLARollUp: {
-      sqlAlias: "comGrRP",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [
-        combinedGroupsSLA.openOpen,
-        combinedGroupsSLA.openClosed,
-        combinedGroupsSLA.openMissing,
-        combinedGroupsSLA.closedOpen,
-        combinedGroupsSLA.closedClosed,
-        combinedGroupsSLA.closedMissing,
-        combinedGroupsSLA.open,
-        combinedGroupsSLA.closed,
-      ],
-      dimensions: [
-        Groups._id,
-        Groups.name,
-        combinedGroupsSLA.tenantId,
-        combinedGroupsSLA.docStatus,
-      ],
-      timeDimension: combinedGroupsSLA.created,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`,
-      },
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
-    },
-  },
+  joins: {},
 
   measures: {
     openOpen: {
       type: `count`,
       filters: [
         {
-          sql: `NOT ${AlertStatusCube}.isTerminal AND (${CUBE}.impactStatus = 'New' OR ${CUBE}.impactStatus = 'In Process')`,
+          sql: `${CUBE}.isTerminal = 0 AND (${CUBE}.impactStatus = 'New' OR ${CUBE}.impactStatus = 'In Process')`,
         },
       ],
     },
@@ -213,7 +61,7 @@ cube(`combinedGroupsSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `NOT ${AlertStatusCube}.isTerminal AND (${CUBE}.impactStatus = 'Closed')`,
+          sql: `${CUBE}.isTerminal = 0 AND (${CUBE}.impactStatus = 'Closed')`,
         },
       ],
     },
@@ -221,7 +69,7 @@ cube(`combinedGroupsSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `NOT ${AlertStatusCube}.isTerminal AND (${CUBE}.impactStatus = 'No')`,
+          sql: `${CUBE}.isTerminal = 0 AND (${CUBE}.impactStatus = 'No')`,
         },
       ],
     },
@@ -229,7 +77,7 @@ cube(`combinedGroupsSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `${AlertStatusCube}.isTerminal AND (${CUBE}.impactStatus = 'New' OR ${CUBE}.impactStatus = 'In Process')`,
+          sql: `${CUBE}.isTerminal = 1 AND (${CUBE}.impactStatus = 'New' OR ${CUBE}.impactStatus = 'In Process')`,
         },
       ],
     },
@@ -237,7 +85,7 @@ cube(`combinedGroupsSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `${AlertStatusCube}.isTerminal AND (${CUBE}.impactStatus = 'Closed')`,
+          sql: `${CUBE}.isTerminal = 1 AND (${CUBE}.impactStatus = 'Closed')`,
         },
       ],
     },
@@ -245,7 +93,7 @@ cube(`combinedGroupsSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `${AlertStatusCube}.isTerminal AND (${CUBE}.impactStatus = 'No')`,
+          sql: `${CUBE}.isTerminal = 1 AND (${CUBE}.impactStatus = 'No')`,
         },
       ],
     },
@@ -253,7 +101,7 @@ cube(`combinedGroupsSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `NOT ${AlertStatusCube}.isTerminal`,
+          sql: `${CUBE}.isTerminal = 0`,
         },
       ],
     },
@@ -261,7 +109,7 @@ cube(`combinedGroupsSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `${AlertStatusCube}.isTerminal`,
+          sql: `${CUBE}.isTerminal = 1`,
         },
       ],
     },
@@ -284,6 +132,10 @@ cube(`combinedGroupsSLA`, {
     impactStatus: {
       sql: `${CUBE}.\`impactStatus\``,
       type: `string`,
+    },
+    isTerminal: {
+      sql: `${CUBE}.\`isTerminal\``,
+      type: `boolean`,
     },
     groups: {
       sql: `${CUBE}.\`groups\``,

@@ -1,76 +1,28 @@
+const {
+  securityContext: { tenantId: secTenantId },
+} = COMPILE_CONTEXT;
+
 import {
-  impactAssessmentCollection,
-  impactAssessmentOwnersCollection,
-  regMapGenericCollection,
-  alertsCollection,
+  enrichedAlertsCollection,
+  enrichedAlertsOwnersCollection,
 } from "./collections";
-import {
-  CUBE_REFRESH_KEY_TIME,
-  PRE_AGG_REFRESH_KEY_TIME,
-} from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`ImpactsByOwnersCube`, {
   sql: `
-		SELECT 
-			_id, 
-			tenantId, 
-			status, 
-			startDate, 
-			docStatus, 
-			created, 
-			owners 
-		FROM (
-			SELECT 
-				_id, 
-				tenantId, 
-				status, 
-				startDate, 
-				srcObject, 
-				created, 
-				owners 
-			FROM (
-				SELECT 
-					_id, 
-					tenantId, 
-					startDate, 
-					created, 
-					status, 
-					owners 
-				FROM (
-					SELECT 
-						_id, 
-						tenantId, 
-						startDate, 
-						created, 
-						status  
-					FROM ${impactAssessmentCollection} 
-					WHERE ${impactAssessmentCollection}.archived = 0
-				) AS impacts 
-				INNER JOIN (
-					SELECT 
-						_id AS Id, 
-						owners 
-					FROM ${impactAssessmentOwnersCollection}
-				) AS ownerIds ON impacts._id = ownerIds.Id
-			) AS UserImpacts 
-			INNER JOIN (
-				SELECT 
-					srcObject, 
-					destObject 
-				FROM ${regMapGenericCollection} 
-				WHERE ${regMapGenericCollection}.archived = 0 
-					AND ${regMapGenericCollection}.srcType = "Alert" 
-					AND ${regMapGenericCollection}.destType = "ImpactAssessment"
-			) AS Maps ON UserImpacts._id = Maps.destObject
-		) AS mappedImpacts 
-		INNER JOIN (
-			SELECT 
-				_id AS Id, 
-				\`info.docStatus\` AS docStatus 
-			FROM ${alertsCollection} 
-			WHERE ${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)
-		) AS alerts ON mappedImpacts.srcObject = alerts.Id
-	`,
+    SELECT
+      a.\`_id\`,
+      a.\`tenantId\`,
+      a.\`impactStatus\` AS \`status\`,
+      a.\`created\`,
+      a.\`docStatus\`,
+      o.\`owners\`
+    FROM ${enrichedAlertsCollection} a
+    INNER JOIN ${enrichedAlertsOwnersCollection} o
+      ON o.\`_id\` = a.\`_id\`
+    WHERE a.\`tenantId\` = '${secTenantId}'
+      AND a.\`impactStatus\` != 'No'
+  `,
 
   sqlAlias: `IAOwCube`,
 
@@ -78,64 +30,7 @@ cube(`ImpactsByOwnersCube`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {
-    Users: {
-      relationship: `belongsTo`,
-      sql: `${CUBE.owners} = ${Users._id}`,
-    },
-  },
-
-  preAggregations: {
-    impactsByUsersRollUp: {
-      sqlAlias: "IAByUsrsRP",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [ImpactsByOwnersCube.count],
-      dimensions: [ImpactsByOwnersCube.tenantId, Users.fullName, Users._id],
-      timeDimension: ImpactsByOwnersCube.startDate,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`,
-      },
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
-    },
-    impactsOwnersRollUp: {
-      sqlAlias: "IAByAppRP",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [
-        ImpactsByOwnersCube.count,
-        ImpactsByOwnersCube.open,
-        ImpactsByOwnersCube.New,
-        ImpactsByOwnersCube.inProcess,
-        ImpactsByOwnersCube.closed,
-      ],
-      dimensions: [
-        ImpactsByOwnersCube.tenantId,
-        Users.fullName,
-        Users._id,
-        ImpactsByOwnersCube.docStatus,
-      ],
-      timeDimension: ImpactsByOwnersCube.created,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`,
-      },
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
-    },
-  },
+  joins: {},
 
   measures: {
     count: {
@@ -188,10 +83,6 @@ cube(`ImpactsByOwnersCube`, {
     tenantId: {
       sql: `${CUBE}.\`tenantId\``,
       type: `string`,
-    },
-    startDate: {
-      sql: `${CUBE}.\`startDate\``,
-      type: `time`,
     },
     created: {
       sql: `${CUBE}.\`created\``,

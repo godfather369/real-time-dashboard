@@ -1,146 +1,45 @@
+const {
+  securityContext: { tenantId: secTenantId },
+} = COMPILE_CONTEXT;
+
 import {
-  alertsCollection,
-  regMapGenericCollection,
-  impactAssessmentCollection,
-  alertsUsersCollection,
+  enrichedAlertsCollection,
+  enrichedAlertsOwnersCollection,
+  alertsByStatusCollection,
+  regConfigCollection,
 } from "./collections";
-import {
-  CUBE_REFRESH_KEY_TIME,
-  PRE_AGG_REFRESH_KEY_TIME,
-} from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`OpenAlertsOrIAsOwnersSLA`, {
   sql: `
-    SELECT 
-      mappedImpacts.srcObject AS _id, 
-      ownerAlerts.owners AS owners, 
-      ownerAlerts.status, 
-      ownerAlerts.docStatus,       
-      ownerAlerts.created, 
-      ownerAlerts.tenantId, 
-      mappedImpacts.impactStatus
-    FROM 
-      (
-        SELECT 
-          ownerImpacts._id AS impactId, 
-          ownerImpacts.impactStatus, 
-          ownerImpacts.tenantId, 
-          maps.srcObject
-        FROM 
-          (
-            SELECT 
-              impacts._id, 
-              impacts.status AS impactStatus, 
-              impacts.tenantId
-            FROM 
-              ${impactAssessmentCollection} AS impacts
-          ) AS ownerImpacts
-        INNER JOIN 
-          (
-            SELECT 
-              srcObject, 
-              destObject, 
-              tenantId AS tntId 
-            FROM 
-              ${regMapGenericCollection} 
-            WHERE 
-              archived = 0 
-              AND destType = "ImpactAssessment" 
-              AND srcType = "Alert"
-          ) AS maps
-        ON 
-          ownerImpacts._id = maps.destObject
-          AND ownerImpacts.tenantId = maps.tntId
-      ) AS mappedImpacts
-    INNER JOIN 
-      (
-        SELECT 
-          alerts._id, 
-          owners.owners, 
-          alerts.status, 
-          alerts.docStatus,       
-          alerts.created, 
-          alerts.tenantId
-        FROM 
-          (
-            SELECT 
-              _id, 
-              owners 
-            FROM 
-              ${alertsUsersCollection}
-          ) AS owners
-        INNER JOIN 
-          (
-            SELECT 
-              _id, 
-              status, 
-              \`info.docStatus\` AS docStatus, 
-              created, 
-              tenantId 
-            FROM 
-              ${alertsCollection} 
-            WHERE 
-              archived = 0 AND (\`reggi.validity\` != 0 OR \`reggi.validity\` IS NULL)
-          ) AS alerts
-        ON 
-          alerts._id = owners._id
-      ) AS ownerAlerts
-    ON 
-      mappedImpacts.srcObject = ownerAlerts._id 
-      AND mappedImpacts.tenantId = ownerAlerts.tenantId
-
-    UNION
-
-    -- Non-Impacted Alerts
-    SELECT 
-      owners._id, 
-      owners.owners, 
-      alerts.status, 
-      alerts.docStatus,       
-      alerts.created, 
-      alerts.tenantId, 
-      "No" AS impactStatus
-    FROM 
-      (
-        SELECT 
-          _id, 
-          owners 
-        FROM 
-          ${alertsUsersCollection}
-      ) AS owners
-    INNER JOIN 
-      (
-        SELECT 
-          _id, 
-          status, 
-          \`info.docStatus\` AS docStatus, 
-          created, 
-          tenantId 
-        FROM 
-          ${alertsCollection} 
-        WHERE 
-          archived = 0 AND (\`reggi.validity\` != 0 OR \`reggi.validity\` IS NULL)
-      ) AS alerts
-    ON 
-      alerts._id = owners._id
-    LEFT JOIN 
-      (
-        SELECT 
-          srcObject, 
-          destObject, 
-          tenantId AS tntId 
-        FROM 
-          ${regMapGenericCollection} 
-        WHERE 
-          archived = 0 
-          AND destType = "ImpactAssessment" 
-          AND srcType = "Alert"
-      ) AS maps
-    ON 
-      maps.srcObject = owners._id
-      AND maps.tntId = alerts.tenantId
-    WHERE 
-      ISNULL(maps.destObject) = 1
+    SELECT
+      a.\`_id\` AS \`_id\`,
+      o.\`owners\` AS \`owners\`,
+      a.\`status\` AS \`status\`,
+      a.\`docStatus\` AS \`docStatus\`,
+      a.\`created\` AS \`created\`,
+      a.\`tenantId\` AS \`tenantId\`,
+      a.\`impactStatus\` AS \`impactStatus\`,
+      sc.\`isTerminal\` AS \`isTerminal\`,
+      sc.\`isExcluded\` AS \`isExcluded\`
+    FROM ${enrichedAlertsCollection} a
+    INNER JOIN ${enrichedAlertsOwnersCollection} o
+      ON o.\`_id\` = a.\`_id\`
+    INNER JOIN (
+      SELECT
+        \`_id\` AS configId,
+        \`status.regChange.id\` AS statusId,
+        \`status.regChange.isTerminal\` AS isTerminal,
+        \`status.regChange.isExcluded\` AS isExcluded
+      FROM ${alertsByStatusCollection}
+      WHERE \`status.regChange.active\` = 1
+        AND \`_id\` IN (
+          SELECT _id FROM ${regConfigCollection}
+          WHERE tenantId = '${secTenantId}'
+        )
+    ) AS sc
+      ON sc.statusId = a.\`status\`
+    WHERE a.\`tenantId\` = '${secTenantId}'
   `,
 
   sqlAlias: `opnAlrtIASLA`,
@@ -149,48 +48,12 @@ cube(`OpenAlertsOrIAsOwnersSLA`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {
-    Users: {
-      relationship: `belongsTo`,
-      sql: `${CUBE.owners} = ${Users._id}`,
-    },
-    AlertStatusCube: {
-      relationship: `belongsTo`,
-      sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1`,
-    },
-  },
-
-  preAggregations: {
-    comUsSLARollUp: {
-      sqlAlias: "comUsRP",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [OpenAlertsOrIAsOwnersSLA.openAlertsOrIAsCount],
-      dimensions: [
-        Users._id,
-        Users.fullName,
-        OpenAlertsOrIAsOwnersSLA.tenantId,
-        OpenAlertsOrIAsOwnersSLA.docStatus,
-      ],
-      timeDimension: OpenAlertsOrIAsOwnersSLA.created,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`,
-      },
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
-    },
-  },
+  joins: {},
 
   measures: {
     openAlertsOrIAsCount: {
       type: `sum`,
-      sql: `NOT ${AlertStatusCube}.isTerminal OR ${CUBE}.impactStatus = 'New' OR ${CUBE}.impactStatus = 'In Process'`,
+      sql: `${CUBE}.isTerminal = 0 OR ${CUBE}.impactStatus = 'New' OR ${CUBE}.impactStatus = 'In Process'`,
     },
   },
 
@@ -211,6 +74,14 @@ cube(`OpenAlertsOrIAsOwnersSLA`, {
     impactStatus: {
       sql: `${CUBE}.\`impactStatus\``,
       type: `string`,
+    },
+    isTerminal: {
+      sql: `${CUBE}.\`isTerminal\``,
+      type: `boolean`,
+    },
+    isExcluded: {
+      sql: `${CUBE}.\`isExcluded\``,
+      type: `boolean`,
     },
     owners: {
       sql: `${CUBE}.\`owners\``,

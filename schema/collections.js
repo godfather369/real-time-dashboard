@@ -81,6 +81,10 @@ export const alertsGroupsCollection = getCollectionString(
 	"reg_alert_parents_groups"
 );
 
+export const enrichedAlertsCollection = getCollectionString("mv_enriched_alerts");
+export const enrichedAlertsOwnersCollection = getCollectionString("mv_enriched_alerts_owners");
+export const enrichedAlertsGroupsCollection = getCollectionString("mv_enriched_alerts_groups");
+
 export const mapGenericCollection = getCollectionString("reg_map_generic");
 export const masterDatumCollection = getCollectionString("masterdatum");
 export const masterDatumMetaCollection = getCollectionString(

@@ -1,62 +1,50 @@
-import {
-  alertsCollection,
-  regMapGenericCollection,
-  alertsGroupsCollection,
-} from "./collections";
+const {
+  securityContext: { tenantId: secTenantId },
+} = COMPILE_CONTEXT;
 
 import {
-  CUBE_REFRESH_KEY_TIME,
-  PRE_AGG_REFRESH_KEY_TIME,
-} from "./cube-constants";
+  enrichedAlertsCollection,
+  enrichedAlertsGroupsCollection,
+  alertsByStatusCollection,
+  regConfigCollection,
+} from "./collections";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube("QuarterlyAlertsByGroups", {
   sql: `
-      SELECT 
-        _id, 
-        status, 
-        docStatus, 
-        created, 
-        groups, 
-        tenantId, 
-        destObject 
-      FROM (
-        SELECT 
-          _id, 
-          status, 
-          docStatus, 
-          created, 
-          tenantId, 
-          groups 
-        FROM (
-          SELECT 
-            _id, 
-            status, 
-            \`info.docStatus\` as docStatus, 
-            created, 
-            tenantId 
-          FROM ${alertsCollection} 
-          WHERE ${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)
-        ) as alerts
-        INNER JOIN (
-          SELECT 
-            _id as grpAlertId, 
-            groups 
-          FROM ${alertsGroupsCollection}
-        ) as groupAlerts
-        ON groupAlerts.grpAlertId = alerts._id
-      ) as alertsbygrps 
-      LEFT JOIN (
-        SELECT 
-          srcObject, 
-          destObject, 
-          tenantId as tntId 
-        FROM ${regMapGenericCollection} 
-        WHERE ${regMapGenericCollection}.archived = 0 
-          AND ${regMapGenericCollection}.destType = "ImpactAssessment" 
-          AND ${regMapGenericCollection}.srcType = "Alert"
-      ) as Maps 
-      ON alertsbygrps._id = Maps.srcObject
-    `,
+    SELECT
+      a.\`_id\`,
+      a.\`status\`,
+      a.\`docStatus\`,
+      a.\`created\`,
+      g.\`groups\`,
+      a.\`tenantId\`,
+      a.\`impactLevel\`,
+      sc.\`isTerminal\`,
+      sc.\`isExcluded\`,
+      sc.\`isFollowing\`,
+      sc.\`actionRequired\`
+    FROM ${enrichedAlertsCollection} a
+    INNER JOIN ${enrichedAlertsGroupsCollection} g
+      ON g.\`_id\` = a.\`_id\`
+    INNER JOIN (
+      SELECT
+        \`_id\` AS configId,
+        \`status.regChange.id\` AS statusId,
+        \`status.regChange.isTerminal\` AS isTerminal,
+        \`status.regChange.isExcluded\` AS isExcluded,
+        \`status.regChange.actionRequired\` AS actionRequired,
+        \`status.regChange.meta.isFollowing\` AS isFollowing
+      FROM ${alertsByStatusCollection}
+      WHERE \`status.regChange.active\` = 1
+        AND \`_id\` IN (
+          SELECT _id FROM ${regConfigCollection}
+          WHERE tenantId = '${secTenantId}'
+        )
+    ) AS sc
+      ON sc.statusId = a.\`status\`
+    WHERE a.\`tenantId\` = '${secTenantId}'
+  `,
 
   sqlAlias: "QAlByGrps",
 
@@ -64,61 +52,14 @@ cube("QuarterlyAlertsByGroups", {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {
-    ImpactAssessmentCube: {
-      relationship: `hasOne`,
-      sql: `${CUBE.impId}=${ImpactAssessmentCube._id}`,
-    },
-    Groups: {
-      relationship: `hasOne`,
-      sql: `${CUBE.groupId}=${Groups._id}`,
-    },
-    AlertStatusCube: {
-      relationship: `belongsTo`,
-      sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1`,
-    },
-  },
-
-  preAggregations: {
-    quarterlyAlertsByGroupRollUp: {
-      sqlAlias: "qrAlByGrp",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [
-        QuarterlyAlertsByGroups.following,
-        QuarterlyAlertsByGroups.open,
-        QuarterlyAlertsByGroups.applicable,
-        QuarterlyAlertsByGroups.excluded,
-        QuarterlyAlertsByGroups.potentialImp,
-        QuarterlyAlertsByGroups.totalCount,
-      ],
-      dimensions: [
-        QuarterlyAlertsByGroups.groupId,
-        Groups.name,
-        QuarterlyAlertsByGroups.docStatus,
-        QuarterlyAlertsByGroups.tenantId,
-      ],
-      timeDimension: QuarterlyAlertsByGroups.created,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`,
-      },
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
-    },
-  },
+  joins: {},
 
   measures: {
     totalCount: {
       type: `count`,
       filters: [
         {
-          sql: `${AlertStatusCube}.isExcluded!=1`,
+          sql: `${CUBE}.isExcluded != 1`,
         },
       ],
     },
@@ -126,7 +67,7 @@ cube("QuarterlyAlertsByGroups", {
       type: `count`,
       filters: [
         {
-          sql: `${AlertStatusCube}.isFollowing= 1 AND ${AlertStatusCube}.isExcluded != 1`,
+          sql: `${CUBE}.isFollowing = 1 AND ${CUBE}.isExcluded != 1`,
         },
       ],
       title: "Following",
@@ -135,7 +76,7 @@ cube("QuarterlyAlertsByGroups", {
       type: `count`,
       filters: [
         {
-          sql: `${AlertStatusCube}.isTerminal= 0 AND ${AlertStatusCube}.isExcluded != 1`,
+          sql: `${CUBE}.isTerminal = 0 AND ${CUBE}.isExcluded != 1`,
         },
       ],
     },
@@ -143,7 +84,7 @@ cube("QuarterlyAlertsByGroups", {
       type: `count`,
       filters: [
         {
-          sql: `${AlertStatusCube}.actionRequired = 1 AND ${AlertStatusCube}.isTerminal = 1 AND ${AlertStatusCube}.isExcluded != 1`,
+          sql: `${CUBE}.actionRequired = 1 AND ${CUBE}.isTerminal = 1 AND ${CUBE}.isExcluded != 1`,
         },
       ],
     },
@@ -151,7 +92,7 @@ cube("QuarterlyAlertsByGroups", {
       type: `count`,
       filters: [
         {
-          sql: `${AlertStatusCube}.isExcluded= 1`,
+          sql: `${CUBE}.isExcluded = 1`,
         },
       ],
       title: "Excluded",
@@ -160,9 +101,9 @@ cube("QuarterlyAlertsByGroups", {
       type: `count`,
       filters: [
         {
-          sql: `${ImpactAssessmentCube}.impactLevel = 'CB - N/A' 
-            AND ${AlertStatusCube}.isExcluded != 1  
-            AND (${AlertStatusCube}.isTerminal = 1 OR ${AlertStatusCube}.isFollowing = 1)`,
+          sql: `${CUBE}.impactLevel = 'CB - N/A'
+            AND ${CUBE}.isExcluded != 1
+            AND (${CUBE}.isTerminal = 1 OR ${CUBE}.isFollowing = 1)`,
         },
       ],
     },
@@ -182,9 +123,25 @@ cube("QuarterlyAlertsByGroups", {
       sql: `${CUBE}.\`docStatus\``,
       type: `string`,
     },
-    impId: {
-      sql: `${CUBE}.\`destObject\``,
+    impactLevel: {
+      sql: `${CUBE}.\`impactLevel\``,
       type: `string`,
+    },
+    isTerminal: {
+      sql: `${CUBE}.\`isTerminal\``,
+      type: `boolean`,
+    },
+    isExcluded: {
+      sql: `${CUBE}.\`isExcluded\``,
+      type: `boolean`,
+    },
+    isFollowing: {
+      sql: `${CUBE}.\`isFollowing\``,
+      type: `boolean`,
+    },
+    actionRequired: {
+      sql: `${CUBE}.\`actionRequired\``,
+      type: `boolean`,
     },
     groupId: {
       sql: `${CUBE}.\`groups\``,

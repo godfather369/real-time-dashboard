@@ -5,5 +5,5 @@ module.exports = {
     },
   },
   contextToAppId: ({ securityContext }) =>
-    `CUBEJS_APP_${securityContext.userId}`,
+    `CUBEJS_APP_${securityContext?.tenantId || "default"}_${securityContext?.userId || "default"}`,
 };

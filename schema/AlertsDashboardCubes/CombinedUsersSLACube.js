@@ -1,72 +1,44 @@
+const {
+  securityContext: { tenantId: secTenantId },
+} = COMPILE_CONTEXT;
+
 import {
-  alertsCollection,
-  regMapGenericCollection,
-  impactAssessmentCollection,
-  impactAssessmentOwnersCollection,
-  alertsUsersCollection,
+  enrichedAlertsCollection,
+  enrichedAlertsOwnersCollection,
+  alertsByStatusCollection,
+  regConfigCollection,
 } from "./collections";
-import {
-  CUBE_REFRESH_KEY_TIME,
-  PRE_AGG_REFRESH_KEY_TIME,
-} from "./cube-constants";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube(`combinedOwnersSLA`, {
   sql: `
-		SELECT * FROM (
-			SELECT srcObject as _id, owners, status, docStatus, created, tenantId, impactStatus FROM (
-				SELECT _id, owners, impactStatus, tenantId, srcObject FROM (
-					SELECT _id, owners, impactStatus, tenantId FROM (
-						SELECT _id, owners FROM ${impactAssessmentOwnersCollection}
-					) AS impactOwners 
-					INNER JOIN (
-						SELECT _id AS impactId, status AS impactStatus, tenantId 
-						FROM ${impactAssessmentCollection} 
-						WHERE ${impactAssessmentCollection}.archived = 0
-					) AS impacts ON impacts.impactId = impactOwners._id
-				) as ownerImpacts 
-				INNER JOIN (
-					SELECT srcObject, destObject, tenantId as tntId 
-					FROM ${regMapGenericCollection} 
-					WHERE ${regMapGenericCollection}.archived = 0 
-						AND ${regMapGenericCollection}.destType = "ImpactAssessment" 
-						AND ${regMapGenericCollection}.srcType = "Alert"
-				) as maps ON ownerImpacts._id = maps.destObject AND ownerImpacts.tenantId = maps.tntId
-			) as mappedImpacts 
-			INNER JOIN (
-				SELECT alertId, status, docStatus, created, tentId FROM (
-					SELECT _id as alertOwnerId, owners as alertOwner FROM ${alertsUsersCollection}
-				) as alertOwners 
-				INNER JOIN (
-					SELECT _id as alertId, status, \`info.docStatus\` as docStatus, created, tenantId as tentId 
-					FROM ${alertsCollection} 
-					WHERE ${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)
-				) as alerts ON alerts.alertId = alertOwners.alertOwnerId
-			) as ownerAlerts ON mappedImpacts.srcObject = ownerAlerts.alertId AND mappedImpacts.tenantId = ownerAlerts.tentId
-		) AS impactedAlerts 
-		
-		UNION
-		
-		SELECT _id, owners, status, docStatus, created, tenantId, "No" as impactStatus FROM (
-			SELECT _id, owners, status, docStatus, created, tenantId, destObject FROM (
-				SELECT _id, owners, status, docStatus, created, tenantId FROM (
-					SELECT _id, owners FROM ${alertsUsersCollection}
-				) as owners 
-				INNER JOIN (
-					SELECT _id as alertId, status, \`info.docStatus\` as docStatus, created, tenantId 
-					FROM ${alertsCollection} 
-					WHERE ${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)
-				) as alerts ON alerts.alertID = owners._id
-			) as ownerAlerts 
-			LEFT JOIN (
-				SELECT srcObject, destObject, tenantId as tntId 
-				FROM ${regMapGenericCollection} 
-				WHERE ${regMapGenericCollection}.archived = 0 
-					AND ${regMapGenericCollection}.destType = "ImpactAssessment" 
-					AND ${regMapGenericCollection}.srcType = "Alert"
-			) as maps ON maps.srcObject = ownerAlerts._id AND maps.tntId = ownerAlerts.tenantId
-		) as mappedAlerts 
-		WHERE ISNULL(mappedAlerts.destObject) = 1
-	`,
+    SELECT
+      a.\`_id\`,
+      o.\`owners\`,
+      a.\`status\`,
+      a.\`docStatus\`,
+      a.\`created\`,
+      a.\`tenantId\`,
+      a.\`impactStatus\`,
+      sc.\`isTerminal\`
+    FROM ${enrichedAlertsCollection} a
+    INNER JOIN ${enrichedAlertsOwnersCollection} o
+      ON o.\`_id\` = a.\`_id\`
+    INNER JOIN (
+      SELECT
+        \`_id\` AS configId,
+        \`status.regChange.id\` AS statusId,
+        \`status.regChange.isTerminal\` AS isTerminal
+      FROM ${alertsByStatusCollection}
+      WHERE \`status.regChange.active\` = 1
+        AND \`_id\` IN (
+          SELECT _id FROM ${regConfigCollection}
+          WHERE tenantId = '${secTenantId}'
+        )
+    ) AS sc
+      ON sc.statusId = a.\`status\`
+    WHERE a.\`tenantId\` = '${secTenantId}'
+  `,
 
   sqlAlias: `comSLA`,
 
@@ -74,59 +46,14 @@ cube(`combinedOwnersSLA`, {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {
-    Users: {
-      relationship: `belongsTo`,
-      sql: `${CUBE.owners} = ${Users._id}`,
-    },
-    AlertStatusCube: {
-      relationship: `belongsTo`,
-      sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1`,
-    },
-  },
-
-  preAggregations: {
-    comUsSLARollUp: {
-      sqlAlias: "comUsRP",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [
-        combinedOwnersSLA.openOpen,
-        combinedOwnersSLA.openClosed,
-        combinedOwnersSLA.openMissing,
-        combinedOwnersSLA.closedOpen,
-        combinedOwnersSLA.closedClosed,
-        combinedOwnersSLA.closedMissing,
-        combinedOwnersSLA.open,
-        combinedOwnersSLA.closed,
-      ],
-      dimensions: [
-        Users._id,
-        Users.fullName,
-        combinedOwnersSLA.tenantId,
-        combinedOwnersSLA.docStatus,
-      ],
-      timeDimension: combinedOwnersSLA.created,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`,
-      },
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
-    },
-  },
+  joins: {},
 
   measures: {
     openOpen: {
       type: `count`,
       filters: [
         {
-          sql: `NOT ${AlertStatusCube}.isTerminal AND (${CUBE}.impactStatus = 'New' OR ${CUBE}.impactStatus = 'In Process')`,
+          sql: `${CUBE}.isTerminal = 0 AND (${CUBE}.impactStatus = 'New' OR ${CUBE}.impactStatus = 'In Process')`,
         },
       ],
     },
@@ -134,7 +61,7 @@ cube(`combinedOwnersSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `NOT ${AlertStatusCube}.isTerminal AND (${CUBE}.impactStatus = 'Closed')`,
+          sql: `${CUBE}.isTerminal = 0 AND (${CUBE}.impactStatus = 'Closed')`,
         },
       ],
     },
@@ -142,7 +69,7 @@ cube(`combinedOwnersSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `NOT ${AlertStatusCube}.isTerminal AND (${CUBE}.impactStatus = 'No')`,
+          sql: `${CUBE}.isTerminal = 0 AND (${CUBE}.impactStatus = 'No')`,
         },
       ],
     },
@@ -150,7 +77,7 @@ cube(`combinedOwnersSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `${AlertStatusCube}.isTerminal AND (${CUBE}.impactStatus = 'New' OR ${CUBE}.impactStatus = 'In Process')`,
+          sql: `${CUBE}.isTerminal = 1 AND (${CUBE}.impactStatus = 'New' OR ${CUBE}.impactStatus = 'In Process')`,
         },
       ],
     },
@@ -158,7 +85,7 @@ cube(`combinedOwnersSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `${AlertStatusCube}.isTerminal AND (${CUBE}.impactStatus = 'Closed')`,
+          sql: `${CUBE}.isTerminal = 1 AND (${CUBE}.impactStatus = 'Closed')`,
         },
       ],
     },
@@ -166,7 +93,7 @@ cube(`combinedOwnersSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `${AlertStatusCube}.isTerminal AND (${CUBE}.impactStatus = 'No')`,
+          sql: `${CUBE}.isTerminal = 1 AND (${CUBE}.impactStatus = 'No')`,
         },
       ],
     },
@@ -174,7 +101,7 @@ cube(`combinedOwnersSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `NOT ${AlertStatusCube}.isTerminal`,
+          sql: `${CUBE}.isTerminal = 0`,
         },
       ],
     },
@@ -182,7 +109,7 @@ cube(`combinedOwnersSLA`, {
       type: `count`,
       filters: [
         {
-          sql: `${AlertStatusCube}.isTerminal`,
+          sql: `${CUBE}.isTerminal = 1`,
         },
       ],
     },
@@ -205,6 +132,10 @@ cube(`combinedOwnersSLA`, {
     impactStatus: {
       sql: `${CUBE}.\`impactStatus\``,
       type: `string`,
+    },
+    isTerminal: {
+      sql: `${CUBE}.\`isTerminal\``,
+      type: `boolean`,
     },
     owners: {
       sql: `${CUBE}.\`owners\``,

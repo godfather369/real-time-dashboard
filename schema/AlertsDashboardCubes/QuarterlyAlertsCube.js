@@ -1,39 +1,45 @@
-import { alertsCollection, regMapGenericCollection } from "./collections";
+const {
+  securityContext: { tenantId: secTenantId },
+} = COMPILE_CONTEXT;
 
 import {
-  CUBE_REFRESH_KEY_TIME,
-  PRE_AGG_REFRESH_KEY_TIME,
-} from "./cube-constants";
+  enrichedAlertsCollection,
+  alertsByStatusCollection,
+  regConfigCollection,
+} from "./collections";
+import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
 cube("QuarterlyAlertsCube", {
   sql: `
-    SELECT 
-      _id, 
-      status, 
-      docStatus, 
-      created, 
-      tenantId, 
-      destObject 
-    FROM (
-      SELECT 
-        _id, 
-        status, 
-        \`info.docStatus\` as docStatus, 
-        created, 
-        tenantId 
-      FROM ${alertsCollection} 
-      WHERE ${alertsCollection}.archived = 0 AND (${alertsCollection}.\`reggi.validity\` != 0 OR ${alertsCollection}.\`reggi.validity\` IS NULL)
-    ) as alerts 
-    LEFT JOIN (
-      SELECT 
-        srcObject, 
-        destObject, 
-        tenantId as tntId 
-      FROM ${regMapGenericCollection} 
-      WHERE ${regMapGenericCollection}.archived = 0 
-        AND ${regMapGenericCollection}.destType = "ImpactAssessment" 
-        AND ${regMapGenericCollection}.srcType = "Alert"
-    ) as Maps ON alerts._id = Maps.srcObject
+    SELECT
+      a.\`_id\`,
+      a.\`status\`,
+      a.\`docStatus\`,
+      a.\`created\`,
+      a.\`tenantId\`,
+      a.\`impactLevel\`,
+      sc.\`isTerminal\`,
+      sc.\`isExcluded\`,
+      sc.\`isFollowing\`,
+      sc.\`actionRequired\`
+    FROM ${enrichedAlertsCollection} a
+    INNER JOIN (
+      SELECT
+        \`_id\` AS configId,
+        \`status.regChange.id\` AS statusId,
+        \`status.regChange.isTerminal\` AS isTerminal,
+        \`status.regChange.isExcluded\` AS isExcluded,
+        \`status.regChange.actionRequired\` AS actionRequired,
+        \`status.regChange.meta.isFollowing\` AS isFollowing
+      FROM ${alertsByStatusCollection}
+      WHERE \`status.regChange.active\` = 1
+        AND \`_id\` IN (
+          SELECT _id FROM ${regConfigCollection}
+          WHERE tenantId = '${secTenantId}'
+        )
+    ) AS sc
+      ON sc.statusId = a.\`status\`
+    WHERE a.\`tenantId\` = '${secTenantId}'
   `,
 
   sqlAlias: "QrAl",
@@ -42,52 +48,14 @@ cube("QuarterlyAlertsCube", {
     every: CUBE_REFRESH_KEY_TIME,
   },
 
-  joins: {
-    ImpactAssessmentCube: {
-      relationship: `hasOne`,
-      sql: `${CUBE.impId}=${ImpactAssessmentCube._id}`,
-    },
-    AlertStatusCube: {
-      relationship: `belongsTo`,
-      sql: `${CUBE.status} = ${AlertStatusCube.statusId} AND ${CUBE.tenantId} = ${AlertStatusCube.tenantId} AND ${AlertStatusCube.active} = 1`,
-    },
-  },
-
-  preAggregations: {
-    quarterlyAlertsRollUp: {
-      sqlAlias: "qrAlPreAgg",
-      type: `rollup`,
-      external: true,
-      scheduledRefresh: true,
-      measures: [
-        QuarterlyAlertsCube.following,
-        QuarterlyAlertsCube.open,
-        QuarterlyAlertsCube.applicable,
-        QuarterlyAlertsCube.excluded,
-        QuarterlyAlertsCube.potentialImp,
-        QuarterlyAlertsCube.totalCount,
-      ],
-      dimensions: [QuarterlyAlertsCube.tenantId, QuarterlyAlertsCube.docStatus],
-      timeDimension: QuarterlyAlertsCube.created,
-      granularity: `day`,
-      buildRangeStart: {
-        sql: `SELECT NOW() - interval '365 day'`,
-      },
-      buildRangeEnd: {
-        sql: `SELECT NOW()`,
-      },
-      refreshKey: {
-        every: PRE_AGG_REFRESH_KEY_TIME,
-      },
-    },
-  },
+  joins: {},
 
   measures: {
     totalCount: {
       type: `count`,
       filters: [
         {
-          sql: `${AlertStatusCube}.isExcluded!=1`,
+          sql: `${CUBE}.isExcluded != 1`,
         },
       ],
     },
@@ -95,7 +63,7 @@ cube("QuarterlyAlertsCube", {
       type: `count`,
       filters: [
         {
-          sql: `${AlertStatusCube}.isFollowing = 1 AND ${AlertStatusCube}.isExcluded != 1`,
+          sql: `${CUBE}.isFollowing = 1 AND ${CUBE}.isExcluded != 1`,
         },
       ],
       title: "Following",
@@ -104,7 +72,7 @@ cube("QuarterlyAlertsCube", {
       type: `count`,
       filters: [
         {
-          sql: `${AlertStatusCube}.isTerminal = 0 AND ${AlertStatusCube}.isExcluded != 1`,
+          sql: `${CUBE}.isTerminal = 0 AND ${CUBE}.isExcluded != 1`,
         },
       ],
     },
@@ -112,7 +80,7 @@ cube("QuarterlyAlertsCube", {
       type: `count`,
       filters: [
         {
-          sql: `${AlertStatusCube}.actionRequired = 1 AND ${AlertStatusCube}.isTerminal = 1 AND ${AlertStatusCube}.isExcluded != 1`,
+          sql: `${CUBE}.actionRequired = 1 AND ${CUBE}.isTerminal = 1 AND ${CUBE}.isExcluded != 1`,
         },
       ],
     },
@@ -120,7 +88,7 @@ cube("QuarterlyAlertsCube", {
       type: `count`,
       filters: [
         {
-          sql: `${AlertStatusCube}.isExcluded= 1`,
+          sql: `${CUBE}.isExcluded = 1`,
         },
       ],
       title: "Excluded",
@@ -129,9 +97,9 @@ cube("QuarterlyAlertsCube", {
       type: `count`,
       filters: [
         {
-          sql: `${ImpactAssessmentCube}.impactLevel = 'CB - N/A' 
-            AND ${AlertStatusCube}.isExcluded != 1 
-            AND (${AlertStatusCube}.isTerminal = 1 OR ${AlertStatusCube}.isFollowing = 1)`,
+          sql: `${CUBE}.impactLevel = 'CB - N/A'
+            AND ${CUBE}.isExcluded != 1
+            AND (${CUBE}.isTerminal = 1 OR ${CUBE}.isFollowing = 1)`,
         },
       ],
     },
@@ -151,9 +119,25 @@ cube("QuarterlyAlertsCube", {
       sql: `${CUBE}.\`docStatus\``,
       type: `string`,
     },
-    impId: {
-      sql: `${CUBE}.\`destObject\``,
+    impactLevel: {
+      sql: `${CUBE}.\`impactLevel\``,
       type: `string`,
+    },
+    isTerminal: {
+      sql: `${CUBE}.\`isTerminal\``,
+      type: `boolean`,
+    },
+    isExcluded: {
+      sql: `${CUBE}.\`isExcluded\``,
+      type: `boolean`,
+    },
+    isFollowing: {
+      sql: `${CUBE}.\`isFollowing\``,
+      type: `boolean`,
+    },
+    actionRequired: {
+      sql: `${CUBE}.\`actionRequired\``,
+      type: `boolean`,
     },
     created: {
       sql: `${CUBE}.\`created\``,
