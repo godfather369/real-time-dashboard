@@ -77,6 +77,10 @@ while (true) {
               _id: 0,
               status: 1,
               impactLevel: "$customAttributes.IMPACT_LEVEL",
+              startDate: 1,
+              created: 1,
+              owners: 1,
+              groups: 1,
             },
           },
         ],
@@ -100,6 +104,24 @@ while (true) {
         },
         impactLevel: {
           $arrayElemAt: ["$impactAssessment.impactLevel", 0],
+        },
+        impactStartDate: {
+          $arrayElemAt: ["$impactAssessment.startDate", 0],
+        },
+        impactCreated: {
+          $arrayElemAt: ["$impactAssessment.created", 0],
+        },
+        impactOwners: {
+          $ifNull: [
+            { $arrayElemAt: ["$impactAssessment.owners", 0] },
+            [],
+          ],
+        },
+        impactGroups: {
+          $ifNull: [
+            { $arrayElemAt: ["$impactAssessment.groups", 0] },
+            [],
+          ],
         },
       },
     },

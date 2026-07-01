@@ -166,6 +166,7 @@ cube(`AlertsCube`, {
         Jurisdiction.displayName,
         AlertsCube.alertCategory,
         AlertsCube.docStatus,
+        AlertStatusCube.statusId,
       ],
       timeDimension: AlertsCube.publishedDate,
       granularity: `day`,

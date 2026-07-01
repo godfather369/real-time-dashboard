@@ -4,7 +4,7 @@ const {
 
 import {
   enrichedAlertsCollection,
-  enrichedAlertsGroupsCollection,
+  enrichedAlertsImpactGroupsCollection,
 } from "./collections";
 import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
@@ -14,11 +14,11 @@ cube(`ImpactsByGroupCube`, {
       a.\`_id\`,
       a.\`tenantId\`,
       a.\`impactStatus\` AS \`status\`,
-      a.\`created\`,
+      a.\`impactCreated\`,
       a.\`docStatus\`,
-      g.\`groups\`
+      g.\`impactGroups\`
     FROM ${enrichedAlertsCollection} a
-    INNER JOIN ${enrichedAlertsGroupsCollection} g
+    INNER JOIN ${enrichedAlertsImpactGroupsCollection} g
       ON g.\`_id\` = a.\`_id\`
     WHERE a.\`tenantId\` = '${secTenantId}'
       AND a.\`impactStatus\` != 'No'
@@ -85,11 +85,11 @@ cube(`ImpactsByGroupCube`, {
       type: `string`,
     },
     created: {
-      sql: `${CUBE}.\`created\``,
+      sql: `${CUBE}.\`impactCreated\``,
       type: `time`,
     },
     groups: {
-      sql: `groups`,
+      sql: `impactGroups`,
       type: `string`,
       title: `groups`,
     },

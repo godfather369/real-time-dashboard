@@ -4,7 +4,7 @@ const {
 
 import {
   enrichedAlertsCollection,
-  enrichedAlertsOwnersCollection,
+  enrichedAlertsImpactOwnersCollection,
 } from "./collections";
 import { CUBE_REFRESH_KEY_TIME } from "./cube-constants";
 
@@ -14,11 +14,12 @@ cube(`ImpactsByOwnersCube`, {
       a.\`_id\`,
       a.\`tenantId\`,
       a.\`impactStatus\` AS \`status\`,
-      a.\`created\`,
+      a.\`impactCreated\`,
+      a.\`impactStartDate\`,
       a.\`docStatus\`,
-      o.\`owners\`
+      o.\`impactOwners\`
     FROM ${enrichedAlertsCollection} a
-    INNER JOIN ${enrichedAlertsOwnersCollection} o
+    INNER JOIN ${enrichedAlertsImpactOwnersCollection} o
       ON o.\`_id\` = a.\`_id\`
     WHERE a.\`tenantId\` = '${secTenantId}'
       AND a.\`impactStatus\` != 'No'
@@ -85,17 +86,21 @@ cube(`ImpactsByOwnersCube`, {
       type: `string`,
     },
     created: {
-      sql: `${CUBE}.\`created\``,
+      sql: `${CUBE}.\`impactCreated\``,
       type: `time`,
     },
     owners: {
-      sql: `owners`,
+      sql: `impactOwners`,
       type: `string`,
       title: `owners`,
     },
     status: {
       sql: `status`,
       type: `string`,
+    },
+    startDate: {
+      sql: `${CUBE}.\`impactStartDate\``,
+      type: `time`,
     },
     docStatus: {
       sql: `${CUBE}.\`docStatus\``,
